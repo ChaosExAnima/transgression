@@ -1,1 +1,3 @@
 /wp-content
+*.code-workspace
+/.vscode
