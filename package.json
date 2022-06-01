@@ -1,0 +1,16 @@
+{
+  "name": "transgression",
+  "version": "1.0.0",
+  "description": "Transgression website",
+  "main": "index.js",
+  "scripts": {
+	  "start": "yarn docker up -d",
+	  "stop": "yarn docker down",
+	  "wp": "yarn docker run cli wp",
+	  "docker": "docker compose"
+  },
+  "repository": "git@github.com:ChaosExAnima/transgression.git",
+  "author": "echo <ChaosExAnima@users.noreply.github.com>",
+  "license": "MIT",
+  "private": true
+}
