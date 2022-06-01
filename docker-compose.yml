@@ -1,0 +1,37 @@
+version: "3.7"
+services:
+    wordpress:
+        image: chaosexanima/transgression-wordpress
+        volumes:
+            - "${PWD}/wp_content:/var/www/html/wp-content"
+            - wp_core:/var/www/html
+            - "${PWD}/wp-config.php:/var/www/html/wp-config.php"
+            - "${PWD}/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro"
+
+    nginx:
+        image: nginx
+        ports:
+            - 8888:80
+        volumes:
+            - "${PWD}/wp_content:/var/www/html/wp-content"
+            - "${PWD}/wp-config.php:/var/www/html/wp-config.php:ro"
+            - wp_core:/var/www/html
+            - "${PWD}/nginx.conf:/etc/nginx/conf.d/transgression.conf:ro"
+
+    database:
+        image: mariadb
+        volumes:
+            - "${PWD}/sql:/docker-entrypoint-initdb.d"
+        environment:
+            MARIADB_ROOT_PASSWORD: password
+            MARIADB_DATABASE: wordpress
+
+    cli:
+        image: wordpress:cli-php7.4
+        volumes:
+            - "${PWD}/wp-content:/var/www/html/wp-content"
+            - "${PWD}/wp-config.php:/var/www/html/wp-config.php"
+            - wp_core:/var/www/html
+
+volumes:
+    wp_core:

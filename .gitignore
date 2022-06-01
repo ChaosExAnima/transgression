@@ -1,3 +1,4 @@
-/wp-content
+/wp_content
 *.code-workspace
 /.vscode
+/sql
