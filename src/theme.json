@@ -106,7 +106,7 @@
 			"form": {
 				"border": {
 					"color": "#EFEFEF",
-					"radius": "0",
+					"radius": "1rem",
 					"style": "solid",
 					"width": "2px"
 				},
@@ -257,6 +257,10 @@
 						"fontSize": "var(--wp--custom--font-sizes--x-small)"
 					}
 				}
+			},
+			"timing": {
+				"short": "0.1s",
+				"long": "0.4s"
 			},
 			"video": {
 				"caption": {

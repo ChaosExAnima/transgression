@@ -1,8 +1,8 @@
 /*
 Theme Name: Transgression
 Theme URI: https://transgression.party
-Author: 
-Author URI: 
+Author: Echo
+Author URI: https://echonyc.blog
 Description: Theme for the Transgression event website
 Requires at least: 5.8
 Tested up to: 5.9
@@ -21,10 +21,9 @@ body {
 }
 
 .jet-form-builder-row {
-/* 	gap: 0.5em; */
 	margin-bottom: 1em;
 }
-.jet-form-builder__field-wrap {
+.jet-form-builder-row > :is(.jet-form-builder__field-wrap, .jet-form-builder__fields-group) {
 	order: 1;
 }
 .jet-form-builder__desc {
@@ -36,7 +35,24 @@ body {
 .jet-form-builder__required {
 	color: var(--wp--preset--color--primary);
 }
+.jet-form-builder__field-wrap > :is(textarea, input) {
+	transition: border-color var(--wp--custom--timing--short);
+}
 .jet-form-builder__field-label.for-checkbox :checked + span::before {
 	background-color: var(--wp--preset--color--primary);
 	border-color: var(--wp--preset--color--secondary);
+}
+.jet-form-builder__action-button {
+	background-color: var(--wp--preset--color--primary);
+	font-size: var(--wp--custom--font-size--normal);
+	border: none;
+	border-radius: var(--wp--custom--form--border--radius);
+	padding: 1rem 2rem;
+	color: var(--wp--preset--color--foreground);
+	font-family: var(--wp--preset--font-family--heading-font);
+	transition: background-color var(--wp--custom--timing--short);
+	cursor: pointer;
+}
+.jet-form-builder__action-button:hover {
+	background-color: var(--wp--preset--color--secondary);
 }
