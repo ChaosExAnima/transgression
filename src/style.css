@@ -23,7 +23,8 @@ body {
 .jet-form-builder-row {
 	margin-bottom: 1em;
 }
-.jet-form-builder-row > :is(.jet-form-builder__field-wrap, .jet-form-builder__fields-group) {
+.jet-form-builder-row
+	> :is(.jet-form-builder__field-wrap, .jet-form-builder__fields-group) {
 	order: 1;
 }
 .jet-form-builder__desc {
