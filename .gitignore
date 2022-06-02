@@ -3,3 +3,4 @@
 /.vscode
 /sql
 node_modules
+/vendor
