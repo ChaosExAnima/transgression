@@ -6,6 +6,7 @@
   "scripts": {
 	  "start": "yarn docker up -d",
 	  "stop": "yarn docker down",
+	  "logs": "yarn docker logs",
 	  "wp": "yarn docker run cli wp",
 	  "docker": "docker compose"
   },

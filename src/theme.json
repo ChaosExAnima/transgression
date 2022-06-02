@@ -270,7 +270,7 @@
 			"wideSize": "1000px"
 		},
 		"spacing": {
-			"units": ["%", "px", "em", "rem", "vh", "vw"]
+			"units": ["em", "rem", "%"]
 		},
 		"typography": {
 			"fontFamilies": [
@@ -481,7 +481,7 @@
 			"core/site-footer": {
 				"spacing": {
 					"margin": {
-						"bottom": "var(--wp--custom--gap--baseline)"
+						"bottom": "var(--wp--custom--gap--vertical)"
 					}
 				}
 			}
