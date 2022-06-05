@@ -20,6 +20,10 @@ body {
 	--custom--form--color--border: var(--wp--preset--color--primary);
 }
 
+small {
+	font-size: var(--wp--preset--font-size--small);
+}
+
 .jet-form-builder-row {
 	margin-bottom: 1em;
 }
@@ -43,22 +47,26 @@ body {
 	background-color: var(--wp--preset--color--primary);
 	border-color: var(--wp--preset--color--secondary);
 }
-.jet-form-builder-file-upload__input {
-	appearance: none;
+.jet-form-builder-file-upload__content {
+	min-height: 0;
+	max-height: 100px;
 }
-.jet-form-builder-file-upload__input::file-selector-button {
-	visibility: hidden;
-}
-.jet-form-builder__action-button, .jet-form-builder-file-upload__input {
+.jet-form-builder__action-button, .jet-form-builder-file-upload__input::file-selector-button {
 	background-color: var(--wp--preset--color--primary);
-	font-size: var(--wp--custom--font-size--normal);
 	border: none;
 	border-radius: var(--wp--custom--form--border--radius);
 	padding: 1rem 2rem;
 	color: var(--wp--preset--color--foreground);
-	font-family: var(--wp--preset--font-family--heading-font);
 	transition: background-color var(--wp--custom--timing--short);
 	cursor: pointer;
+}
+.jet-form-builder-file-upload__input::file-selector-button {
+	font-family: var(--wp--preset--font-family--body-font);
+	font-size: 2em;
+}
+.jet-form-builder__action-button {
+	font-family: var(--wp--preset--font-family--heading-font);
+	font-size: var(--wp--custom--font-size--normal);
 }
 .jet-form-builder__action-button:hover {
 	background-color: var(--wp--preset--color--secondary);
