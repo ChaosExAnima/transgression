@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<ruleset name="Transgression">
+	<description>Transgression ruleset</description>
+	<rule ref="NeutronStandard"/>
+	<exclude-pattern type="relative">^/wp_content/*</exclude-pattern>
+	<exclude-pattern type="relative">^/vendor/*</exclude-pattern>
+</ruleset>
