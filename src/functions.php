@@ -5,6 +5,10 @@ namespace Transgression;
 // Includes
 require_once 'inc/class-applications.php';
 
+if ( defined( 'JET_FORM_BUILDER_VERSION' ) && version_compare( JET_FORM_BUILDER_VERSION, '2.0.6', '>=' ) ) {
+	require_once 'inc/jetforms.php';
+}
+
 function init() {
 	add_theme_support( 'editor-styles' );
 	add_editor_style( 'editor.css' );
