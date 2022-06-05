@@ -22,6 +22,8 @@ services:
 
     database:
         image: mariadb
+        ports:
+            - 8890:3306
         volumes:
             - "${PWD}/sql:/docker-entrypoint-initdb.d"
         environment:
@@ -31,7 +33,7 @@ services:
     mail:
         image: mailhog/mailhog:v1.0.0
         ports:
-            - '8889:8025'
+            - 8889:8025
         environment:
             MH_STORAGE: maildir
             MH_MAILDIR_PATH: /output
@@ -41,7 +43,7 @@ services:
     cli:
         image: wordpress:cli-php7.4
         volumes:
-            - "${PWD}/wp-content:/var/www/html/wp-content"
+            - "${PWD}/wp_content:/var/www/html/wp-content"
             - "${PWD}/wp-config.php:/var/www/html/wp-config.php"
             - wp_core:/var/www/html
 

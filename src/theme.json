@@ -1,4 +1,5 @@
 {
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
 	"customTemplates": [
 		{
 			"name": "blank",
@@ -97,7 +98,6 @@
 				"secondary": "var(--wp--preset--color--secondary)",
 				"tertiary": "var(--wp--preset--color--tertiary)"
 			},
-			"colorPalettes": [],
 			"fontSizes": {
 				"huge": "4rem",
 				"normal": "2rem",
@@ -418,6 +418,9 @@
 					"fontFamily": "var(--wp--preset--font-family--heading-font)",
 					"fontSize": "var(--wp--preset--font-size--x-large)",
 					"lineHeight": "var(--wp--custom--heading--typography--line-height)"
+				},
+				"color": {
+					"text": "var(--wp--custom--color--primary)"
 				}
 			},
 			"core/pullquote": {

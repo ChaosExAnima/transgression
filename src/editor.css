@@ -1,0 +1,5 @@
+.wp-block-post-title {
+	max-width: none !important;
+	text-align: center;
+	color: var(--wp--custom--color--primary);
+}

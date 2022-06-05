@@ -43,7 +43,13 @@ body {
 	background-color: var(--wp--preset--color--primary);
 	border-color: var(--wp--preset--color--secondary);
 }
-.jet-form-builder__action-button {
+.jet-form-builder-file-upload__input {
+	appearance: none;
+}
+.jet-form-builder-file-upload__input::file-selector-button {
+	visibility: hidden;
+}
+.jet-form-builder__action-button, .jet-form-builder-file-upload__input {
 	background-color: var(--wp--preset--color--primary);
 	font-size: var(--wp--custom--font-size--normal);
 	border: none;
