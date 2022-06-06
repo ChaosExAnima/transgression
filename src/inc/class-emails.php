@@ -31,7 +31,7 @@ class Emails extends Singleton {
 		}
 	}
 
-	public function send_email( string $email, string $subject, string $template_id, array $params = [] ): ?WP_Error {
+	public function send_email( string $email, string $template_id ): ?WP_Error {
 		if ( !isset( self::TEMPLATES[$template_id] ) ) {
 			return new WP_Error( 'email-no-template', 'Template not found' );
 		}
@@ -51,12 +51,12 @@ class Emails extends Singleton {
 		return null;
 	}
 
-	public function send_user_email( int $user_id, string $subject, string $template, array $params = [] ): ?WP_Error {
+	public function send_user_email( int $user_id, string $template_id ): ?WP_Error {
 		$user = get_userdata( $user_id );
 		if ( !$user ) {
 			return new WP_Error( 'email-no-user', 'User not found', compact( 'user_id' ) );
 		}
-		$this->send_email( $user->user_email, $subject, $template, array_merge( $params, compact( 'user' ) ) );
+		$this->send_email( $user->user_email, $template_id );
 		return null;
 	}
 
