@@ -30,6 +30,11 @@ function init() {
 }
 add_action( 'init', cb( 'init' ) );
 
+function admin() {
+	Applications::instance()->action_admin_init();
+}
+add_action( 'admin_init', cb( 'admin' ) );
+
 function styles() {
 	wp_enqueue_style( 'transgression-styles', get_theme_file_uri( 'style.css' ) , [], null, 'screen' );
 }

@@ -3,12 +3,12 @@
 namespace Transgression;
 
 use MailPoet\DI\ContainerWrapper;
+use MailPoet\Entities\NewsletterEntity;
 use MailPoet\Newsletter\NewslettersRepository;
 
 function get_newsletters() {
 	$repo = get_mailpoet_instance();
-	$all = $repo->findAll();
-	var_dump( $all );
+	return $repo->findDraftByTypes( [NewsletterEntity::TYPE_STANDARD] );
 }
 
 function get_mailpoet_instance(): NewslettersRepository {
