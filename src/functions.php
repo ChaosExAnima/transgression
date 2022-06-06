@@ -10,6 +10,9 @@ if ( defined( 'JET_FORM_BUILDER_VERSION' ) && version_compare( JET_FORM_BUILDER_
 	require_once 'inc/jetforms.php';
 }
 
+if ( defined( 'MAILPOET_VERSION' ) && version_compare( MAILPOET_VERSION, '3.89.3', '>=' ) ) {
+	require_once 'inc/mailpoet.php';
+}
 
 function theme_path( string $file = '' ): string {
 	$path = untrailingslashit( get_stylesheet_directory() );
