@@ -33,8 +33,15 @@ function styles() {
 }
 add_action( 'wp_enqueue_scripts', cb( 'styles' ) );
 
-function log_error( \WP_Error $error ) {
-	error_log( implode( '; ', $error->get_error_messages() ) );
+function log_error( \Throwable|\WP_Error $error ) {
+	if ( $error instanceof \Throwable ) {
+		error_log( $error->__toString() );
+	} else if ( $error instanceof \WP_Error ) {
+		foreach ( $error->get_error_codes() as $error_code ) {
+			$message = $error->get_error_message( $error_code );
+			error_log( "{$error_code}: {$message}" );
+		}
+	}
 }
 
 function cb( string $func ): Callable {

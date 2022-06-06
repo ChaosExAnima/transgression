@@ -2,12 +2,15 @@
 
 namespace Transgression;
 
+use Exception;
 use WP_Error;
 
 class Emails extends Singleton {
 	const ADMIN_PAGE = 'edit.php?post_type=' . Applications::POST_TYPE;
+	const EMAIL_PAGE = 'apps_emails';
 	const SETTING_GROUP = 'transgression_emails';
 	const SETTING_SECTION = self::SETTING_GROUP . '_emails';
+	const SETTING_ERRORS = self::SETTING_GROUP . '_messages';
 	const TEMPLATES = [
 		'email_approved' => 'Approved Template',
 		'email_denied' => 'Denied Template',
@@ -31,14 +34,14 @@ class Emails extends Singleton {
 		}
 	}
 
-	public function send_email( string $email, string $template_id ): ?WP_Error {
-		if ( !isset( self::TEMPLATES[$template_id] ) ) {
+	public function send_email( string $email, string $template_key ): ?WP_Error {
+		if ( !isset( self::TEMPLATES[$template_key] ) ) {
 			return new WP_Error( 'email-no-template', 'Template not found' );
 		}
 		if ( !$this->newsletter_repo ) {
 			return new WP_Error( 'email-no-mailpoet', 'MailPoet not set up' );
 		}
-		$template_id = get_option( $template_id, 0 );
+		$template_id = get_option( $template_key, 0 );
 		if ( !$template_id ) {
 			return new WP_Error( 'email-template-unset', 'Template not set' );
 		}
@@ -48,16 +51,26 @@ class Emails extends Singleton {
 			return new WP_Error( 'email-template-missing', 'Template not found' );
 		}
 
+		try {
+			/** @var \MailPoet\Newsletter\Preview\SendPreviewController */
+			$preview_controller = \MailPoet\DI\ContainerWrapper::getInstance()->get(
+				\MailPoet\Newsletter\Preview\SendPreviewController::class
+			);
+			$preview_controller->sendPreview( $template, $email );
+		} catch ( \Throwable $error ) {
+			log_error( new WP_Error( $error->getMessage(), $error->getTraceAsString() ) );
+			return new WP_Error( 'send-fail', "There was a problem sending the mail to {$email}" );
+		}
+
 		return null;
 	}
 
-	public function send_user_email( int $user_id, string $template_id ): ?WP_Error {
+	public function send_user_email( int $user_id, string $template_key ): ?WP_Error {
 		$user = get_userdata( $user_id );
 		if ( !$user ) {
 			return new WP_Error( 'email-no-user', 'User not found', compact( 'user_id' ) );
 		}
-		$this->send_email( $user->user_email, $template_id );
-		return null;
+		return $this->send_email( $user->user_email, $template_key );
 	}
 
 	public function filter_from( string $from ): string {
@@ -94,9 +107,30 @@ class Emails extends Singleton {
 			'Emails',
 			'Emails',
 			'manage_options',
-			'apps_emails',
+			self::EMAIL_PAGE,
 			[$this, 'render_email_menu']
 		);
+	}
+
+	protected function do_test_email( string $template_key ) {
+		check_admin_referer( 'test-email-' . $template_key );
+		if ( !isset( self::TEMPLATES[$template_key] ) ) {
+			add_settings_error( self::SETTING_ERRORS, 'invalid-template', 'Could not find template' );
+			return;
+		}
+
+		$user_id = get_current_user_id();
+		$result = $this->send_user_email( $user_id, $template_key );
+		if ( is_wp_error( $result ) ) {
+			foreach ( $result->get_error_codes() as $error_code ) {
+				add_settings_error( self::SETTING_ERRORS, $error_code, $result->get_error_message( $error_code ) );
+			}
+		} else {
+			$user = get_userdata( $user_id );
+			add_settings_error(
+				self::SETTING_ERRORS,
+				'email-sent', "Email sent to {$user->user_email}!", 'success' );
+		}
 	}
 
 	public function render_email_menu() {
@@ -105,10 +139,12 @@ class Emails extends Singleton {
 		}
 
 		if ( isset( $_GET['settings-updated'] ) ) {
-			add_settings_error( 'apps_messages', 'apps_saved', 'Settings Saved', 'updated' );
+			add_settings_error( self::SETTING_ERRORS, 'saved', 'Settings Saved', 'updated' );
+		} else if ( isset( $_GET['test-email'] ) ) {
+			$this->do_test_email( sanitize_title_with_dashes( $_GET['test-email'] ) );
 		}
 
-		settings_errors( 'apps_messages' );
+		settings_errors( self::SETTING_ERRORS );
 		printf(
 			'<div class="wrap"><h1>%s</h1><form action="options.php" method="post">',
 			esc_html( get_admin_page_title() )
@@ -140,6 +176,16 @@ class Emails extends Singleton {
 				selected( $newsletter->getId(), $current_setting, false )
 			);
 		}
-		echo '</select>';
+		echo '</select>&nbsp;';
+		$test_url = add_query_arg( [
+			'page' => self::EMAIL_PAGE,
+			'test-email' => $args['name'],
+			'_wpnonce' => wp_create_nonce( 'test-email-' . $args['name'] ),
+		], admin_url( self::ADMIN_PAGE ) );
+		printf(
+			'<a class="button button-secondary" href="%s" id="%s-test">Send test</a>',
+			esc_url( $test_url ),
+			esc_attr( $args['name'] )
+		);
 	}
 }
