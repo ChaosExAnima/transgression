@@ -16,14 +16,58 @@ class Emails extends Singleton {
 
 	private string $admin_email_page = '';
 
+	/** @var ?\MailPoet\Newsletter\NewslettersRepository */
+	private $newsletter_repo = null;
+
 	public function init() {
+		add_filter( 'wp_mail_from', [ $this, 'filter_from' ] );
 		add_action( 'admin_menu', [$this, 'action_admin_menu'] );
 		add_action( 'admin_init', [$this, 'action_admin_init'] );
+
+		if ( class_exists( '\\MailPoet\\Newsletter\\NewslettersRepository' ) ) {
+			$this->newsletter_repo = \MailPoet\DI\ContainerWrapper::getInstance()->get(
+				\MailPoet\Newsletter\NewslettersRepository::class
+			);
+		}
 	}
 
-	public function send_template() {
+	public function send_email( string $email, string $subject, string $template_id, array $params = [] ): ?WP_Error {
+		if ( !isset( self::TEMPLATES[$template_id] ) ) {
+			return new WP_Error( 'email-no-template', 'Template not found' );
+		}
+		if ( !$this->newsletter_repo ) {
+			return new WP_Error( 'email-no-mailpoet', 'MailPoet not set up' );
+		}
+		$template_id = get_option( $template_id, 0 );
+		if ( !$template_id ) {
+			return new WP_Error( 'email-template-unset', 'Template not set' );
+		}
+		/** @var ?\MailPoet\Entities\NewsletterEntity */
+		$template = $this->newsletter_repo->findOneById( $template_id );
+		if ( !$template ) {
+			return new WP_Error( 'email-template-missing', 'Template not found' );
+		}
 
+		return null;
 	}
+
+	public function send_user_email( int $user_id, string $subject, string $template, array $params = [] ): ?WP_Error {
+		$user = get_userdata( $user_id );
+		if ( !$user ) {
+			return new WP_Error( 'email-no-user', 'User not found', compact( 'user_id' ) );
+		}
+		$this->send_email( $user->user_email, $subject, $template, array_merge( $params, compact( 'user' ) ) );
+		return null;
+	}
+
+	public function filter_from( string $from ): string {
+		if ( !is_email( $from ) ) {
+			return 'events@transgression.party';
+		}
+		return $from;
+	}
+
+	/** ADMIN STUFF */
 
 	public function action_admin_init() {
 		if ( !$this->admin_email_page ) {
@@ -76,7 +120,7 @@ class Emails extends Singleton {
 	}
 
 	public function render_template_picker( array $args ) {
-		if ( !function_exists( __NAMESPACE__.'\\get_newsletters' ) ) {
+		if ( !$this->newsletter_repo ) {
 			echo 'MailPoet not loaded';
 			return;
 		}
@@ -86,7 +130,7 @@ class Emails extends Singleton {
 			esc_attr( $args['label_for'] )
 		);
 		echo '<option value="0">None</option>';
-		$newsletters = get_newsletters();
+		$newsletters = $this->newsletter_repo->findDraftByTypes( [\MailPoet\Entities\NewsletterEntity::TYPE_STANDARD] );
 		$current_setting = get_option( $args['name'], 0 );
 		foreach ( $newsletters as $newsletter ) {
 			printf(
@@ -98,40 +142,4 @@ class Emails extends Singleton {
 		}
 		echo '</select>';
 	}
-}
-
-function send_email( string $email, string $subject, string $template, array $params = [] ): ?WP_Error {
-	ob_start();
-	include theme_path( "/inc/emails/{$template}.php" );
-	$body = ob_get_clean();
-	$success = _send( $email, prefix_subject( $subject ), $body, [ 'Content-Type: text/html; charset=UTF-8' ] );
-	if ( !$success ) {
-		return new WP_Error( 'email-failed', 'Could not send email', compact( 'email', 'subject', 'template', 'params' ) );
-	}
-	return null;
-}
-
-function send_user_email( int $user_id, string $subject, string $template, array $params = [] ): ?WP_Error {
-	$user = get_userdata( $user_id );
-	if ( !$user ) {
-		return new WP_Error( 'email-no-user', 'User not found', compact( 'user_id' ) );
-	}
-	send_email( $user->user_email, $subject, $template, array_merge( $params, compact( 'user' ) ) );
-	return null;
-}
-
-function prefix_subject( string $subject ): string {
-	return get_bloginfo() . ": {$subject}";
-}
-
-function filter_from( string $from ): string {
-	if ( !is_email( $from ) ) {
-		return 'events@transgression.party';
-	}
-	return $from;
-}
-add_filter( 'wp_mail_from', cb( 'filter_from' ) );
-
-function _send( string $email, string $subject, string $body, array $headers = [] ): bool {
-	return wp_mail( $email, $subject, $body, $headers );
 }

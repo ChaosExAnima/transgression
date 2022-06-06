@@ -8,7 +8,7 @@ abstract class Singleton {
 	/** @var Singleton[] */
 	private static array $instances = [];
 
-	final public static function instance(): Singleton {
+	final public static function instance(): static {
 		$class = get_called_class();
 		if ( ! isset( static::$instances[ $class ] ) ) {
 			static::$instances[$class] = new static();

@@ -11,7 +11,7 @@ function before_application_insert( bool $return, array $source ): bool {
 		$email = trim( (string) $source['meta_input']['email'] );
 		$user_id = email_exists( $email );
 		if ( $user_id ) {
-			$result = send_user_email( $user_id, 'Got an application', 'app-duplicate' );
+			$result = Emails::instance()->send_user_email( $user_id, 'Got an application', 'app-duplicate' );
 			if ( is_wp_error( $result ) ) {
 				log_error( $result );
 			}
