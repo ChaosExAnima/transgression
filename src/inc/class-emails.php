@@ -2,7 +2,6 @@
 
 namespace Transgression;
 
-use Exception;
 use WP_Error;
 
 class Emails extends Singleton {
@@ -23,15 +22,17 @@ class Emails extends Singleton {
 	private $newsletter_repo = null;
 
 	public function init() {
+		if ( !class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
+			return;
+		}
+
 		add_filter( 'wp_mail_from', [ $this, 'filter_from' ] );
 		add_action( 'admin_menu', [$this, 'action_admin_menu'] );
 		add_action( 'admin_init', [$this, 'action_admin_init'] );
 
-		if ( class_exists( '\\MailPoet\\Newsletter\\NewslettersRepository' ) ) {
-			$this->newsletter_repo = \MailPoet\DI\ContainerWrapper::getInstance()->get(
-				\MailPoet\Newsletter\NewslettersRepository::class
-			);
-		}
+		$this->newsletter_repo = $this->get_mp_instance(
+			\MailPoet\Newsletter\NewslettersRepository::class
+		);
 	}
 
 	public function send_email( string $email, string $template_key ): ?WP_Error {
@@ -39,7 +40,7 @@ class Emails extends Singleton {
 			return new WP_Error( 'email-no-template', 'Template not found' );
 		}
 		if ( !$this->newsletter_repo ) {
-			return new WP_Error( 'email-no-mailpoet', 'MailPoet not set up' );
+			return new WP_Error( 'email-no-mailpoet', 'MailPoet not activated' );
 		}
 		$template_id = get_option( $template_key, 0 );
 		if ( !$template_id ) {
@@ -53,7 +54,7 @@ class Emails extends Singleton {
 
 		try {
 			/** @var \MailPoet\Newsletter\Preview\SendPreviewController */
-			$preview_controller = \MailPoet\DI\ContainerWrapper::getInstance()->get(
+			$preview_controller = $this->get_mp_instance(
 				\MailPoet\Newsletter\Preview\SendPreviewController::class
 			);
 			$preview_controller->sendPreview( $template, $email );
@@ -187,5 +188,12 @@ class Emails extends Singleton {
 			esc_url( $test_url ),
 			esc_attr( $args['name'] )
 		);
+	}
+
+	/** HELPERS */
+
+	// phpcs:ignore NeutronStandard.Functions.TypeHint.NoReturnType
+	private function get_mp_instance( string $class ) {
+		return \MailPoet\DI\ContainerWrapper::getInstance()->get( $class );
 	}
 }
