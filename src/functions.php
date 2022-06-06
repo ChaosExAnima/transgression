@@ -26,7 +26,7 @@ function init() {
 	add_theme_support( 'editor-styles' );
 	add_editor_style( 'editor.css' );
 
-	Applications::init();
+	Applications::instance()->init();
 }
 add_action( 'init', cb( 'init' ) );
 
