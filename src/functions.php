@@ -3,8 +3,9 @@
 namespace Transgression;
 
 // Includes
+require_once 'inc/class-abstract-singleton.php';
 require_once 'inc/class-applications.php';
-require_once 'inc/emails.php';
+require_once 'inc/class-emails.php';
 
 if ( defined( 'JET_FORM_BUILDER_VERSION' ) && version_compare( JET_FORM_BUILDER_VERSION, '2.0.6', '>=' ) ) {
 	require_once 'inc/jetforms.php';
@@ -27,13 +28,9 @@ function init() {
 	add_editor_style( 'editor.css' );
 
 	Applications::instance()->init();
+	Emails::instance()->init();
 }
 add_action( 'init', cb( 'init' ) );
-
-function admin() {
-	Applications::instance()->action_admin_init();
-}
-add_action( 'admin_init', cb( 'admin' ) );
 
 function styles() {
 	wp_enqueue_style( 'transgression-styles', get_theme_file_uri( 'style.css' ) , [], null, 'screen' );
