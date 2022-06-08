@@ -24,3 +24,5 @@ Applications can be created by multiple sources, but the current choice is [JetF
 3. Once everything is up, check to see if you see WordPress on `localhost:8888`. If so, run through the installation process.
 4. Run `yarn setup`. This installs the plugin and activates the theme.
 5. Have fun!
+
+To stop, just run `yarn stop`.
