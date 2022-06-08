@@ -8,13 +8,20 @@
     "stop": "yarn docker down",
     "logs": "yarn docker logs",
     "wp": "yarn docker run cli wp",
-    "docker": "docker compose"
+    "docker": "docker compose",
+	"setup": "concurrently yarn:setup:plugins yarn:setup:theme",
+	"setup:plugins": "yarn wp plugin install --activate $(cat plugins.txt)",
+	"setup:theme": "yarn wp theme install blockbase; yarn wp theme activate transgression"
   },
   "repository": "git@github.com:ChaosExAnima/transgression.git",
   "author": "echo <ChaosExAnima@users.noreply.github.com>",
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "concurrently": "^7.2.1",
     "prettier": "^2.6.2"
+  },
+  "volta": {
+    "node": "18.3.0"
   }
 }

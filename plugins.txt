@@ -1,0 +1,7 @@
+cron-logger
+gutenberg
+jetformbuilder
+mailpoet
+post-meta-inspector
+query-monitor
+woocommerce

@@ -5,8 +5,8 @@ services:
         volumes:
             - "${PWD}/wp_content:/var/www/html/wp-content"
             - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
-            - wp_core:/var/www/html
             - "${PWD}/wp-config.php:/var/www/html/wp-config.php"
+            - wp_core:/var/www/html
             - "${PWD}/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro"
 
     nginx:
@@ -41,9 +41,10 @@ services:
             - "${PWD}/wp_content/mail:/output"
 
     cli:
-        image: wordpress:cli-php7.4
+        image: wordpress:cli-php8.0
         volumes:
             - "${PWD}/wp_content:/var/www/html/wp-content"
+            - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
             - "${PWD}/wp-config.php:/var/www/html/wp-config.php"
             - wp_core:/var/www/html
 

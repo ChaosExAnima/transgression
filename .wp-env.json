@@ -1,8 +1,0 @@
-{
-	"mappings": {
-		"wp-content/plugins": "./wp-content/plugins",
-		"wp-content/themes": "./wp-content/themes",
-		"wp-content/uploads": "./wp-content/uploads",
-		"wp-content/themes/transgression": "./src"
-	}
-}
