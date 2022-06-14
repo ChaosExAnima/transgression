@@ -12,10 +12,8 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v3
-            - name: Zip src dird
-              run: cd src && zip -r ../theme.zip .
+            - uses: actions/checkout@v
             - uses: actions/upload-artifact@v1
               with:
                   name: transgression
-                  path: ${{ github.workspace }}/theme.zip
+                  path: ${{ github.workspace }}/src
