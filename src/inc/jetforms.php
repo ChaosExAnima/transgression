@@ -28,24 +28,6 @@ function after_application_insert( Base $action, Action_Handler $handler ) {
 
 	if ( $post_id ) {
 		add_post_meta( $post_id, '_form_id', $form_id, true );
-		add_image_to_application( $post_id );
 	}
 }
 add_action( 'jet-form-builder/action/after-post-insert', cb( 'after_application_insert' ), 10, 2 );
-
-function add_image_to_application( int $post_id ) {
-	$post = get_post( $post_id );
-	$image_path = $post->photo_local_url;
-	if ( !$image_path && $post->photo_url ) {
-		$remote_url = $post->photo_url;
-		$mime_types = [
-			'jpg|jpeg|jpe' => 'image/jpeg',
-			'png' => 'image/png',
-			'webp' => 'image/webp',
-		];
-		$remote_type = wp_check_filetype( $remote_url, $mime_types );
-		if ( $remote_type !== false ) {
-			$id = media_sideload_image( $remote_url, $post_id, 'Applicant photo', 'id' );
-		}
-	}
-}
