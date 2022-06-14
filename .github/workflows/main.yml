@@ -13,12 +13,10 @@ jobs:
 
         steps:
             - uses: actions/checkout@v3
-            - uses: papeloto/action-zip@v1
+            - uses: thedoctor0/zip-release@main
               with:
-                  files: src
-                  recursive: false
-                  dest: transgression.zip
+                  directory: "src"
             - uses: actions/upload-artifact@v1
               with:
                   name: transgression
-                  path: ${{ github.workspace }}/transgression.zip
+                  path: ${{ github.workspace }}/src/release.zip
