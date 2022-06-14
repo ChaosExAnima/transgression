@@ -13,10 +13,9 @@ jobs:
 
         steps:
             - uses: actions/checkout@v3
-            - uses: thedoctor0/zip-release@main
-              with:
-                  directory: "src"
+            - name: Zip src dird
+              run: cd src && zip -r ../theme.zip .
             - uses: actions/upload-artifact@v1
               with:
                   name: transgression
-                  path: ${{ github.workspace }}/src/release.zip
+                  path: ${{ github.workspace }}/theme.zip
