@@ -2,10 +2,16 @@ version: "3.7"
 services:
     wordpress:
         image: chaosexanima/transgression-wordpress
+        environment:
+            WORDPRESS_DB_HOST: database
+            WORDPRESS_DB_USER: root
+            WORDPRESS_DB_PASSWORD: password
+            WORDPRESS_DEBUG: 1
+            WORDPRESS_CONFIG_EXTRA: |
+                define('MAILPOET_CRON_SITE_URL', 'http://nginx');
         volumes:
             - "${PWD}/wp_content:/var/www/html/wp-content"
             - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
-            - "${PWD}/wp-config.php:/var/www/html/wp-config.php"
             - wp_core:/var/www/html
             - "${PWD}/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro"
 
@@ -41,11 +47,14 @@ services:
             - "${PWD}/wp_content/mail:/output"
 
     cli:
-        image: wordpress:cli-php8.0
+        image: chaosexanima/transgression-cli
+        environment:
+            WORDPRESS_DB_HOST: database
+            WORDPRESS_DB_USER: root
+            WORDPRESS_DB_PASSWORD: password
         volumes:
             - "${PWD}/wp_content:/var/www/html/wp-content"
             - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
-            - "${PWD}/wp-config.php:/var/www/html/wp-config.php"
             - wp_core:/var/www/html
 
 volumes:
