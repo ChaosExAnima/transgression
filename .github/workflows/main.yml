@@ -1,23 +1,24 @@
 name: Create theme zip
 
 on:
-  push:
-    branches: [ "main" ]
+    push:
+        branches: ["main"]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    # Allows you to run this workflow manually from the Actions tab
+    workflow_dispatch:
 
 jobs:
-  create-zip:
-    runs-on: ubuntu-latest
+    create-zip:
+        runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: papeloto/action-zip@v1
-        with:
-          files: src
-          dest: transgression.zip
-      - uses: actions/upload-artifact@v1
-        with:
-          name: theme
-          path: ${{ github.workspace }}/transgression.zip
+        steps:
+            - uses: actions/checkout@v3
+            - uses: papeloto/action-zip@v1
+              with:
+                  files: src
+                  recursive: false
+                  dest: transgression.zip
+            - uses: actions/upload-artifact@v1
+              with:
+                  name: transgression
+                  path: ${{ github.workspace }}/transgression.zip
