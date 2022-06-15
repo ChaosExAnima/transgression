@@ -33,6 +33,14 @@ function styles() {
 }
 add_action( 'wp_enqueue_scripts', cb( 'styles' ) );
 
+function redirect() {
+    if ( is_author() ) {
+        wp_redirect( home_url(), 301 );
+        exit;
+    }
+}
+add_action( 'template_redirect', cb( 'redirect' ) );
+
 function log_error( \Throwable|\WP_Error $error ) {
 	if ( $error instanceof \Throwable ) {
 		error_log( $error->__toString() );
