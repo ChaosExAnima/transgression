@@ -6,6 +6,7 @@ use WP_Post;
 
 class Applications extends Singleton {
 	const POST_TYPE = 'application';
+	const COMMENT_TYPE = 'review_comment';
 
 	const LABELS = [
 		'name' => 'Applications',
@@ -42,10 +43,17 @@ class Applications extends Singleton {
 			'supports' => ['comments'],
 			'register_meta_box_cb' => [$this, 'meta_boxes'],
 			'delete_with_user' => true,
+			'capabilities' => [
+				'create_posts' => false,
+			],
+			'map_meta_cap' => true,
 		] );
 
+		add_action( 'admin_enqueue_scripts', [$this, 'scripts'] );
 		add_action( 'edit_form_after_title', [$this, 'render_title'] );
 		add_action( 'save_post_' . self::POST_TYPE, [$this, 'save'] );
+		add_filter( 'post_row_actions', [$this, 'remove_bulk_actions'], 10, 2 );
+		add_filter( 'comments_list_table_query_args', [$this, 'hide_review_comments'] );
 	}
 
 	public function save( int $post_id ) {
@@ -56,7 +64,19 @@ class Applications extends Singleton {
 				'comment_author' => $user->display_name,
 				'comment_post_ID' => $post_id,
 				'comment_content' => $new_comment,
+				'comment_type' => self::COMMENT_TYPE,
 			] );
+		}
+	}
+
+	public function scripts() {
+		$screen = get_current_screen();
+		if (
+			is_object( $screen ) &&
+			$screen->post_type === self::POST_TYPE &&
+			$screen->action === 'edit'
+		) {
+			wp_enqueue_style( 'application-styles', get_theme_file_uri( 'assets/apps-admin.css' ) );
 		}
 	}
 
@@ -114,7 +134,7 @@ class Applications extends Singleton {
 		foreach ( self::FIELDS as $key => $name ) {
 			echo '<tr>';
 			printf(
-				'<td><strong>%s<strong></td>',
+				'<th>%s</th>',
 				esc_html( $name )
 			);
 			$value = $post->{$key};
@@ -122,7 +142,12 @@ class Applications extends Singleton {
 				if ( $key === 'email' ) {
 					printf( '<td><a href="mailto:%1$s" target="_blank">%1$s</a></td>', esc_attr( $value ) );
 				} else {
-					printf( '<td>%s</td>', esc_html( $value ) );
+					$paragraphs = preg_split( '/\n\s*\n/', $value, -1, PREG_SPLIT_NO_EMPTY );
+					echo '<td>';
+					foreach ( $paragraphs as $paragraph ) {
+						echo esc_html( wptexturize( trim( $paragraph ) ) ) . "<br/>\n";
+					}
+					echo '</td>';
 				}
 			} else {
 				echo '<td><em>Not provided</em></td>';
@@ -134,7 +159,11 @@ class Applications extends Singleton {
 
 	public function render_metabox_comments( WP_Post $post ) {
 		/** @var \WP_Comment[] */
-		$comments = get_comments( ['post_id' => $post->ID] );
+		$comments = get_comments( [
+			'post_id' => $post->ID,
+			'order' => 'ASC',
+			'type'=> self::COMMENT_TYPE,
+		] );
 		wp_list_comments( ['post_id' => $post->ID] );
 		echo '<ul class="app-comments">';
 		foreach ( $comments as $comment ) {
@@ -142,7 +171,7 @@ class Applications extends Singleton {
 				'<li><q>%1$s</q> - %2$s <time datetime="%4$s">%3$s ago</time></li>',
 				esc_html( $comment->comment_content ),
 				esc_html( $comment->comment_author ),
-				esc_html( human_time_diff( strtotime( $comment->comment_date ) ) ),
+				esc_html( human_time_diff( strtotime( $comment->comment_date_gmt ) ) ),
 				esc_attr( $comment->comment_date )
 			);
 		}
@@ -179,5 +208,19 @@ class Applications extends Singleton {
 		} else {
 			echo '<p><strong>Nothing provided!</strong></p>';
 		}
+	}
+
+	public function remove_bulk_actions( array $actions, WP_Post $post ): array {
+		if ( $post->post_type === self::POST_TYPE ) {
+			return [];
+		}
+		return $actions;
+	}
+
+	public function hide_review_comments( array $args ): array {
+		if ( empty( $args['type'] ) ) {
+			$args['type'] = 'comment';
+		}
+		return $args;
 	}
 }

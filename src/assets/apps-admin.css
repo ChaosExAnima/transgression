@@ -1,0 +1,14 @@
+.app-fields {
+	border-collapse: collapse;
+	margin: 1rem 0;
+}
+.app-fields th {
+	text-align: right;
+	padding-right: 1rem;
+}
+.app-fields :is(th, td) {
+	padding-top: 0.5rem;
+}
+.app-fields tr:first-of-type > * {
+	padding-top: 0;
+}
