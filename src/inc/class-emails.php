@@ -30,6 +30,8 @@ class Emails extends Singleton {
 		add_action( 'admin_menu', [$this, 'action_admin_menu'] );
 		add_action( 'admin_init', [$this, 'action_admin_init'] );
 
+		add_filter( 'mailpoet_newsletter_shortcode', [$this, 'filter_shortcodes'], 10, 3 );
+
 		$this->newsletter_repo = $this->get_mp_instance(
 			\MailPoet\Newsletter\NewslettersRepository::class
 		);
@@ -72,6 +74,24 @@ class Emails extends Singleton {
 			return new WP_Error( 'email-no-user', 'User not found', compact( 'user_id' ) );
 		}
 		return $this->send_email( $user->user_email, $template_key );
+	}
+
+	/**
+	 * Filters MailPoet shortcodes.
+	 *
+	 * @param string $shortcode
+	 * @param \MailPoet\Entities\NewsletterEntity $newsletter
+	 * @param \MailPoet\Entities\SubscriberEntity $subscriber
+	 * @return string
+	 */
+	public function filter_shortcodes( string $shortcode, $newsletter, $subscriber ): string {
+		if ( $shortcode !== '[link:confirm_email]' ) {
+			return $shortcode;
+		}
+
+		/** @var \MailPoet\Subscription\SubscriptionUrlFactory */
+		$factory = $this->get_mp_instance( \MailPoet\Subscription\SubscriptionUrlFactory::class );
+		return $factory->getConfirmationUrl( $subscriber );
 	}
 
 	public function filter_from( string $from ): string {
