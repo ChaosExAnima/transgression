@@ -18,7 +18,7 @@ abstract class Singleton {
 
 	public function init() {}
 
-	private function __construct() {}
+	protected function __construct() {}
 
 	private function __clone() {}
 
