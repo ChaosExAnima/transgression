@@ -3,6 +3,7 @@
 namespace Transgression;
 
 // Includes
+require_once 'inc/helpers.php';
 require_once 'inc/class-abstract-singleton.php';
 require_once 'inc/class-applications.php';
 require_once 'inc/class-emails.php';
