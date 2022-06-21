@@ -57,9 +57,6 @@ function render_time( int|string $date, bool $relative = false ) {
  * @return boolean
  */
 function is_url( string $url ): bool {
-	if ( !str_contains( $url, '://' ) ) {
-		$url = "http://{$url}";
-	}
 	if ( strtolower( esc_url_raw( $url ) ) === strtolower( $url ) ) {
 		return true;
 	} else {

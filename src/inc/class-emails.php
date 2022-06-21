@@ -21,6 +21,9 @@ class Emails extends Singleton {
 	/** @var ?\MailPoet\Newsletter\NewslettersRepository */
 	private $newsletter_repo = null;
 
+	/** @var ?\MailPoet\Entities\SubscriberEntity */
+	private $subscriber = null;
+
 	public function init() {
 		if ( !class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
 			return;
@@ -46,22 +49,55 @@ class Emails extends Singleton {
 		if ( !$template_id ) {
 			return new WP_Error( 'email-template-unset', 'Template not set' );
 		}
-		/** @var ?\MailPoet\Entities\NewsletterEntity */
-		$template = $this->newsletter_repo->findOneById( $template_id );
-		if ( !$template ) {
-			return new WP_Error( 'email-template-missing', 'Template not found' );
-		}
 
 		try {
-			/** @var \MailPoet\Newsletter\Preview\SendPreviewController */
-			$preview_controller = $this->get_mp_instance(
-				\MailPoet\Newsletter\Preview\SendPreviewController::class
+			/** @var ?\MailPoet\Entities\NewsletterEntity */
+			$template = $this->newsletter_repo->findOneById( $template_id );
+			if ( !$template ) {
+				return new WP_Error( 'email-template-missing', 'Template not found' );
+			}
+
+			/** @var \MailPoet\Newsletter\Renderer\Renderer */
+			$renderer = $this->get_mp_instance(
+				\MailPoet\Newsletter\Renderer\Renderer::class
 			);
-			$preview_controller->sendPreview( $template, $email );
+			$rendered = $renderer->renderAsPreview( $template );
+
+			/** @var \MailPoet\Newsletter\Shortcodes\Shortcodes */
+			$shortcodes = $this->get_mp_instance(
+				\MailPoet\Newsletter\Shortcodes\Shortcodes::class
+			);
+			$shortcodes->setNewsletter( $template );
+			if ( $this->subscriber ) {
+				$shortcodes->setSubscriber( $this->subscriber );
+			}
+
+			$divider = '***MailPoet***';
+			$rendered_for_shortcodes = array_merge(
+				[$template->getSubject()],
+				$rendered
+			);
+			$body = implode( $divider, $rendered_for_shortcodes );
+			[
+				$rendered['subject'],
+				$rendered['body']['html'],
+				$rendered['body']['text'],
+			] = explode( $divider, $shortcodes->replace( $body ) );
+			$rendered['id'] = $template->getId();
+
+			/** @var \MailPoet\Mailer\MailerFactory */
+			$mailer_factory = $this->get_mp_instance(
+				\MailPoet\Mailer\MailerFactory::class
+			);
+			$result = $mailer_factory->getDefaultMailer()->send( $rendered, $email );
+			if ( $result['response'] === false ) {
+				throw $result['error'];
+			}
 		} catch ( \Throwable $error ) {
 			log_error( new WP_Error( $error->getMessage(), $error->getTraceAsString() ) );
 			return new WP_Error( 'send-fail', "There was a problem sending the mail to {$email}" );
 		}
+		$this->subscriber = null;
 
 		return null;
 	}
@@ -71,6 +107,11 @@ class Emails extends Singleton {
 		if ( !$user ) {
 			return new WP_Error( 'email-no-user', 'User not found', compact( 'user_id' ) );
 		}
+		/** @var \MailPoet\Subscribers\SubscribersRepository */
+		$subscriber_repo = $this->get_mp_instance(
+			\MailPoet\Subscribers\SubscribersRepository::class
+		);
+		$this->subscriber = $subscriber_repo->findOneBy( ['wpUserId' => $user_id] );
 		return $this->send_email( $user->user_email, $template_key );
 	}
 

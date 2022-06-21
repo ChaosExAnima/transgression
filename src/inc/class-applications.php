@@ -157,7 +157,11 @@ class Applications extends Singleton {
 
 		$status = $post->post_status;
 		if ( $status === 'approved' ) {
-			$user = get_userdata( $post->post_author );
+			$user = get_userdata( $post->created_user );
+			if ( !$user ) {
+				echo '<div class="notice notice-warning"><p>Application for missing user!</p></div>';
+				return;
+			}
 			printf(
 				'<div class="notice notice-success"><p>%1$s <a href="%3$s">%2$s</a></p></div>',
 				'Application is approved for',
@@ -380,11 +384,14 @@ class Applications extends Singleton {
 		update_post_meta( $post->ID, 'status', $approved ? 'approved' : 'denied' );
 		if ( ! $approved ) {
 			Emails::instance()->send_email( $post->email, 'email_denied' );
+			$post->post_status = self::STATUS_DENIED;
+			wp_update_post( $post );
 			return 101;
 		}
 
 		$user_id = wp_insert_user( [
 			'user_login' => $post->post_title,
+			'user_nicename' => "{$post->post_title}-{$post->ID}",
 			'user_pass' => wp_generate_password( 100 ),
 			'user_email' => sanitize_email( $post->email ),
 			'role' => 'customer',
@@ -398,10 +405,9 @@ class Applications extends Singleton {
 			log_error( $user_id );
 			return 103;
 		}
-		$post->post_author = $user_id;
-		$post->post_status = 'approved';
-		$post->post_status = 'denied';
+		$post->post_status = self::STATUS_APPROVED;
 		wp_update_post( $post );
+		update_post_meta( $post->ID, 'created_user', $user_id );
 		Emails::instance()->send_user_email( $user_id, 'email_approved' );
 		return 102;
 	}
