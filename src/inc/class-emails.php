@@ -57,39 +57,22 @@ class Emails extends Singleton {
 				return new WP_Error( 'email-template-missing', 'Template not found' );
 			}
 
-			/** @var \MailPoet\Newsletter\Renderer\Renderer */
-			$renderer = $this->get_mp_instance(
-				\MailPoet\Newsletter\Renderer\Renderer::class
-			);
-			$rendered = $renderer->renderAsPreview( $template );
-
-			/** @var \MailPoet\Newsletter\Shortcodes\Shortcodes */
-			$shortcodes = $this->get_mp_instance(
-				\MailPoet\Newsletter\Shortcodes\Shortcodes::class
-			);
-			$shortcodes->setNewsletter( $template );
+			$extra_params = [];
 			if ( $this->subscriber ) {
-				$shortcodes->setSubscriber( $this->subscriber );
+				$subscription_urls = \MailPoet\Subscription\SubscriptionUrlFactory::getInstance();
+				$meta = new \MailPoet\Mailer\MetaInfo();
+				$extra_params = [
+					'unsubscribe_url' => $subscription_urls->getUnsubscribeUrl( $this->subscriber ),
+					'meta' => $meta->getWordPressTransactionalMetaInfo( $this->subscriber ),
+				];
 			}
-
-			$divider = '***MailPoet***';
-			$rendered_for_shortcodes = array_merge(
-				[$template->getSubject()],
-				$rendered
-			);
-			$body = implode( $divider, $rendered_for_shortcodes );
-			[
-				$rendered['subject'],
-				$rendered['body']['html'],
-				$rendered['body']['text'],
-			] = explode( $divider, $shortcodes->replace( $body ) );
-			$rendered['id'] = $template->getId();
 
 			/** @var \MailPoet\Mailer\MailerFactory */
 			$mailer_factory = $this->get_mp_instance(
 				\MailPoet\Mailer\MailerFactory::class
 			);
-			$result = $mailer_factory->getDefaultMailer()->send( $rendered, $email );
+			$newsletter = $this->render_newsletter( $template );
+			$result = $mailer_factory->getDefaultMailer()->send( $newsletter, $email, $extra_params );
 			if ( $result['response'] === false ) {
 				throw $result['error'];
 			}
@@ -236,5 +219,36 @@ class Emails extends Singleton {
 	// phpcs:ignore NeutronStandard.Functions.TypeHint.NoReturnType
 	private function get_mp_instance( string $class ) {
 		return \MailPoet\DI\ContainerWrapper::getInstance()->get( $class );
+	}
+
+	private function render_newsletter( \MailPoet\Entities\NewsletterEntity $newsletter ): array {
+		/** @var \MailPoet\Newsletter\Renderer\Renderer */
+		$renderer = $this->get_mp_instance(
+			\MailPoet\Newsletter\Renderer\Renderer::class
+		);
+		$rendered = $renderer->renderAsPreview( $newsletter );
+
+		/** @var \MailPoet\Newsletter\Shortcodes\Shortcodes */
+		$shortcodes = $this->get_mp_instance(
+			\MailPoet\Newsletter\Shortcodes\Shortcodes::class
+		);
+		$shortcodes->setNewsletter( $newsletter );
+
+		$shortcodes->setSubscriber( $this->subscriber );
+
+		$divider = '***MailPoet***';
+		$rendered_for_shortcodes = array_merge(
+			[$newsletter->getSubject()],
+			$rendered
+		);
+		$body = implode( $divider, $rendered_for_shortcodes );
+		[
+			$rendered['subject'],
+			$rendered['body']['html'],
+			$rendered['body']['text'],
+		] = explode( $divider, $shortcodes->replace( $body ) );
+		$rendered['id'] = $newsletter->getId();
+
+		return $rendered;
 	}
 }
