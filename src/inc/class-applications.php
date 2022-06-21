@@ -380,7 +380,8 @@ class Applications extends Singleton {
 
 	private function finalize( WP_Post $post ): int {
 		$verdicts = $this->get_unique_verdicts( $post->ID );
-		$approved = count( $verdicts ) === count( array_filter( $verdicts ) );
+		$verdict_results = wp_list_pluck( $verdicts, 'approved' );
+		$approved = count( $verdict_results ) === count( array_filter( $verdict_results ) );
 		update_post_meta( $post->ID, 'status', $approved ? 'approved' : 'denied' );
 		if ( ! $approved ) {
 			Emails::instance()->send_email( $post->email, 'email_denied' );
