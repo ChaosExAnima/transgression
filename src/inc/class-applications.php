@@ -134,7 +134,10 @@ class Applications extends Singleton {
 			$message = 100;
 		}
 
-		$redirect = add_query_arg( 'message', $message, get_edit_post_link( $post->ID, 'url' ) );
+		$redirect = get_edit_post_link( $post->ID, 'url' );
+		if ( $message ) {
+			$redirect = add_query_arg( 'message', $message, $redirect );
+		}
 		wp_safe_redirect( $redirect );
 		exit;
 	}
@@ -378,7 +381,7 @@ class Applications extends Singleton {
 		return $messages;
 	}
 
-	private function finalize( WP_Post $post ): int {
+	private function finalize( WP_Post $post ): ?int {
 		$verdicts = $this->get_unique_verdicts( $post->ID );
 		$verdict_results = wp_list_pluck( $verdicts, 'approved' );
 		$approved = count( $verdict_results ) === count( array_filter( $verdict_results ) );
@@ -387,7 +390,7 @@ class Applications extends Singleton {
 			Emails::instance()->send_email( $post->email, 'email_denied' );
 			$post->post_status = self::STATUS_DENIED;
 			wp_update_post( $post );
-			return 101;
+			return null;
 		}
 
 		$user_id = wp_insert_user( [
@@ -410,7 +413,7 @@ class Applications extends Singleton {
 		wp_update_post( $post );
 		update_post_meta( $post->ID, 'created_user', $user_id );
 		Emails::instance()->send_user_email( $user_id, 'email_approved' );
-		return 102;
+		return null;
 	}
 
 	private function get_unique_verdicts( int $post_id ): array {
