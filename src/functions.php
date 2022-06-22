@@ -7,6 +7,7 @@ require_once 'inc/helpers.php';
 require_once 'inc/class-abstract-singleton.php';
 require_once 'inc/class-applications.php';
 require_once 'inc/class-emails.php';
+require_once 'inc/class-woocommerce.php';
 
 if ( defined( 'JET_FORM_BUILDER_VERSION' ) && version_compare( JET_FORM_BUILDER_VERSION, '2.0.6', '>=' ) ) {
 	require_once 'inc/jetforms.php';
@@ -24,8 +25,11 @@ function init() {
 	add_theme_support( 'editor-styles' );
 	add_editor_style( 'editor.css' );
 
+	add_theme_support( 'woocommerce' );
+
 	Applications::instance()->init();
 	Emails::instance()->init();
+	WooCommerce::instance()->init();
 }
 add_action( 'init', cb( 'init' ) );
 
