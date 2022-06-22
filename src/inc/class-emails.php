@@ -202,7 +202,7 @@ class Emails extends Singleton {
 	}
 
 	public function action_admin_menu() {
-		$this->admin_email_page = add_submenu_page(
+		$admin_page = add_submenu_page(
 			self::ADMIN_PAGE,
 			'Emails',
 			'Emails',
@@ -210,6 +210,9 @@ class Emails extends Singleton {
 			self::EMAIL_PAGE,
 			[$this, 'render_email_menu']
 		);
+		if ( $admin_page ) {
+			$this->admin_email_page = $admin_page;
+		}
 	}
 
 	protected function do_test_email( string $template_key ) {
