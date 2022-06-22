@@ -2,7 +2,16 @@
 
 namespace Transgression;
 
+use Error;
+use MailPoet\Config\ServicesChecker;
 use WP_Error;
+
+use MailPoet\Entities\{NewsletterEntity, SubscriberEntity};
+use MailPoet\Newsletter\{NewslettersRepository, Renderer\Preprocessor};
+use MailPoet\Newsletter\Renderer\{Renderer, Blocks\Renderer as BlocksRenderer, Columns\Renderer as ColumnsRenderer};
+use MailPoet\Newsletter\Shortcodes\Shortcodes;
+use MailPoet\Subscribers\SubscribersRepository;
+use MailPoetVendor\CSS;
 
 class Emails extends Singleton {
 	const ADMIN_PAGE = 'edit.php?post_type=' . Applications::POST_TYPE;
@@ -18,64 +27,58 @@ class Emails extends Singleton {
 
 	private string $admin_email_page = '';
 
-	/** @var ?\MailPoet\Newsletter\NewslettersRepository */
-	private $newsletter_repo = null;
+	private ?SubscriberEntity $subscriber = null;
 
-	/** @var ?\MailPoet\Entities\SubscriberEntity */
-	private $subscriber = null;
+	/** @var ?\MailPoet\DI\ContainerWrapper; */
+	private $mailpoet_container = null;
 
 	public function init() {
-		if ( !class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
-			return;
-		}
-
 		add_filter( 'wp_mail_from', [ $this, 'filter_from' ] );
 		add_action( 'admin_menu', [$this, 'action_admin_menu'] );
 		add_action( 'admin_init', [$this, 'action_admin_init'] );
 
-		$this->newsletter_repo = $this->get_mp_instance(
-			\MailPoet\Newsletter\NewslettersRepository::class
-		);
+		if ( class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
+			$this->mailpoet_container = \MailPoet\DI\ContainerWrapper::getInstance();
+		}
+
 	}
 
 	public function send_email( string $email, string $template_key ): ?WP_Error {
 		if ( !isset( self::TEMPLATES[$template_key] ) ) {
 			return new WP_Error( 'email-no-template', 'Template not found' );
 		}
-		if ( !$this->newsletter_repo ) {
-			return new WP_Error( 'email-no-mailpoet', 'MailPoet not activated' );
-		}
-		$template_id = get_option( $template_key, 0 );
+
+		$template_id = absint( get_option( $template_key, 0 ) );
 		if ( !$template_id ) {
 			return new WP_Error( 'email-template-unset', 'Template not set' );
 		}
 
 		try {
-			/** @var ?\MailPoet\Entities\NewsletterEntity */
-			$template = $this->newsletter_repo->findOneById( $template_id );
-			if ( !$template ) {
+			$newsletter = $this->get_newsletter( $template_id );
+			if ( !$newsletter ) {
 				return new WP_Error( 'email-template-missing', 'Template not found' );
 			}
 
-			$extra_params = [];
-			if ( $this->subscriber ) {
-				$subscription_urls = \MailPoet\Subscription\SubscriptionUrlFactory::getInstance();
-				$meta = new \MailPoet\Mailer\MetaInfo();
-				$extra_params = [
-					'unsubscribe_url' => $subscription_urls->getUnsubscribeUrl( $this->subscriber ),
-					'meta' => $meta->getWordPressTransactionalMetaInfo( $this->subscriber ),
-				];
+			$is_html = true;
+			$user = get_user_by( 'email', $email );
+			if ( $user ) {
+				$is_html = $user->email_preference !== 'text';
 			}
 
-			/** @var \MailPoet\Mailer\MailerFactory */
-			$mailer_factory = $this->get_mp_instance(
-				\MailPoet\Mailer\MailerFactory::class
-			);
-			$newsletter = $this->render_newsletter( $template );
-			$result = $mailer_factory->getDefaultMailer()->send( $newsletter, $email, $extra_params );
-			if ( $result['response'] === false ) {
-				throw $result['error'];
+			$subject = $newsletter->getSubject();
+			$body = $this->render_newsletter( $newsletter, !$is_html );
+
+			$headers = [];
+			if ( $is_html ) {
+				$headers[] = 'Content-Type: text/html; charset=UTF-8';
 			}
+
+			wp_mail(
+				$email,
+				$subject,
+				$body,
+				$headers
+			);
 		} catch ( \Throwable $error ) {
 			log_error( new WP_Error( $error->getMessage(), $error->getTraceAsString() ) );
 			return new WP_Error( 'send-fail', "There was a problem sending the mail to {$email}" );
@@ -90,11 +93,7 @@ class Emails extends Singleton {
 		if ( !$user ) {
 			return new WP_Error( 'email-no-user', 'User not found', compact( 'user_id' ) );
 		}
-		/** @var \MailPoet\Subscribers\SubscribersRepository */
-		$subscriber_repo = $this->get_mp_instance(
-			\MailPoet\Subscribers\SubscribersRepository::class
-		);
-		$this->subscriber = $subscriber_repo->findOneBy( ['wpUserId' => $user_id] );
+		$this->subscriber = $this->get_subscriber( $user->user_email );
 		return $this->send_email( $user->user_email, $template_key );
 	}
 
@@ -105,7 +104,83 @@ class Emails extends Singleton {
 		return $from;
 	}
 
-	/** ADMIN STUFF */
+	/** MAILPOET */
+	private function is_mp_enabled( bool $throw = false ): bool {
+		if ( $this->mailpoet_container !== null ) {
+			return true;
+		}
+		if ( $throw ) {
+			throw new Error( 'MailPoet not enabled' );
+		}
+		return false;
+	}
+
+	private function get_newsletter_repo(): NewslettersRepository {
+		$this->is_mp_enabled( true );
+
+		/** @var NewslettersRepository */
+		$repo = $this->mailpoet_container->get( NewslettersRepository::class );
+		return $repo;
+	}
+
+	private function get_newsletter_templates(): array {
+		if ( !$this->is_mp_enabled() ) {
+			return [];
+		}
+		return $this->get_newsletter_repo()->findDraftByTypes( [NewsletterEntity::TYPE_STANDARD] );
+	}
+
+	private function get_newsletter( int $id ): ?NewsletterEntity {
+		/** @var ?NewsletterEntity */
+		$entity = $this->get_newsletter_repo()->findOneById( $id );
+		return $entity;
+	}
+
+	private function get_renderer(): ?Renderer {
+		$this->is_mp_enabled( true );
+
+		return new Renderer(
+			$this->mailpoet_container->get( BlocksRenderer::class ),
+			$this->mailpoet_container->get( ColumnsRenderer::class ),
+			$this->mailpoet_container->get( Preprocessor::class ),
+			$this->mailpoet_container->get( CSS::class ),
+			$this->get_newsletter_repo(),
+			$this->mailpoet_container->get( ServicesChecker::class ),
+		);
+	}
+
+	private function get_subscriber( string $email ): ?SubscriberEntity {
+		if ( !$this->is_mp_enabled() ) {
+			return null;
+		}
+
+		/** @var SubscribersRepository */
+		$repo = $this->mailpoet_container->get( SubscribersRepository::class );
+
+		/** @var ?SubscriberEntity */
+		$subscriber = $repo->findOneBy( compact( 'email' ) );
+		return $subscriber;
+	}
+
+	private function render_newsletter( NewsletterEntity $newsletter, bool $text = false ): string {
+		$renderer = $this->get_renderer();
+
+		$type = $text ? 'text' : 'html';
+		$body = $renderer->render( $newsletter, null, $type );
+
+		/** @var Shortcodes */
+		$shortcodes = $this->mailpoet_container->get( Shortcodes::class );
+		$shortcodes->setNewsletter( $newsletter );
+		if ( $this->subscriber ) {
+			$shortcodes->setSubscriber( $this->subscriber );
+		}
+
+		$body = $shortcodes->replace( $body );
+
+		return $body;
+	}
+
+	/** ADMIN */
 
 	public function action_admin_init() {
 		if ( !$this->admin_email_page ) {
@@ -181,7 +256,7 @@ class Emails extends Singleton {
 	}
 
 	public function render_template_picker( array $args ) {
-		if ( !$this->newsletter_repo ) {
+		if ( !$this->is_mp_enabled() ) {
 			echo 'MailPoet not loaded';
 			return;
 		}
@@ -191,7 +266,7 @@ class Emails extends Singleton {
 			esc_attr( $args['label_for'] )
 		);
 		echo '<option value="0">None</option>';
-		$newsletters = $this->newsletter_repo->findDraftByTypes( [\MailPoet\Entities\NewsletterEntity::TYPE_STANDARD] );
+		$newsletters = $this->get_newsletter_templates();
 		$current_setting = get_option( $args['name'], 0 );
 		foreach ( $newsletters as $newsletter ) {
 			printf(
@@ -212,43 +287,5 @@ class Emails extends Singleton {
 			esc_url( $test_url ),
 			esc_attr( $args['name'] )
 		);
-	}
-
-	/** HELPERS */
-
-	// phpcs:ignore NeutronStandard.Functions.TypeHint.NoReturnType
-	private function get_mp_instance( string $class ) {
-		return \MailPoet\DI\ContainerWrapper::getInstance()->get( $class );
-	}
-
-	private function render_newsletter( \MailPoet\Entities\NewsletterEntity $newsletter ): array {
-		/** @var \MailPoet\Newsletter\Renderer\Renderer */
-		$renderer = $this->get_mp_instance(
-			\MailPoet\Newsletter\Renderer\Renderer::class
-		);
-		$rendered = $renderer->renderAsPreview( $newsletter );
-
-		/** @var \MailPoet\Newsletter\Shortcodes\Shortcodes */
-		$shortcodes = $this->get_mp_instance(
-			\MailPoet\Newsletter\Shortcodes\Shortcodes::class
-		);
-		$shortcodes->setNewsletter( $newsletter );
-
-		$shortcodes->setSubscriber( $this->subscriber );
-
-		$divider = '***MailPoet***';
-		$rendered_for_shortcodes = array_merge(
-			[$newsletter->getSubject()],
-			$rendered
-		);
-		$body = implode( $divider, $rendered_for_shortcodes );
-		[
-			$rendered['subject'],
-			$rendered['body']['html'],
-			$rendered['body']['text'],
-		] = explode( $divider, $shortcodes->replace( $body ) );
-		$rendered['id'] = $newsletter->getId();
-
-		return $rendered;
 	}
 }
