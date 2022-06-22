@@ -9,6 +9,7 @@
 .app-fields th {
 	text-align: right;
 	padding-right: 1rem;
+	max-width: 20rem;
 }
 .app-fields :is(th, td) {
 	padding-top: 0.5rem;

@@ -4,6 +4,7 @@ namespace Transgression;
 
 use Jet_Form_Builder\Actions\Action_Handler;
 use Jet_Form_Builder\Actions\Types\Base;
+use Jet_Form_Builder\Blocks\Block_Helper;
 use WP_Error;
 
 function before_application_insert( bool $return, array $source ): bool {
@@ -31,3 +32,16 @@ function after_application_insert( Base $action, Action_Handler $handler ) {
 	}
 }
 add_action( 'jet-form-builder/action/after-post-insert', cb( 'after_application_insert' ), 10, 2 );
+
+function get_form_fields_for_meta( int $form_id ): array {
+	$content = Block_Helper::get_blocks_by_post( $form_id );
+	$blocks = Block_Helper::filter_blocks_by_namespace( $content );
+
+	$fields = [];
+	foreach ( $blocks as $block ) {
+		if ( !empty( $block['attrs']['label'] ) ) {
+			$fields[ $block['attrs']['name'] ] = $block['attrs']['label'];
+		}
+	}
+	return $fields;
+}

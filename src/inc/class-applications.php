@@ -220,13 +220,22 @@ class Applications extends Singleton {
 
 	public function render_metabox_fields( WP_Post $post ) {
 		echo '<table class="app-fields"><tbody>';
-		foreach ( self::FIELDS as $key => $name ) {
+		$fields = self::FIELDS;
+		$original_field_keys = array_keys( $fields );
+		if ( function_exists( '\\Transgression\\get_form_fields_for_meta' ) && $post->_form_id ) {
+			$form_fields = get_form_fields_for_meta( absint( $post->_form_id ) );
+			$fields = array_merge( $form_fields, $fields );
+		}
+		foreach ( $fields as $key => $name ) {
+			$value = $post->{$key};
+			if ( !$value && ! in_array( $key, $original_field_keys, true ) ) {
+				continue;
+			}
 			echo '<tr>';
 			printf(
 				'<th>%s</th>',
 				esc_html( $name )
 			);
-			$value = $post->{$key};
 			if ( $value ) {
 				if ( $key === 'email' ) {
 					printf( '<td><a href="mailto:%1$s" target="_blank">%1$s</a></td>', esc_attr( $value ) );
