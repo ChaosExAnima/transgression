@@ -33,6 +33,8 @@ class Emails extends Singleton {
 	/** @var ?\MailPoet\DI\ContainerWrapper; */
 	private $mailpoet_container = null;
 
+	private string $custom_url = '';
+
 	public function init() {
 		add_filter( 'wp_mail_from', [ $this, 'filter_from' ] );
 		add_action( 'admin_menu', [$this, 'action_admin_menu'] );
@@ -74,6 +76,8 @@ class Emails extends Singleton {
 				$headers[] = 'Content-Type: text/html; charset=UTF-8';
 			}
 
+			$body = str_replace( '[custom-link]', $this->custom_url, $body );
+
 			wp_mail(
 				$email,
 				$subject,
@@ -96,6 +100,10 @@ class Emails extends Singleton {
 		}
 		$this->subscriber = $this->get_subscriber( $user->user_email );
 		return $this->send_email( $user->user_email, $template_key );
+	}
+
+	public function set_custom_url( string $url ) {
+		$this->custom_url = $url;
 	}
 
 	public function filter_from( string $from ): string {

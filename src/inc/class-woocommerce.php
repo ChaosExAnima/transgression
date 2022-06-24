@@ -114,11 +114,9 @@ class WooCommerce extends Singleton {
 		$login_url = add_query_arg( 'hash', $hash, $url );
 
 		// Send the email.
-		wp_mail(
-			$user->user_email,
-			'Log in here',
-			"Here's your ticket link: {$login_url}"
-		);
+		$emails = Emails::instance();
+		$emails->set_custom_url( $login_url );
+		$emails->send_user_email( $user_id, 'email_login' );
 	}
 
 	protected function check_login( string $url ): bool {
