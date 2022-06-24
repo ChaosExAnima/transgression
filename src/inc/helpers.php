@@ -50,6 +50,15 @@ function render_time( int|string $date, bool $relative = false ) {
 }
 
 /**
+ * Gets the current URL.
+ *
+ * @return string
+ */
+function get_current_url(): string {
+	return esc_url_raw( home_url( $_SERVER['REQUEST_URI'] ) );
+}
+
+/**
  * Checks if a string is a URL or not.
  *
  * @see https://wordpress.stackexchange.com/questions/166392/how-to-check-if-a-string-is-a-valid-url

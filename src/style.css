@@ -49,8 +49,19 @@ button:hover {
 	background-color: var(--wp--preset--color--secondary);
 }
 
+button:disabled {
+	background-color: var(--wp--preset--color--background);
+	border: 1px solid var(--wp--preset--color--foreground);
+	cursor: not-allowed;
+}
+
 button[type="submit"] {
 	width: 100%;
+}
+
+input {
+	width: 100%;
+	transition: var(--wp--custom--timing--short) border-color linear;
 }
 
 input[type="radio"] {

@@ -10,6 +10,9 @@ $form_url = apply_filters(
 	'woocommerce_add_to_cart_form_action',
 	$product->add_to_cart_url(),
 );
+$button_text = is_user_logged_in()
+	? 'Buy Tickets'
+	: 'Log In To Buy';
 
 do_action( 'woocommerce_before_single_product' );
 
@@ -76,10 +79,19 @@ the_title(
 		<?php endif; ?>
 		<?php echo wc_get_stock_html( $product ); ?>
 
-		<input type="hidden" name="add-to-cart" value="<?php the_ID(); ?>" />
-		<button type="submit" class="trans__product__submit" <?php disabled( ! $product->is_in_stock() ) ?>>
-			Buy Tickets
+		<?php if ( is_user_logged_in() ): ?>
+			<input type="hidden" name="add-to-cart" value="<?php the_ID(); ?>" />
+		<?php else : ?>
+			<p><input type="email" name="login-email" placeholder="Email" required /></p>
+		<?php endif; ?>
+		<button
+			type="submit"
+			class="trans__product__submit"
+			<?php disabled( ! $product->is_in_stock() ) ?>
+		>
+			<?php echo esc_html( $button_text ); ?>
 		</button>
+
 
 		<?php do_action( 'woocommerce_after_add_to_cart_button' ); ?>
 	</form>

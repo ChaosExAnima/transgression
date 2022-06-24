@@ -23,6 +23,7 @@ class Emails extends Singleton {
 		'email_approved' => 'Approved Template',
 		'email_denied' => 'Denied Template',
 		'email_duplicate' => 'Duplicate Application Template',
+		'email_login' => 'Login Template',
 	];
 
 	private string $admin_email_page = '';

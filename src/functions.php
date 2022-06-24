@@ -46,7 +46,7 @@ function redirect() {
 }
 add_action( 'template_redirect', cb( 'redirect' ) );
 
-function log_error( \Throwable|\WP_Error $error ) {
+function log_error( \Throwable|\WP_Error|string $error ) {
 	if ( $error instanceof \Throwable ) {
 		error_log( $error->__toString() );
 	} else if ( $error instanceof \WP_Error ) {
@@ -54,6 +54,8 @@ function log_error( \Throwable|\WP_Error $error ) {
 			$message = $error->get_error_message( $error_code );
 			error_log( "{$error_code}: {$message}" );
 		}
+	} else if ( is_string( $error ) ) {
+		error_log( $error );
 	}
 }
 
