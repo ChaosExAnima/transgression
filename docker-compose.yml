@@ -22,7 +22,6 @@ services:
         volumes:
             - "${PWD}/wp_content:/var/www/html/wp-content"
             - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
-            - "${PWD}/wp-config.php:/var/www/html/wp-config.php:ro"
             - wp_core:/var/www/html
             - "${PWD}/nginx.conf:/etc/nginx/conf.d/default.conf:ro"
 
