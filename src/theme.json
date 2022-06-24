@@ -3,17 +3,26 @@
 	"customTemplates": [
 		{
 			"name": "blank",
-			"postTypes": ["page", "post"],
+			"postTypes": [
+				"page",
+				"post"
+			],
 			"title": "Blank"
 		},
 		{
 			"name": "header-footer-only",
-			"postTypes": ["page", "post"],
+			"postTypes": [
+				"page",
+				"post"
+			],
 			"title": "Header and Footer Only"
 		},
 		{
 			"name": "footer-only",
-			"postTypes": ["page", "post"],
+			"postTypes": [
+				"page",
+				"post"
+			],
 			"title": "Footer Only"
 		}
 	],
@@ -259,7 +268,7 @@
 				}
 			},
 			"timing": {
-				"short": "0.1s",
+				"short": "0.2s",
 				"long": "0.4s"
 			},
 			"video": {
@@ -274,7 +283,11 @@
 			"wideSize": "1000px"
 		},
 		"spacing": {
-			"units": ["em", "rem", "%"]
+			"units": [
+				"em",
+				"rem",
+				"%"
+			]
 		},
 		"typography": {
 			"fontFamilies": [
@@ -288,21 +301,27 @@
 							"fontWeight": "400",
 							"fontStyle": "normal",
 							"fontStretch": "normal",
-							"src": ["file:./assets/AbhayaLibre-Regular.ttf"]
+							"src": [
+								"file:./assets/AbhayaLibre-Regular.ttf"
+							]
 						},
 						{
 							"fontFamily": "Abhaya Libre",
 							"fontWeight": "700",
 							"fontStyle": "normal",
 							"fontStretch": "normal",
-							"src": ["file:./assets/AbhayaLibre-Bold.ttf"]
+							"src": [
+								"file:./assets/AbhayaLibre-Bold.ttf"
+							]
 						},
 						{
 							"fontFamily": "Abhaya Libre",
 							"fontWeight": "900",
 							"fontStyle": "normal",
 							"fontStretch": "normal",
-							"src": ["file:./assets/AbhayaLibre-ExtraBold.ttf"]
+							"src": [
+								"file:./assets/AbhayaLibre-ExtraBold.ttf"
+							]
 						}
 					]
 				},
@@ -316,7 +335,9 @@
 							"fontWeight": "200 900",
 							"fontStyle": "normal",
 							"fontStretch": "normal",
-							"src": ["file:./assets/EastSeaDokdo-Regular.ttf"]
+							"src": [
+								"file:./assets/EastSeaDokdo-Regular.ttf"
+							]
 						}
 					]
 				}

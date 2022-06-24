@@ -6,6 +6,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 global $product;
 
+$form_url = apply_filters(
+	'woocommerce_add_to_cart_form_action',
+	$product->add_to_cart_url(),
+);
+
 do_action( 'woocommerce_before_single_product' );
 
 if ( post_password_required() ) {
@@ -22,9 +27,18 @@ if ( post_password_required() ) {
  * @hooked woocommerce_show_product_sale_flash - 10
  * @hooked woocommerce_show_product_images - 20
  */
+
+use Transgression\WooCommerce;
+
 do_action( 'woocommerce_before_single_product_summary' );
 
-the_title( '<h1 class="product_title trans__product__title">', '</h1>' );
+if ( WooCommerce::add_title_prefix( $product ) ) {
+	echo '<h2 class="trans__product__subtitle">Transgression:</h2>';
+}
+the_title(
+	'<h1 class="product_title trans__product__title">',
+	'</h1>'
+);
 ?>
 <div class="trans__product__wrapper">
 	<div class="trans__product__description">
@@ -32,31 +46,42 @@ the_title( '<h1 class="product_title trans__product__title">', '</h1>' );
 	</div>
 	<form
 		class="trans__product__cart"
-		action="<?php echo esc_url( $product->get_permalink() ); ?>"
+		action="<?php echo esc_url( $form_url ); ?>"
 		method="post"
 		enctype="multipart/form-data"
 	>
+		<?php do_action( 'woocommerce_before_add_to_cart_form' ); ?>
 		<?php if ( $product->is_type( 'variable' ) ): ?>
 			<?php $default_variation = $product->get_variation_default_attribute( 'tier' ); ?>
-			<h2 class="trans__product__cart__title"><?php echo wc_attribute_label( 'tier', $product ); // WPCS: XSS ok. ?></h3>
-			<?php foreach ( $product->get_available_variations() as $variation ): ?>
-				<?php
-					$variation_name = $variation['attributes']['attribute_tier'];
-				?><p>
-					<input
-						id="variation-<?php echo absint( $variation['variation_id'] ); ?>"
-						name="tier"
-						type="radio"
-						value="<?php echo esc_attr( $variation_name ); ?>"
-						<?php checked( $default_variation, $variation_name ); ?>
-					/>
-					<label for="variation-<?php echo absint( $variation['variation_id'] ); ?>">
-						<?php echo esc_html( $variation_name ); ?>
-						<?php echo $variation['price_html']; ?>
-					</label>
-				</p>
-			<?php endforeach; ?>
+			<fieldset>
+				<legend class="trans__product__cart__title">
+					<?php echo esc_html( wc_attribute_label( 'tier', $product ) ); ?>
+				</legend>
+				<?php foreach ( $product->get_available_variations() as $variation ): ?>
+					<?php
+						$variation_name = $variation['attributes']['attribute_tier'];
+					?>
+						<label>
+							<input
+								name="variation_id"
+								type="radio"
+								value="<?php echo esc_attr( $variation['variation_id'] ); ?>"
+								<?php checked( $default_variation, $variation_name ); ?>
+							/>
+							<?php echo esc_html( $variation_name ); ?>
+							<?php echo $variation['price_html']; ?>
+						</label>
+				<?php endforeach; ?>
+			</fieldset>
 		<?php endif; ?>
+		<?php echo wc_get_stock_html( $product ); ?>
+
+		<input type="hidden" name="add-to-cart" value="<?php the_ID(); ?>" />
+		<button type="submit" class="trans__product__submit" <?php disabled( ! $product->is_in_stock() ) ?>>
+			Buy Tickets
+		</button>
+
+		<?php do_action( 'woocommerce_after_add_to_cart_button' ); ?>
 	</form>
 </div>
 </div>
