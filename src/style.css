@@ -137,6 +137,14 @@ input[type="radio"]:checked {
 }
 
 /** WOOCOMMERCE */
+.woocommerce-info {
+	border-top-color: var(--wp--preset--color--primary);
+}
+
+.woocommerce-info::before {
+	color: var(--wp--preset--color--primary);
+}
+
 .woocommerce-loop-product__link {
 	display: block;
 }
@@ -202,4 +210,45 @@ input[type="radio"]:checked {
 
 .trans__product__cart label input:checked+span.price.price {
 	color: var(--wp--preset--color--primary);
+}
+
+/** CHECKOUT PAGE */
+#customer_details>.col-1 {
+	display: none;
+}
+
+#customer_details>.col-2 {
+	float: none;
+	width: auto;
+}
+
+.woocommerce #respond input#submit.alt,
+.woocommerce a.button.alt,
+.woocommerce button.button.alt,
+.woocommerce input.button.alt {
+	background-color: var(--wp--preset--color--primary);
+	border-radius: var(--wp--custom--form--border--radius) !important;
+	padding: 1rem 2rem;
+	height: auto;
+	width: auto;
+	font-family: var(--wp--preset--font-family--heading-font);
+	max-width: none;
+	font-size: var(--wp--custom--font-size--normal);
+	color: var(--wp--custom--color--foreground);
+}
+
+#add_payment_method #payment,
+.woocommerce-cart #payment,
+.woocommerce-checkout #payment {
+	background: inherit;
+	border-radius: 0;
+}
+
+.woocommerce #payment #place_order,
+.woocommerce-page #payment #place_order {
+	float: none;
+}
+
+.wc_payment_method>label {
+	display: initial;
 }

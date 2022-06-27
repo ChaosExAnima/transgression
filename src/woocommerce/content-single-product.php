@@ -92,7 +92,6 @@ the_title(
 			<?php echo esc_html( $button_text ); ?>
 		</button>
 
-
 		<?php do_action( 'woocommerce_after_add_to_cart_button' ); ?>
 	</form>
 </div>

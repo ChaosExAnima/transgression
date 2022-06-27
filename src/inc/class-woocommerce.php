@@ -16,11 +16,13 @@ class WooCommerce extends Singleton {
 		add_action( 'template_redirect', [ $this, 'handle_login' ] );
 		add_filter( 'login_message', [ $this, 'filter_login_message' ] );
 		add_filter( 'the_title', [ $this, 'filter_title' ], 10, 2 );
+		add_action( 'woocommerce_after_add_to_cart_button', [ $this, 'render_logout' ] );
+		add_action( 'woocommerce_thankyou', [ $this, 'skip_processing' ] );
 
 		// Tweaks actions and filters.
 		remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
-		add_filter( 'wc_product_sku_enabled', '__return_false' );
-		add_filter( 'woocommerce_product_tabs', '__return_empty_array' );
+		add_filter( 'wc_add_to_cart_message_html', '__return_empty_string' );
+		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' );
 	}
 
 	public function init() {
@@ -46,12 +48,18 @@ class WooCommerce extends Singleton {
 			return;
 		}
 
+		$current_url = strip_query( get_current_url() );
+
 		// Try logging in?
 		if ( $this->check_login( get_current_url() ) ) {
 			$user_id = email_exists( $_GET['email'] );
 			wp_set_auth_cookie( $user_id );
-			$redirect_url = add_query_arg( 'login', 'done', strtok( get_current_url(), '?' ) );
-			wp_safe_redirect( $redirect_url );
+			wc_add_notice( sprintf(
+				'You are now logged in, %s. <a href="%s">Log out</a>',
+				esc_html( get_userdata( $user_id )->display_name ),
+				esc_url( wp_logout_url( $current_url ) )
+			) );
+			wp_safe_redirect( $current_url );
 			exit;
 		}
 
@@ -59,14 +67,18 @@ class WooCommerce extends Singleton {
 			return;
 		}
 
-		$url = add_query_arg( 'login', 'sent', get_current_url() );
-
 		$email = sanitize_email( $_POST['login-email'] );
 		$user_id = email_exists( $email );
 		if ( is_integer( $user_id ) ) {
 			$this->send_login_email( $user_id );
 		}
-		wp_safe_redirect( $url );
+		wc_add_notice( sprintf(
+			'Check your email %s for a login link. If you don&rsquo;t see it, ' .
+			'<a href="%s" target="_blank">contact us</a>.',
+			esc_html( $email ),
+			esc_url( 'mailto:' . get_option( 'admin_email' ) . '?subject=Login Issues' )
+		) );
+		wp_safe_redirect( $current_url );
 		exit;
 	}
 
@@ -82,6 +94,24 @@ class WooCommerce extends Singleton {
 			return ltrim( str_replace( 'Transgression:', '', $title ) );
 		}
 		return $title;
+	}
+
+	public function render_logout() {
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
+		printf(
+			'<p><a href="%s" class="logout">Log out</a></p>',
+			esc_url( wp_logout_url( strip_query( get_current_url() ) ) )
+		);
+	}
+
+	public function skip_processing( int $order_id ) {
+		if ( !$order_id ) {
+			return;
+		}
+		$order = wc_get_order( $order_id );
+		$order->update_status( 'completed' );
 	}
 
 	public static function add_title_prefix( WC_Product $product ): bool {
@@ -121,7 +151,12 @@ class WooCommerce extends Singleton {
 
 	protected function check_login( string $url ): bool {
 		// First, is this even valid?
-		if ( empty( $_GET['login'] ) || $_GET['login'] !=='purchase' || empty( $_GET['email'] ) ) {
+		if (
+			empty( $_GET['login'] ) ||
+			$_GET['login'] !== 'purchase' ||
+			empty( $_GET['email'] ) ||
+			empty( $_GET['token'] )
+		) {
 			return false;
 		}
 
@@ -148,6 +183,9 @@ class WooCommerce extends Singleton {
 
 		// Finally, check the token.
 		$token = get_transient( $key );
+		if ( false === $token ) {
+			return false;
+		}
 		return hash_equals( $token, $_GET['token'] );
 	}
 
