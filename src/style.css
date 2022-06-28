@@ -77,6 +77,14 @@ input[type="radio"]:checked {
 	border: 0.4em solid var(--wp--preset--color--primary);
 }
 
+.hide-if-logged-out {
+	display: none !important;
+}
+
+.logged-in .hide-if-logged-out {
+	display: inherit !important;
+}
+
 /** JETFORM BUILDER */
 .jet-form-builder-row {
 	margin-bottom: 1em;
@@ -137,6 +145,12 @@ input[type="radio"]:checked {
 }
 
 /** WOOCOMMERCE */
+.woocommerce-error,
+.woocommerce-info,
+.woocommerce-message {
+	font-size: var(--wp--preset--font-size--medium);
+}
+
 .woocommerce-info {
 	border-top-color: var(--wp--preset--color--primary);
 }
@@ -251,4 +265,9 @@ input[type="radio"]:checked {
 
 .wc_payment_method>label {
 	display: initial;
+}
+
+/** ACCOUNT PAGE */
+.woocommerce-MyAccount-navigation {
+	font-size: var(--wp--preset--font-size--medium);
 }
