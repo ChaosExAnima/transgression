@@ -48,6 +48,12 @@ class People extends Singleton {
 		if ( is_integer( $user_id ) ) {
 			$this->send_login_email( $user_id );
 		}
+
+		// Set the session cookie so notices work.
+		if ( ! WC()->session->has_session() ) {
+			WC()->session->set_customer_session_cookie( true );
+		}
+
 		wc_add_notice( sprintf(
 			'Check your email %s for a login link. If you don&rsquo;t see it, ' .
 			'<a href="%s" target="_blank">contact us</a>.',
