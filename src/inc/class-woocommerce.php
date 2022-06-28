@@ -64,7 +64,7 @@ class WooCommerce extends Singleton {
 
 	public function render_clear_cart() {
 		printf(
-			'<p><a href="%s" class="button">Clear Cart</a></p>',
+			'<p><a href="%s" class="clear-cart">Clear Cart</a></p>',
 			esc_url( add_query_arg( 'empty_cart', 'yes' ) )
 		);
 	}
