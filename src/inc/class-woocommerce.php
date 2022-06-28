@@ -13,9 +13,11 @@ class WooCommerce extends Singleton {
 
 		// Display
 		add_filter( 'the_title', [ $this, 'filter_title' ], 10, 2 );
+		add_action( 'woocommerce_checkout_order_review', [ $this, 'render_clear_cart' ], 15 );
 
 		// Purchasing
 		add_action( 'template_redirect', [ $this, 'skip_cart' ] );
+		add_action( 'template_redirect', [ $this, 'clear_cart' ] );
 		add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'prevent_variation_dupes' ], 10, 2 );
 		add_action( 'woocommerce_checkout_order_processed', [ $this, 'skip_processing' ] );
 
@@ -43,11 +45,28 @@ class WooCommerce extends Singleton {
 		exit;
 	}
 
+	public function clear_cart() {
+		if ( !is_checkout() || empty( $_GET['empty_cart'] ) || $_GET['empty_cart'] !== 'yes' ) {
+			return;
+		}
+
+		WC()->cart->empty_cart();
+		wp_safe_redirect( wc_get_page_permalink( 'shop' ) );
+		exit;
+	}
+
 	public function filter_title( string $title, int $post_id ): string {
 		if ( get_post_type( $post_id ) === 'product' ) {
 			return ltrim( str_replace( 'Transgression:', '', $title ) );
 		}
 		return $title;
+	}
+
+	public function render_clear_cart() {
+		printf(
+			'<p><a href="%s" class="button">Clear Cart</a></p>',
+			esc_url( add_query_arg( 'empty_cart', 'yes' ) )
+		);
 	}
 
 	public function skip_processing( int $order_id ) {
