@@ -13,7 +13,6 @@ class WooCommerce extends Singleton {
 
 		// Display
 		add_filter( 'the_title', [ $this, 'filter_title' ], 10, 2 );
-		add_action( 'woocommerce_after_add_to_cart_button', [ $this, 'render_logout' ] );
 
 		// Purchasing
 		add_action( 'template_redirect', [ $this, 'skip_cart' ] );
