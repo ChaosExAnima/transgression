@@ -21,6 +21,7 @@ class WooCommerce extends Singleton {
 
 		// Tweaks actions and filters.
 		remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
+		remove_action( 'woocommerce_order_details_after_order_table', 'woocommerce_order_again_button' );
 		add_filter( 'wc_add_to_cart_message_html', '__return_empty_string' );
 		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' );
 	}
