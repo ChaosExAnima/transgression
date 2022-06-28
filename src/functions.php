@@ -7,6 +7,7 @@ require_once 'inc/helpers.php';
 require_once 'inc/class-abstract-singleton.php';
 require_once 'inc/class-applications.php';
 require_once 'inc/class-emails.php';
+require_once 'inc/class-people.php';
 require_once 'inc/class-woocommerce.php';
 
 if ( defined( 'JET_FORM_BUILDER_VERSION' ) && version_compare( JET_FORM_BUILDER_VERSION, '2.0.6', '>=' ) ) {
@@ -29,6 +30,7 @@ function init() {
 
 	Applications::instance()->init();
 	Emails::instance()->init();
+	People::instance()->init();
 	WooCommerce::instance()->init();
 }
 add_action( 'init', cb( 'init' ) );

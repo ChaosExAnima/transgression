@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use Transgression\WooCommerce;
+
+use function Transgression\{get_current_url, strip_query};
+
 global $product;
 
 $form_url = apply_filters(
@@ -30,9 +34,6 @@ if ( post_password_required() ) {
  * @hooked woocommerce_show_product_sale_flash - 10
  * @hooked woocommerce_show_product_images - 20
  */
-
-use Transgression\WooCommerce;
-
 do_action( 'woocommerce_before_single_product_summary' );
 
 if ( WooCommerce::add_title_prefix( $product ) ) {
@@ -91,6 +92,13 @@ the_title(
 		>
 			<?php echo esc_html( $button_text ); ?>
 		</button>
+
+		<?php if ( is_user_logged_in() ) : ?>
+			<p><a
+				href="<?php echo esc_url( wp_logout_url( strip_query( get_current_url() ) ) ); ?>"
+				class="logout"
+			>Log out</a></p>
+		<?php endif; ?>
 
 		<?php do_action( 'woocommerce_after_add_to_cart_button' ); ?>
 	</form>
