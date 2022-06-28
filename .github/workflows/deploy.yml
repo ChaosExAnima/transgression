@@ -9,7 +9,7 @@ jobs:
       - name: rsync deployment
         uses: burnett01/rsync-deployments@5.2
         with:
-          switches: -avzrhu --dry-run --delete
+          switches: -avzrhu --delete
           path: src/
           remote_path: /var/www/html/wp-content/themes/transgression/
           remote_host: 164.90.254.59
