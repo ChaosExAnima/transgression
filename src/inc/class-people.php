@@ -17,6 +17,7 @@ class People extends Singleton {
 		// Account
 		add_filter( 'woocommerce_save_account_details_required_fields', [ $this, 'filter_fields' ] );
 		add_action( 'woocommerce_save_account_details', [ $this, 'save_pronouns' ] );
+		add_filter( 'user_contactmethods', [ $this, 'filter_contact_methods' ] );
 	}
 
 	public function handle_login() {
@@ -100,7 +101,14 @@ class People extends Singleton {
 		}
 	}
 
-	protected function send_login_email( int $user_id ) {
+	public function filter_contact_methods( array $methods ): array {
+		$methods['pronouns'] = 'Pronouns';
+		return $methods;
+	}
+
+	/** Private methods */
+
+	private function send_login_email( int $user_id ) {
 		$user = get_user_by( 'id', $user_id );
 		if ( !$user ) {
 			log_error( "Tried to log in with user ID of {$user_id}" );
@@ -131,7 +139,7 @@ class People extends Singleton {
 		$emails->send_user_email( $user_id, 'email_login' );
 	}
 
-	protected function check_login( string $url ): bool {
+	private function check_login( string $url ): bool {
 		// First, is this even valid?
 		if (
 			empty( $_GET['login'] ) ||
