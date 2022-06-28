@@ -11,6 +11,7 @@ class People extends Singleton {
 
 		// Logging in
 		add_action( 'template_redirect', [ $this, 'handle_login' ] );
+		add_action( 'template_redirect', [ $this, 'redirect_to_profile' ] );
 		add_filter( 'login_message', [ $this, 'filter_login_message' ] );
 
 		// Account
@@ -61,6 +62,19 @@ class People extends Singleton {
 			esc_url( 'mailto:' . get_option( 'admin_email' ) . '?subject=Login Issues' )
 		) );
 		wp_safe_redirect( $current_url );
+		exit;
+	}
+
+	public function redirect_to_profile() {
+		if ( !is_edit_account_page() || !is_user_logged_in() ) {
+			return;
+		}
+
+		$user_id = get_current_user_id();
+		if ( $this->is_passwordless( $user_id ) ) {
+			return;
+		}
+		wp_safe_redirect( get_edit_profile_url( $user_id ) );
 		exit;
 	}
 
@@ -157,11 +171,15 @@ class People extends Singleton {
 		return hash_equals( $token, $_GET['token'] );
 	}
 
-	protected function redirect_to_login_if_not_customer( WP_User $user ) {
-		if ( !wc_user_has_role( $user, 'customer' ) ) {
+	private function redirect_to_login_if_not_customer( WP_User $user ) {
+		if ( !$this->is_passwordless( $user->ID ) ) {
 			$url = add_query_arg( 'action', 'purchase', wp_login_url( get_current_url() ) );
 			wp_safe_redirect( $url );
 			exit;
 		}
+	}
+
+	private function is_passwordless( int $user_id ): bool {
+		return wc_user_has_role( $user_id, 'customer' );
 	}
 }
