@@ -11,7 +11,7 @@ jobs:
         with:
           switches: -avzrhu --dry-run --delete
           path: src/
-          remote_path: /var/www/html/wp-content/themes/transgression
+          remote_path: /var/www/html/wp-content/themes/transgression/
           remote_host: 164.90.254.59
           remote_port: 2222
           remote_user: transgression
