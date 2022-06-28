@@ -236,6 +236,14 @@ input[type="radio"]:checked {
 	width: auto;
 }
 
+.woocommerce #respond input#submit,
+.woocommerce a.button,
+.woocommerce button.button,
+.woocommerce input.button {
+	background-color: var(--wp--custom--color--primary);
+	color: var(--wp--custom--color--foreground);
+}
+
 .woocommerce #respond input#submit.alt,
 .woocommerce a.button.alt,
 .woocommerce button.button.alt,

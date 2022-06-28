@@ -72,7 +72,12 @@ class People extends Singleton {
 	}
 
 	public function save_pronouns( int $user_id ) {
-
+		$new_pronouns = trim( sanitize_text_field( $_POST['account_pronouns'] ) );
+		if ( $new_pronouns === '' ) {
+			delete_user_meta( $user_id, 'pronouns' );
+		} else {
+			update_user_meta( $user_id, 'pronouns', $new_pronouns );
+		}
 	}
 
 	protected function send_login_email( int $user_id ) {
