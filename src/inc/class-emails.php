@@ -6,11 +6,14 @@ use Error;
 use MailPoet\Config\ServicesChecker;
 use WP_Error;
 
-use MailPoet\Entities\{NewsletterEntity, SubscriberEntity};
+use MailPoet\Entities\{NewsletterEntity, SegmentEntity, SubscriberEntity};
+use MailPoet\Models\{Segment, Subscriber, SubscriberSegment};
 use MailPoet\Newsletter\{NewslettersRepository, Renderer\Preprocessor};
 use MailPoet\Newsletter\Renderer\{Renderer, Blocks\Renderer as BlocksRenderer, Columns\Renderer as ColumnsRenderer};
 use MailPoet\Newsletter\Shortcodes\Shortcodes;
-use MailPoet\Subscribers\SubscribersRepository;
+use MailPoet\Segments\SegmentsRepository;
+use MailPoet\Settings\SettingsController;
+use MailPoet\Subscribers\{ConfirmationEmailMailer, Source, SubscribersRepository};
 use MailPoetVendor\CSS;
 
 class Emails extends Singleton {
@@ -36,14 +39,13 @@ class Emails extends Singleton {
 	private string $custom_url = '';
 
 	public function init() {
-		add_filter( 'wp_mail_from', [ $this, 'filter_from' ] );
+		add_filter( 'wp_mail_from', [$this, 'filter_from'] );
 		add_action( 'admin_menu', [$this, 'action_admin_menu'] );
 		add_action( 'admin_init', [$this, 'action_admin_init'] );
 
 		if ( class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
 			$this->mailpoet_container = \MailPoet\DI\ContainerWrapper::getInstance();
 		}
-
 	}
 
 	public function send_email( string $email, string $template_key ): ?WP_Error {
@@ -102,6 +104,54 @@ class Emails extends Singleton {
 		return $this->send_email( $user->user_email, $template_key );
 	}
 
+	public function send_subscribe_confirmation( string $email, ?string $name = null, bool $create_subscriber = false ): void {
+		if ( ! is_email( $email ) && ! $this->is_mp_enabled() ) {
+			return;
+		}
+
+		if ( !SettingsController::getInstance()->get( 'signup_confirmation.enabled' ) ) {
+			log_error( 'Confirmation signup not available' );
+			return;
+		}
+
+		$subscriber = $this->get_subscriber( $email );
+		if ( !$subscriber ) {
+			if ( !$create_subscriber ) {
+				log_error( "Could not find subscriber for {$email}" );
+				return;
+			}
+
+			$subscriber_model = Subscriber::createOrUpdate( [
+				'email' => $email,
+				'first_name' => $name,
+				'status' => SubscriberEntity::STATUS_UNCONFIRMED,
+				'source' => Source::FORM,
+			] );
+			if ( $subscriber_model->getErrors() !== false || $subscriber_model->id === 0 ) {
+				log_error( "Could not create subscriber for {$email}" );
+				return;
+			}
+			/** @var SubscribersRepository */
+			$subscriber_repo = $this->mailpoet_container->get( SubscribersRepository::class );
+			/** @var SubscriberEntity */
+			$entity = $subscriber_repo->findOneById( $subscriber_model->id );
+		}
+
+		/** @var ConfirmationEmailMailer */
+		$confirmation_emailer = $this->mailpoet_container->get( ConfirmationEmailMailer::class );
+		$confirmation_emailer->sendConfirmationEmailOnce( $entity );
+		log_error( "Sent confirmation email to {$email}" );
+	}
+
+	public function subscribe_approved_user( int $user_id ) {
+		$segment = get_option( 'approved_list' );
+		if ( !$segment ) {
+			return;
+		}
+		$subscriber = Subscriber::where( 'wp_user_id', $user_id )->findOne();
+		SubscriberSegment::subscribeToSegments( $subscriber, [$segment] );
+	}
+
 	public function set_custom_url( string $url ) {
 		$this->custom_url = $url;
 	}
@@ -143,6 +193,21 @@ class Emails extends Singleton {
 		/** @var ?NewsletterEntity */
 		$entity = $this->get_newsletter_repo()->findOneById( $id );
 		return $entity;
+	}
+
+	/**
+	 * @return SegmentEntity[]
+	 */
+	private function get_segments(): array {
+		if ( !$this->is_mp_enabled() ) {
+			return [];
+		}
+
+		/** @var SegmentsRepository */
+		$segments_repo = $this->mailpoet_container->get( SegmentsRepository::class );
+		/** @var SegmentEntity[] */
+		$segments = $segments_repo->findBy( ['type' => SegmentEntity::TYPE_DEFAULT, 'deletedAt' => null] );
+		return $segments;
 	}
 
 	private function get_renderer(): ?Renderer {
@@ -208,6 +273,15 @@ class Emails extends Singleton {
 				[ 'label_for' => $option_key, 'name' => $option_key ]
 			);
 		}
+		register_setting( self::SETTING_GROUP, 'approved_list' );
+		add_settings_field(
+			'approved_list',
+			'Approved member segment',
+			[$this, 'render_segment_picker'],
+			$this->admin_email_page,
+			self::SETTING_SECTION,
+			[ 'label_for' => 'approved_list', 'name' => 'approved_list' ]
+		);
 	}
 
 	public function action_admin_menu() {
@@ -299,5 +373,29 @@ class Emails extends Singleton {
 			esc_url( $test_url ),
 			esc_attr( $args['name'] )
 		);
+	}
+
+	public function render_segment_picker( array $args ) {
+		if ( !$this->is_mp_enabled() ) {
+			echo 'MailPoet not loaded';
+			return;
+		}
+		$segments = $this->get_segments();
+		printf(
+			'<select name="%s" id="%s">',
+			esc_attr( $args['name'] ),
+			esc_attr( $args['label_for'] )
+		);
+		echo '<option value="0">None</option>';
+		$current_setting = get_option( $args['name'], 0 );
+		foreach ( $segments as $segment ) {
+			printf(
+				'<option value="%1$s" %3$s>%2$s</option>',
+				esc_attr( $segment->getId() ),
+				esc_html( $segment->getName() ),
+				selected( $segment->getId(), $current_setting, false )
+			);
+		}
+		echo '</select>';
 	}
 }

@@ -37,7 +37,7 @@ class Applications extends Singleton {
 
 	protected function __construct() {
 		// Actions
-		add_action( 'save_post_' . self::POST_TYPE, [$this, 'save'] );
+		add_action( 'save_post_' . self::POST_TYPE, [$this, 'save'], 10, 3 );
 		add_action( 'post_action_verdict', [$this, 'action_verdict'] );
 
 		// Display
@@ -86,7 +86,11 @@ class Applications extends Singleton {
 		] );
 	}
 
-	public function save( int $post_id ) {
+	public function save( int $post_id, WP_Post $post, bool $update ) {
+		if ( !$update && !empty( $post->email ) ) {
+			Emails::instance()->send_subscribe_confirmation( $post->email, $post->post_title, true );
+		}
+
 		// New comments.
 		$new_comment = sanitize_textarea_field( $_POST['newcomment'] ?? '' );
 		if ( $new_comment ) {
@@ -421,7 +425,9 @@ class Applications extends Singleton {
 		$post->post_status = self::STATUS_APPROVED;
 		wp_update_post( $post );
 		update_post_meta( $post->ID, 'created_user', $user_id );
-		Emails::instance()->send_user_email( $user_id, 'email_approved' );
+		$emails = Emails::instance();
+		$emails->send_user_email( $user_id, 'email_approved' );
+		$emails->subscribe_approved_user( $user_id );
 		return null;
 	}
 
