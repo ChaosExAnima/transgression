@@ -1,0 +1,18 @@
+#wpbody {
+	padding-left: 0 !important;
+}
+
+#wpbody,
+#wpbody-content {
+	margin-top: 0 !important;
+}
+
+#woocommerce-embedded-root,
+#screen-meta-links,
+.wrap> :not(#posts-filter),
+.search-box,
+.tablenav,
+.check-column,
+.order-preview {
+	display: none;
+}

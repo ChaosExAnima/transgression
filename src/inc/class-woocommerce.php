@@ -14,6 +14,7 @@ class WooCommerce extends Singleton {
 		// Display
 		add_filter( 'the_title', [ $this, 'filter_title' ], 10, 2 );
 		add_action( 'woocommerce_checkout_order_review', [ $this, 'render_clear_cart' ], 15 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'load_admin_styles' ] );
 
 		// Purchasing
 		add_action( 'template_redirect', [ $this, 'skip_cart' ] );
@@ -26,6 +27,7 @@ class WooCommerce extends Singleton {
 		remove_action( 'woocommerce_order_details_after_order_table', 'woocommerce_order_again_button' );
 		add_filter( 'wc_add_to_cart_message_html', '__return_empty_string' );
 		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' );
+		add_filter( 'woocommerce_navigation_wp_toolbar_disabled', '__return_false' );
 	}
 
 	public function init() {
@@ -104,6 +106,19 @@ class WooCommerce extends Singleton {
 		}
 
 		return $is_valid;
+	}
+
+	public function load_admin_styles() {
+		$screen = get_current_screen();
+		if ( $screen->post_type === 'shop_order' && $screen->base === 'edit' ) {
+			wp_enqueue_style(
+				'transgression-wc-print',
+				get_theme_file_uri( 'assets/woo-print.css' ),
+				[],
+				null,
+				'print'
+			);
+		}
 	}
 
 	public static function add_title_prefix( WC_Product $product ): bool {
