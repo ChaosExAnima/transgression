@@ -2,14 +2,46 @@
 
 namespace Transgression;
 
+use Exception;
+
+/**
+ * Enable autoloading of plugin classes in namespace
+ * @param string $class_name
+ */
+function autoload( string $class_name ) {
+	// Only autoload classes from this namespace
+	if ( false === str_starts_with( $class_name, __NAMESPACE__ ) ) {
+		return;
+	}
+
+	// Remove namespace from class name
+	$class_file = str_replace( __NAMESPACE__ . '\\', '', $class_name );
+
+	// Convert class name format to file name format
+	$class_file = strtolower( $class_file );
+	$class_file = str_replace( '_', '-', $class_file );
+
+	// Convert sub-namespaces into directories
+	$class_path = explode( '\\', $class_file );
+	$class_file = array_pop( $class_path );
+	$class_path = implode( '/', $class_path );
+
+	// Load the class
+	$types = ['abstract', 'class', 'enum', 'trait'];
+	foreach ( $types as $type ) {
+		$path = __DIR__ . "/inc/{$class_path}/{$type}-{$class_file}.php";
+		if ( file_exists(  $path ) ) {
+			require_once $path;
+			return;
+		}
+	}
+	throw new Exception( "Could not find class ${class_file}" );
+}
+
+spl_autoload_register( cb( 'autoload' ) );
+
 // Includes
 require_once 'inc/helpers.php';
-require_once 'inc/class-abstract-singleton.php';
-require_once 'inc/class-applications.php';
-require_once 'inc/class-emails.php';
-require_once 'inc/class-people.php';
-require_once 'inc/class-woocommerce.php';
-
 if ( defined( 'JET_FORM_BUILDER_VERSION' ) && version_compare( JET_FORM_BUILDER_VERSION, '2.0.6', '>=' ) ) {
 	require_once 'inc/jetforms.php';
 }

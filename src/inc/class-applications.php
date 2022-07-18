@@ -4,7 +4,7 @@ namespace Transgression;
 
 use WP_Post;
 
-class Applications extends Singleton {
+class Applications extends Helpers\Singleton {
 	const POST_TYPE = 'application';
 	const COMMENT_TYPE = 'review_comment';
 	const STATUS_APPROVED = 'approved';

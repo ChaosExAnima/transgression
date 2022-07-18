@@ -5,7 +5,7 @@ namespace Transgression;
 use WC_Product;
 use WP_User;
 
-class WooCommerce extends Singleton {
+class WooCommerce extends Helpers\Singleton {
 	protected function __construct() {
 		if ( !defined( 'WC_PLUGIN_FILE' ) ) {
 			return;

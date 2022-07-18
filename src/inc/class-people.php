@@ -6,7 +6,7 @@ use Error;
 use WC_Product;
 use WP_User;
 
-class People extends Singleton {
+class People extends Helpers\Singleton {
 	protected function __construct() {
 
 		// Logging in
