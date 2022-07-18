@@ -27,7 +27,7 @@ function autoload( string $class_name ) {
 	$class_path = implode( '/', $class_path );
 
 	// Load the class
-	$types = ['abstract', 'class', 'enum', 'trait'];
+	$types = ['abstract', 'trait', 'enum', 'class'];
 	foreach ( $types as $type ) {
 		$path = __DIR__ . "/inc/{$class_path}/{$type}-{$class_file}.php";
 		if ( file_exists(  $path ) ) {
@@ -35,7 +35,7 @@ function autoload( string $class_name ) {
 			return;
 		}
 	}
-	throw new Exception( "Could not find class ${class_file}" );
+	throw new Exception( "Could not find class ${class_file} at {$path}" );
 }
 
 spl_autoload_register( cb( 'autoload' ) );
