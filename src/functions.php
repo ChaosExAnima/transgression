@@ -61,6 +61,7 @@ function init() {
 	add_theme_support( 'woocommerce' );
 
 	Applications::instance()->init();
+	Discord::instance()->init();
 	Emails::instance()->init();
 	People::instance()->init();
 	WooCommerce::instance()->init();
