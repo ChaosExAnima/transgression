@@ -218,7 +218,6 @@ class Emails extends Singleton {
 			$this->mailpoet_container->get( ColumnsRenderer::class ),
 			$this->mailpoet_container->get( Preprocessor::class ),
 			$this->mailpoet_container->get( CSS::class ),
-			$this->get_newsletter_repo(),
 			$this->mailpoet_container->get( ServicesChecker::class ),
 		);
 	}
