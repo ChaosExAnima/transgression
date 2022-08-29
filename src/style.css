@@ -140,6 +140,10 @@ input[type="radio"]:checked {
 	font-size: var(--wp--custom--font-size--normal);
 }
 
+.jet-form-builder__action-button.jet-form-builder__action-button {
+	display: block;
+}
+
 .jet-form-builder__action-button:hover {
 	background-color: var(--wp--preset--color--secondary);
 }
