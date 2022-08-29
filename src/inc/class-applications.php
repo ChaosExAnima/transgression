@@ -235,7 +235,7 @@ class Applications extends Singleton {
 			if ( !$value && ! in_array( $key, $original_field_keys, true ) ) {
 				continue;
 			}
-			echo '<tr>';
+			printf( '<tr id="%s">', esc_attr( $key ) );
 			printf(
 				'<th>%s</th>',
 				esc_html( $name )
@@ -334,6 +334,7 @@ class Applications extends Singleton {
 		$image_url = $post->photo_img ?: $post->photo_url;
 		$social_url = $post->photo_url;
 		$input_label = 'Add photo';
+		$has_photo = false;
 
 		['ext' => $ext] = wp_check_filetype( $image_url, self::MIME_TYPES );
 
@@ -343,6 +344,7 @@ class Applications extends Singleton {
 				esc_url( $image_url )
 			);
 			$input_label = 'Update photo';
+			$has_photo = true;
 		}
 
 		if ( is_url( $social_url ) ) {
@@ -359,7 +361,7 @@ class Applications extends Singleton {
 			);
 		} else if ( $social_url ) {
 			printf( '<p class="app-social">%s</p>', esc_html( $social_url ) );
-		} else {
+		} else if ( ! $has_photo ) {
 			echo '<p><strong>Nothing provided!</strong></p>';
 		}
 		printf(
@@ -406,11 +408,12 @@ class Applications extends Singleton {
 			return null;
 		}
 
+		$email = sanitize_email( $post->email );
 		$user_id = wp_insert_user( [
-			'user_login' => $post->post_title,
-			'user_nicename' => "{$post->post_title}-{$post->ID}",
+			'user_login' => array_shift( explode( '@', $email ) ),
 			'user_pass' => wp_generate_password( 100 ),
-			'user_email' => sanitize_email( $post->email ),
+			'user_email' => $email,
+			'display_name' => $post->post_title,
 			'role' => 'customer',
 			'meta_input' => [
 				'pronouns' => $post->pronouns,
