@@ -66,7 +66,7 @@ function get_current_url(): string {
  * @return boolean
  */
 function is_url( string $url ): bool {
-	if ( strtolower( esc_url_raw( $url ) ) === strtolower( $url ) ) {
+	if ( $url && strtolower( esc_url_raw( $url ) ) === strtolower( $url ) ) {
 		return true;
 	} else {
 		return false;
