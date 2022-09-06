@@ -5,5 +5,8 @@
 	<rule ref="NeutronStandard.Functions.LongFunction.LongFunction">
 		<severity>0</severity>
 	</rule>
+	<rule ref="NeutronStandard.Functions.DisallowCallUserFunc.CallUserFunc">
+		<severity>0</severity>
+	</rule>
 	<file>./src</file>
 </ruleset>
