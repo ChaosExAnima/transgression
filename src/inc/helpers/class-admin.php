@@ -7,6 +7,8 @@ use WP_Screen;
 class Admin {
 	protected const SETTING_PREFIX = 'transgression_';
 
+	protected string $page_slug;
+
 	/** @var callable[] */
 	protected array $actions = [];
 
@@ -33,6 +35,7 @@ class Admin {
 		string $icon,
 		?string $menu_label = null
 	): Admin {
+		$this->page_slug = self::SETTING_PREFIX . $page;
 		$callback = function () use ( $page, $label, $menu_label, $icon ) {
 			$admin_page = add_menu_page(
 				$page,
@@ -57,6 +60,7 @@ class Admin {
 		string $label,
 		?string $menu_label = null
 	): Admin {
+		$this->page_slug = self::SETTING_PREFIX . $page;
 		$callback = function () use ( $parent, $page, $label, $menu_label ) {
 			$admin_page = add_submenu_page(
 				$parent,
@@ -117,7 +121,8 @@ class Admin {
 	 */
 	public function get_url( array $params = [] ): string {
 		$screen = WP_Screen::get( $this->page_hook );
-		return add_query_arg( $params, admin_url( "admin.php?page={$screen->parent_base}" ) );
+		$params['page'] = $this->page_slug;
+		return add_query_arg( $params, admin_url( $screen->parent_file ) );
 	}
 
 	/**
