@@ -7,12 +7,12 @@ use WP_Screen;
 class Admin {
 	protected const SETTING_PREFIX = 'transgression_';
 
-	protected string $page_slug;
+	protected string $page_slug = '';
 
 	/** @var callable[] */
 	protected array $actions = [];
 
-	protected string $page_hook;
+	protected string $page_hook = '';
 
 	/**
 	 * Creates admin page
