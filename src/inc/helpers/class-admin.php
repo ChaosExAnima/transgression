@@ -33,18 +33,21 @@ class Admin {
 		string $icon,
 		?string $menu_label = null
 	): Admin {
-		$admin_page = add_menu_page(
-			$page,
-			$label,
-			$menu_label ?? $label,
-			$this->permission,
-			self::SETTING_PREFIX . $page,
-			[$this, 'render_page'],
-			$icon
-		);
-		if ( $admin_page ) {
-			$this->page_hook = $admin_page;
-		}
+		$callback = function () use ( $page, $label, $menu_label, $icon ) {
+			$admin_page = add_menu_page(
+				$page,
+				$label,
+				$menu_label ?? $label,
+				$this->permission,
+				self::SETTING_PREFIX . $page,
+				[ $this, 'render_page' ],
+				$icon
+			);
+			if ( $admin_page ) {
+				$this->page_hook = $admin_page;
+			}
+		};
+		add_action( 'admin_menu', $callback );
 		return $this;
 	}
 
@@ -54,17 +57,20 @@ class Admin {
 		string $label,
 		?string $menu_label = null
 	): Admin {
-		$admin_page = add_submenu_page(
-			$parent,
-			$label,
-			$menu_label ?? $label,
-			$this->permission,
-			self::SETTING_PREFIX . $page,
-			[ $this, 'render_page' ]
-		);
-		if ( $admin_page ) {
-			$this->page_hook = $admin_page;
-		}
+		$callback = function () use ( $parent, $page, $label, $menu_label ) {
+			$admin_page = add_submenu_page(
+				$parent,
+				$label,
+				$menu_label ?? $label,
+				$this->permission,
+				self::SETTING_PREFIX . $page,
+				[ $this, 'render_page' ]
+			);
+			if ( $admin_page ) {
+				$this->page_hook = $admin_page;
+			}
+		};
+		add_action( 'admin_menu', $callback );
 		return $this;
 	}
 
