@@ -15,21 +15,17 @@ use MailPoet\Segments\SegmentsRepository;
 use MailPoet\Settings\SettingsController;
 use MailPoet\Subscribers\{ConfirmationEmailMailer, Source, SubscribersRepository};
 use MailPoetVendor\CSS;
+use Transgression\Helpers\{Admin, Admin_Option, Admin_Select_Option};
 
 class Emails extends Helpers\Singleton {
-	const ADMIN_PAGE = 'edit.php?post_type=' . Applications::POST_TYPE;
-	const EMAIL_PAGE = 'apps_emails';
-	const SETTING_GROUP = 'transgression_emails';
-	const SETTING_SECTION = self::SETTING_GROUP . '_emails';
-	const SETTING_ERRORS = self::SETTING_GROUP . '_messages';
+	protected Admin $admin;
+
 	const TEMPLATES = [
 		'email_approved' => 'Approved Template',
 		'email_denied' => 'Denied Template',
 		'email_duplicate' => 'Duplicate Application Template',
 		'email_login' => 'Login Template',
 	];
-
-	private string $admin_email_page = '';
 
 	private ?SubscriberEntity $subscriber = null;
 
@@ -38,14 +34,43 @@ class Emails extends Helpers\Singleton {
 
 	private string $custom_url = '';
 
-	public function init() {
-		add_filter( 'wp_mail_from', [$this, 'filter_from'] );
-		add_action( 'admin_menu', [$this, 'action_admin_menu'] );
-		add_action( 'admin_init', [$this, 'action_admin_init'] );
-
+	public function __construct() {
 		if ( class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
 			$this->mailpoet_container = \MailPoet\DI\ContainerWrapper::getInstance();
 		}
+
+		$admin = new Admin( 'emails' );
+		$admin->as_post_subpage(
+			Applications::POST_TYPE,
+			'emails',
+			'Emails'
+		);
+		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
+
+		$newsletters = [];
+		foreach ( $this->get_newsletter_templates() as $newsletter ) {
+			$newsletters[ $newsletter->getId() ] = $newsletter->getSubject();
+		}
+		foreach ( self::TEMPLATES as $key => $name ) {
+			( new Admin_Select_Option( $key, $name ) )
+				->with_options( $newsletters )
+				->render_after( [ $this, 'render_test_button' ] )
+				->on_page( $admin );
+		}
+
+		$segments = [];
+		foreach ( $this->get_segments() as $segment ) {
+			$segments[ $segment->getId() ] = $segment->getName();
+		}
+		( new Admin_Select_Option( 'approved_list', 'Approved member segment' ) )
+			->with_options( $segments )
+			->on_page( $admin );
+
+		$this->admin = $admin;
+	}
+
+	public function init() {
+		add_filter( 'wp_mail_from', [ $this, 'filter_from' ] );
 	}
 
 	public function send_email( string $email, string $template_key ): ?WP_Error {
@@ -254,147 +279,31 @@ class Emails extends Helpers\Singleton {
 	}
 
 	/** ADMIN */
-
-	public function action_admin_init() {
-		if ( !$this->admin_email_page ) {
-			return;
-		}
-
-		add_settings_section( self::SETTING_SECTION, '', '', $this->admin_email_page );
-		foreach ( self::TEMPLATES as $option_key => $option_label ) {
-			register_setting( self::SETTING_GROUP, $option_key, [ 'type' => 'integer', 'sanitize_callback' => 'absint' ] );
-			add_settings_field(
-				$option_key,
-				$option_label,
-				[$this, 'render_template_picker'],
-				$this->admin_email_page,
-				self::SETTING_SECTION,
-				[ 'label_for' => $option_key, 'name' => $option_key ]
-			);
-		}
-		register_setting( self::SETTING_GROUP, 'approved_list' );
-		add_settings_field(
-			'approved_list',
-			'Approved member segment',
-			[$this, 'render_segment_picker'],
-			$this->admin_email_page,
-			self::SETTING_SECTION,
-			[ 'label_for' => 'approved_list', 'name' => 'approved_list' ]
-		);
-	}
-
-	public function action_admin_menu() {
-		$admin_page = add_submenu_page(
-			self::ADMIN_PAGE,
-			'Emails',
-			'Emails',
-			'manage_options',
-			self::EMAIL_PAGE,
-			[$this, 'render_email_menu']
-		);
-		if ( $admin_page ) {
-			$this->admin_email_page = $admin_page;
-		}
-	}
-
-	protected function do_test_email( string $template_key ) {
+	public function do_test_email( string $template_key ) {
 		check_admin_referer( 'test-email-' . $template_key );
-		if ( !isset( self::TEMPLATES[$template_key] ) ) {
-			add_settings_error( self::SETTING_ERRORS, 'invalid-template', 'Could not find template' );
+		if ( ! isset( self::TEMPLATES[ $template_key ] ) ) {
+			$this->admin->add_message( 'Could not find template', 'error' );
 			return;
 		}
 
 		$user_id = get_current_user_id();
 		$result = $this->send_user_email( $user_id, $template_key );
 		if ( is_wp_error( $result ) ) {
-			foreach ( $result->get_error_codes() as $error_code ) {
-				add_settings_error( self::SETTING_ERRORS, $error_code, $result->get_error_message( $error_code ) );
+			foreach ( $result->get_error_messages() as $message ) {
+				$this->admin->add_message( $message, 'error' );
 			}
 		} else {
 			$user = get_userdata( $user_id );
-			add_settings_error(
-				self::SETTING_ERRORS,
-				'email-sent', "Email sent to {$user->user_email}!", 'success' );
+			$this->admin->add_message( "Email sent to {$user->user_email}!", 'success' );
 		}
 	}
 
-	public function render_email_menu() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-
-		if ( isset( $_GET['settings-updated'] ) ) {
-			add_settings_error( self::SETTING_ERRORS, 'saved', 'Settings Saved', 'updated' );
-		} else if ( isset( $_GET['test-email'] ) ) {
-			$this->do_test_email( sanitize_title_with_dashes( $_GET['test-email'] ) );
-		}
-
-		settings_errors( self::SETTING_ERRORS );
+	public function render_test_button( Admin_Option $option ): void {
+		$test_url = $this->admin->get_url( [ 'test-email' => $option->key ] );
 		printf(
-			'<div class="wrap"><h1>%s</h1><form action="options.php" method="post">',
-			esc_html( get_admin_page_title() )
+			'&nbsp;<a class="button button-secondary" href="%s" id="%s-test">Send test</a>',
+			esc_url( wp_nonce_url( $test_url, "test-email-{$option->key}" ) ),
+			esc_attr( $option->key )
 		);
-		settings_fields( self::SETTING_GROUP );
-		do_settings_sections( $this->admin_email_page );
-		submit_button( 'Save Settings' );
-		echo '</form></div>';
-	}
-
-	public function render_template_picker( array $args ) {
-		if ( !$this->is_mp_enabled() ) {
-			echo 'MailPoet not loaded';
-			return;
-		}
-		printf(
-			'<select name="%s" id="%s">',
-			esc_attr( $args['name'] ),
-			esc_attr( $args['label_for'] )
-		);
-		echo '<option value="0">None</option>';
-		$newsletters = $this->get_newsletter_templates();
-		$current_setting = get_option( $args['name'], 0 );
-		foreach ( $newsletters as $newsletter ) {
-			printf(
-				'<option value="%1$s" %3$s>%2$s</option>',
-				esc_attr( $newsletter->getId() ),
-				esc_html( $newsletter->getSubject() ),
-				selected( $newsletter->getId(), $current_setting, false )
-			);
-		}
-		echo '</select>&nbsp;';
-		$test_url = add_query_arg( [
-			'page' => self::EMAIL_PAGE,
-			'test-email' => $args['name'],
-			'_wpnonce' => wp_create_nonce( 'test-email-' . $args['name'] ),
-		], admin_url( self::ADMIN_PAGE ) );
-		printf(
-			'<a class="button button-secondary" href="%s" id="%s-test">Send test</a>',
-			esc_url( $test_url ),
-			esc_attr( $args['name'] )
-		);
-	}
-
-	public function render_segment_picker( array $args ) {
-		if ( !$this->is_mp_enabled() ) {
-			echo 'MailPoet not loaded';
-			return;
-		}
-		$segments = $this->get_segments();
-		printf(
-			'<select name="%s" id="%s">',
-			esc_attr( $args['name'] ),
-			esc_attr( $args['label_for'] )
-		);
-		echo '<option value="0">None</option>';
-		$current_setting = get_option( $args['name'], 0 );
-		foreach ( $segments as $segment ) {
-			printf(
-				'<option value="%1$s" %3$s>%2$s</option>',
-				esc_attr( $segment->getId() ),
-				esc_html( $segment->getName() ),
-				selected( $segment->getId(), $current_setting, false )
-			);
-		}
-		echo '</select>';
 	}
 }
