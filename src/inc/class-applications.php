@@ -396,6 +396,16 @@ class Applications extends Helpers\Singleton {
 		return $messages;
 	}
 
+	/**
+	 * Gets a count of pending applications
+	 *
+	 * @return int
+	 */
+	public static function get_unreviewed_count(): int {
+		$counts = wp_count_posts( self::POST_TYPE );
+		return absint( $counts->pending ?? 0 );
+	}
+
 	private function finalize( WP_Post $post ): ?int {
 		$verdicts = $this->get_unique_verdicts( $post->ID );
 		$verdict_results = wp_list_pluck( $verdicts, 'approved' );
