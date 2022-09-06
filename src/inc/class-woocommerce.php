@@ -5,7 +5,7 @@ namespace Transgression;
 use WC_Product;
 use WP_User;
 
-class WooCommerce extends Singleton {
+class WooCommerce extends Helpers\Singleton {
 	protected function __construct() {
 		if ( !defined( 'WC_PLUGIN_FILE' ) ) {
 			return;
@@ -123,5 +123,24 @@ class WooCommerce extends Singleton {
 
 	public static function add_title_prefix( WC_Product $product ): bool {
 		return strpos( $product->get_name(), 'Transgression:' ) === 0;
+	}
+
+	/**
+	 * Gets gross sales for a given product
+	 *
+	 * @param int $product_id
+	 * @return float
+	 */
+	public static function get_gross_sales( int $product_id ): float {
+		global $wpdb;
+
+		$query = $wpdb->prepare(
+			"SELECT SUM(product_gross_revenue)
+			FROM {$wpdb->prefix}wc_order_product_lookup
+			WHERE product_id = %d",
+			$product_id
+		);
+		$value = $wpdb->get_var( $query );
+		return floatval( $value );
 	}
 }

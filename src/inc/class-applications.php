@@ -4,7 +4,7 @@ namespace Transgression;
 
 use WP_Post;
 
-class Applications extends Singleton {
+class Applications extends Helpers\Singleton {
 	const POST_TYPE = 'application';
 	const COMMENT_TYPE = 'review_comment';
 	const STATUS_APPROVED = 'approved';
@@ -394,6 +394,16 @@ class Applications extends Singleton {
 			103 => 'Error creating new user',
 		];
 		return $messages;
+	}
+
+	/**
+	 * Gets a count of pending applications
+	 *
+	 * @return int
+	 */
+	public static function get_unreviewed_count(): int {
+		$counts = wp_count_posts( self::POST_TYPE );
+		return absint( $counts->pending ?? 0 );
 	}
 
 	private function finalize( WP_Post $post ): ?int {

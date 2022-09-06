@@ -16,7 +16,7 @@ use MailPoet\Settings\SettingsController;
 use MailPoet\Subscribers\{ConfirmationEmailMailer, Source, SubscribersRepository};
 use MailPoetVendor\CSS;
 
-class Emails extends Singleton {
+class Emails extends Helpers\Singleton {
 	const ADMIN_PAGE = 'edit.php?post_type=' . Applications::POST_TYPE;
 	const EMAIL_PAGE = 'apps_emails';
 	const SETTING_GROUP = 'transgression_emails';

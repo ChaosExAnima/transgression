@@ -1,8 +1,6 @@
 <?php declare( strict_types=1 );
 
-namespace Transgression;
-
-use Exception;
+namespace Transgression\Helpers;
 
 abstract class Singleton {
 	/** @var Singleton[] */
