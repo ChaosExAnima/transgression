@@ -81,3 +81,17 @@ function strip_query( string $url ): string {
 	}
 	return $result;
 }
+
+/**
+ * Inserts an array at a specific location, preserving keys.
+ *
+ * @param array $source
+ * @param array $insert
+ * @param int $offset
+ * @return array
+ */
+function insert_in_array( array $source, array $insert, int $offset = 0 ): array {
+	return array_slice( $source, 0, $offset, true ) +
+		$insert +
+		array_slice( $source, $offset , null, true );
+}

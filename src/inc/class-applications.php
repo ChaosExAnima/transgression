@@ -45,6 +45,8 @@ class Applications extends Helpers\Singleton {
 		add_filter( 'post_updated_messages', [$this, 'update_messages'] );
 		add_action( 'edit_form_top', [$this, 'render_status'] );
 		add_action( 'post_edit_form_tag', function() { echo ' enctype="multipart/form-data"'; } );
+		add_filter( 'manage_' . self::POST_TYPE . '_posts_columns', [ $this, 'reviewed_column_header' ] );
+		add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', [ $this, 'reviewed_column' ], 10, 2 );
 		add_filter( 'post_row_actions', [$this, 'remove_bulk_actions'], 10, 2 );
 		add_filter( 'comments_list_table_query_args', [$this, 'hide_review_comments'] );
 	}
@@ -148,11 +150,7 @@ class Applications extends Helpers\Singleton {
 
 	public function scripts() {
 		$screen = get_current_screen();
-		if (
-			is_object( $screen ) &&
-			$screen->post_type === self::POST_TYPE &&
-			$screen->action === 'edit'
-		) {
+		if ( is_object( $screen ) && $screen->post_type === self::POST_TYPE ) {
 			wp_enqueue_style( 'application-styles', get_theme_file_uri( 'assets/apps-admin.css' ) );
 		}
 	}
@@ -372,6 +370,24 @@ class Applications extends Helpers\Singleton {
 		submit_button( 'Save image' );
 	}
 
+	public function reviewed_column_header( array $columns ): array {
+		return insert_in_array( $columns, [ 'reviewed' => 'Reviewed' ], 1 );
+	}
+
+	public function reviewed_column( string $column_name, int $post_id ): void {
+		if ( 'reviewed' !== $column_name ) {
+			return;
+		}
+
+		foreach ( $this->get_unique_verdicts( $post_id ) as $verdict ) {
+			if ( $verdict['user_id'] === get_current_user_id() ) {
+				echo $verdict['approved'] ? 'Approved' : 'Rejected';
+				return;
+			}
+		}
+		echo '<em>Not reviewed</em>';
+	}
+
 	public function remove_bulk_actions( array $actions, WP_Post $post ): array {
 		if ( $post->post_type === self::POST_TYPE ) {
 			return [];
@@ -387,8 +403,12 @@ class Applications extends Helpers\Singleton {
 	}
 
 	public function update_messages( array $messages ): array {
+		$verdict_message = sprintf(
+			'Verdict added. <a href="%s">See all applications</a>.',
+			admin_url( 'edit.php?post_type=' . self::POST_TYPE )
+		);
 		$messages[ self::POST_TYPE ] = [
-			100 => 'Verdict added', // We're starting at 100 to avoid conflicts with posts.
+			100 => $verdict_message, // We're starting at 100 to avoid conflicts with posts.
 			101 => 'Rejection sent',
 			102 => 'Application approved',
 			103 => 'Error creating new user',

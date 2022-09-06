@@ -1,3 +1,13 @@
+/* Post list page */
+.column-reviewed {
+	width: 8em;
+}
+
+.column-reviewed::before {
+	content: none !important;
+}
+
+/* Post edit page */
 .app-details {
 	text-decoration: underline dotted;
 }
@@ -6,23 +16,29 @@
 	border-collapse: collapse;
 	margin: 1rem 0;
 }
+
 .app-fields th {
 	text-align: right;
 	padding-right: 1rem;
 	max-width: 20rem;
 }
+
 .app-fields :is(th, td) {
 	padding-top: 0.5rem;
 }
-.app-fields tr:first-of-type > * {
+
+.app-fields tr:first-of-type>* {
 	padding-top: 0;
 }
+
 .app-comments q::before {
 	content: open-quote;
 }
+
 .app-comments q::after {
 	content: close-quote;
 }
+
 .post-type-application .button.button-warning {
 	background-color: #d63638;
 	border-color: #c62426;
