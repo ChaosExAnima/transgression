@@ -3,8 +3,10 @@
 namespace Transgression\Helpers;
 
 class Admin_Option {
-	protected mixed $sanitize_cb;
-	protected mixed $render_cb;
+	protected mixed $sanitize_cb = null;
+	protected mixed $render_cb = null;
+	protected mixed $render_before = null;
+	protected mixed $render_after = null;
 	protected array $render_args = [];
 	protected string $description = '';
 
@@ -26,21 +28,21 @@ class Admin_Option {
 	}
 
 	public function of_type( ?string $type = null ): Admin_Option {
-		$this->render_cb = [$this, 'render_text_field'];
+		$this->render_cb = [ $this, 'render_text_field' ];
 		switch ( $type ) {
 			case 'url':
 				$this->sanitize_cb = 'esc_url';
-				$this->render_args = ['type' => 'url'];
+				$this->render_args = [ 'type' => 'url' ];
 				break;
 			case 'num':
 				$this->sanitize_cb = 'floatval';
 			case 'absint':
 				$this->sanitize_cb = 'absint';
 			case 'int':
-				if ( !$this->sanitize_cb ) {
+				if ( ! isset( $this->sanitize_cb ) ) {
 					$this->sanitize_cb = 'intval';
 				}
-				$this->render_args = ['type' => 'number'];
+				$this->render_args = [ 'type' => 'number' ];
 				break;
 			case 'text':
 			default:
@@ -67,6 +69,16 @@ class Admin_Option {
 		return update_option( $this->key, $value );
 	}
 
+	public function render_before( callable $callback ): Admin_Option {
+		$this->render_before = $callback;
+		return $this;
+	}
+
+	public function render_after( callable $callback ): Admin_Option {
+		$this->render_after = $callback;
+		return $this;
+	}
+
 	/**
 	 * Registers the setting
 	 *
@@ -77,22 +89,34 @@ class Admin_Option {
 	 */
 	public function register( string $page, string $group, string $section ) {
 		$register_args = [];
-		if ( $this->sanitize_cb ) {
-			$register_args = ['sanitize_callback' => $this->sanitize_cb];
+		if ( isset( $this->sanitize_cb ) ) {
+			$register_args = [ 'sanitize_callback' => $this->sanitize_cb ];
 		}
 		register_setting( $group, $this->key, $register_args );
 
-		if ( !$this->render_cb ) {
+		if ( ! $this->render_cb ) {
 			$this->of_type();
 		}
 		add_settings_field(
 			$this->key,
 			$this->label,
-			$this->render_cb,
+			[ $this, 'render' ],
 			$page,
 			$section,
 			[ 'label_for' => $this->key, 'option' => $this ]
 		);
+	}
+
+	public function render(): void {
+		if ( is_callable( $this->render_before ) ) {
+			call_user_func( $this->render_before, $this );
+		}
+		call_user_func( $this->render_cb );
+
+		if ( is_callable( $this->render_after ) ) {
+			call_user_func( $this->render_after, $this );
+		}
+		$this->render_description();
 	}
 
 	public function render_text_field() {
@@ -102,7 +126,6 @@ class Admin_Option {
 			esc_attr( $this->get() ),
 			esc_attr( $this->render_args['type'] ?? 'text' )
 		);
-		$this->render_description();
 	}
 
 	protected function render_description() {
