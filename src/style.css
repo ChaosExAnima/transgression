@@ -366,10 +366,7 @@ input[type="radio"]:checked {
 	padding-right: 0.5em;
 }
 
-.comment__form {
-	max-width: 20em;
-}
-
+.comment__form,
 .comments__login {
-	max-width: 10em;
+	max-width: 20em;
 }
