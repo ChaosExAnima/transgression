@@ -323,3 +323,53 @@ input[type="radio"]:checked {
 .woocommerce-MyAccount-navigation {
 	font-size: var(--wp--preset--font-size--medium);
 }
+
+/** COMMENTS */
+.comments {
+	font-size: var(--wp--preset--font-size--medium);
+}
+
+.comments__list {
+	font-size: var(--wp--preset--font-size--small);
+	padding-left: 0;
+}
+
+.comments__list ol,
+.comments__list li {
+	margin: 1em 0;
+}
+
+.comments__list>li {
+	padding-left: 1em;
+}
+
+.comments__list>li::marker {
+	margin-left: 1em;
+}
+
+.comments__list>li:not(:first-child) {
+	border-top: 1px solid var(--wp--preset--color--secondary);
+	padding-top: 1em;
+}
+
+.comment-content {
+	font-size: var(--wp--preset--font-size--medium);
+}
+
+.comment-meta {
+	display: flex;
+	gap: 0.5em;
+}
+
+.comment-meta> :not(:last-child) {
+	border-right: 1px solid var(--wp--preset--color--secondary);
+	padding-right: 0.5em;
+}
+
+.comment__form {
+	max-width: 20em;
+}
+
+.comments__login {
+	max-width: 10em;
+}

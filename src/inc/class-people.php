@@ -4,6 +4,7 @@ namespace Transgression;
 
 use Error;
 use WC_Product;
+use WP_Comment;
 use WP_User;
 
 class People extends Helpers\Singleton {
@@ -18,6 +19,10 @@ class People extends Helpers\Singleton {
 		add_filter( 'woocommerce_save_account_details_required_fields', [ $this, 'filter_fields' ] );
 		add_action( 'woocommerce_save_account_details', [ $this, 'save_pronouns' ] );
 		add_filter( 'user_contactmethods', [ $this, 'filter_contact_methods' ] );
+
+		// Comments
+		add_filter( 'preprocess_comment', [ $this, 'filter_comment_data' ] );
+		add_filter( 'get_comment_author', [ $this, 'filter_comment_name' ], 10, 3 );
 	}
 
 	public function handle_login() {
@@ -104,6 +109,19 @@ class People extends Helpers\Singleton {
 	public function filter_contact_methods( array $methods ): array {
 		$methods['pronouns'] = 'Pronouns';
 		return $methods;
+	}
+
+	public function filter_comment_data( array $comment_data ): array {
+		$nickname = wp_unslash( $_POST['author'] );
+		if ( ! $nickname ) {
+			$nickname = 'Anon';
+		}
+		$comment_data['comment_author'] = $nickname;
+		return $comment_data;
+	}
+
+	public function filter_comment_name( string $author, int $comment_id, WP_Comment $comment ): string {
+		return $author;
 	}
 
 	/** Private methods */

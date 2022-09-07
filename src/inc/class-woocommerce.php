@@ -15,6 +15,7 @@ class WooCommerce extends Helpers\Singleton {
 		add_filter( 'the_title', [ $this, 'filter_title' ], 10, 2 );
 		add_action( 'woocommerce_checkout_order_review', [ $this, 'render_clear_cart' ], 15 );
 		add_action( 'admin_enqueue_scripts', [ $this, 'load_admin_styles' ] );
+		add_action( 'woocommerce_after_single_product', 'comments_template' );
 
 		// Purchasing
 		add_action( 'template_redirect', [ $this, 'skip_cart' ] );
@@ -25,6 +26,9 @@ class WooCommerce extends Helpers\Singleton {
 		// Tweaks actions and filters.
 		remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
 		remove_action( 'woocommerce_order_details_after_order_table', 'woocommerce_order_again_button' );
+		remove_filter( 'template_include', [ 'WC_Template_Loader', 'template_loader' ] );
+		remove_filter( 'comments_template', [ 'WC_Template_Loader', 'comments_template_loader' ] );
+		remove_filter( 'preprocess_comment', [ 'WC_Comments', 'update_comment_type' ], 1 );
 		add_filter( 'wc_add_to_cart_message_html', '__return_empty_string' );
 		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' );
 		add_filter( 'woocommerce_navigation_wp_toolbar_disabled', '__return_false' );

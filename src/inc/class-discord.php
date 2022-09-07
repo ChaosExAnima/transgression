@@ -57,6 +57,8 @@ class Discord extends Helpers\Singleton {
 			absint( Applications::get_unreviewed_count() )
 		);
 
+		log_error( "App edit link for {$post->post_title}: " . get_edit_post_link( $post_id, 'url' ) );
+
 		$this->send_discord_message(
 			$hook,
 			"New application from {$post->post_title}",
