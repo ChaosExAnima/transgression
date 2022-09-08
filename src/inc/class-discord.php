@@ -60,7 +60,7 @@ class Discord extends Helpers\Singleton {
 		$this->send_discord_message(
 			$hook,
 			"New application from {$post->post_title}",
-			get_edit_post_link( $post_id, 'url' ),
+			admin_url( "post.php?post={$post_id}&action=edit" ),
 			$description
 		);
 	}
