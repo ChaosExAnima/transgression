@@ -17,6 +17,7 @@ class People extends Helpers\Singleton {
 		// Account
 		add_filter( 'woocommerce_save_account_details_required_fields', [ $this, 'filter_fields' ] );
 		add_action( 'woocommerce_save_account_details', [ $this, 'save_pronouns' ] );
+		add_action( 'admin_notices', [ $this, 'show_application' ] );
 		add_filter( 'user_contactmethods', [ $this, 'filter_contact_methods' ] );
 	}
 
@@ -99,6 +100,31 @@ class People extends Helpers\Singleton {
 		} else {
 			update_user_meta( $user_id, 'pronouns', $new_pronouns );
 		}
+	}
+
+	/**
+	 * Shows a notice to a user's application, if any
+	 *
+	 * @return void
+	 */
+	public function show_application() {
+		global $user_id;
+		if ( ! isset( $user_id ) ) {
+			return;
+		}
+		$app_id = get_user_meta( $user_id, 'application', true );
+		if ( ! $app_id ) {
+			return;
+		}
+		$edit_link = get_edit_post_link( $app_id, 'url' );
+		if ( !$edit_link ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-info"><p>See <a href="%s">application here</a>.</p></div>',
+			esc_url( $edit_link )
+		);
 	}
 
 	public function filter_contact_methods( array $methods ): array {
