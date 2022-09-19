@@ -145,7 +145,7 @@ class People extends Helpers\Singleton {
 		} else if ( $id_or_email instanceof WP_User ) {
 			$user = $id_or_email;
 		}
-		if ( ! $user ) {
+		if ( empty( $user ) ) {
 			return $args;
 		}
 
@@ -156,15 +156,6 @@ class People extends Helpers\Singleton {
 			}
 			$args['url'] = $image[0];
 			$args['found_avatar'] = true;
-		} else if ( $user->application ) {
-			$application = get_post( $user->application );
-			if ( $application instanceof WP_Post ) {
-				$avatar_id = Applications::load_application_image( $application );
-				if ( $avatar_id ) {
-					update_user_meta( $user->ID, 'avatar', $avatar_id );
-					return $this->filter_avatar( $args, $id_or_email );
-				}
-			}
 		}
 
 		return $args;

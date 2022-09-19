@@ -452,12 +452,18 @@ class Applications extends Helpers\Singleton {
 		$avatar_id = wp_insert_attachment( $attachment, $image_path, $post->ID );
 		if ( ! is_wp_error( $avatar_id ) ) {
 			require_once ABSPATH . 'wp-admin/includes/image.php';
-			$avatar_data = wp_generate_attachment_metadata( $avatar_id, $path );
+			$avatar_data = wp_generate_attachment_metadata( $avatar_id, $image_path );
 			wp_update_attachment_metadata( $avatar_id, $avatar_data );
 		}
 		return $avatar_id;
 	}
 
+	/**
+	 * Finalizes the application- either rejects or creates a new user, sending emails.
+	 *
+	 * @param WP_Post $post
+	 * @return integer|null Error code to show in admin
+	 */
 	private function finalize( WP_Post $post ): ?int {
 		$verdicts = $this->get_unique_verdicts( $post->ID );
 		$verdict_results = wp_list_pluck( $verdicts, 'approved' );

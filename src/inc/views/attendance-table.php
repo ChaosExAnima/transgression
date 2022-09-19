@@ -37,7 +37,11 @@ $orders = $params['orders'];
 		<tbody>
 			<?php foreach ( $orders as $order ) : ?>
 				<tr>
-					<td>#<?php echo esc_html( $order['id'] ); ?></td>
+					<td>
+						<a href="<?php echo esc_url( get_edit_post_link( $order['id'] ) ); ?>">
+							#<?php echo esc_html( $order['id'] ); ?>
+						</a>
+					</td>
 					<td><?php echo get_avatar( $order['user_id'] ); ?></td>
 					<td>
 						<a href="<?php echo esc_url( get_edit_user_link( $order['user_id'] ) ); ?>">
@@ -45,7 +49,7 @@ $orders = $params['orders'];
 						</a>
 					</td>
 					<td><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
-					<td><?php $order['volunteer'] ? '✔️' : ''; ?></td>
+					<td><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
 				</tr>
 			<?php endforeach; ?>
 		</tbody>
