@@ -3,7 +3,6 @@
 namespace Transgression;
 
 use WC_Product;
-use WP_User;
 
 class WooCommerce extends Helpers\Singleton {
 	protected function __construct() {
@@ -22,12 +21,16 @@ class WooCommerce extends Helpers\Singleton {
 		add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'prevent_variation_dupes' ], 10, 2 );
 		add_action( 'woocommerce_checkout_order_processed', [ $this, 'skip_processing' ] );
 
+		// Attendance page
+		add_action( 'admin_menu', [ $this, 'attendance_menu' ] );
+
 		// Tweaks actions and filters.
 		remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
 		remove_action( 'woocommerce_order_details_after_order_table', 'woocommerce_order_again_button' );
 		add_filter( 'wc_add_to_cart_message_html', '__return_empty_string' );
 		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' );
 		add_filter( 'woocommerce_navigation_wp_toolbar_disabled', '__return_false' );
+		add_filter( 'woocommerce_customer_meta_fields', '__return_empty_array' );
 	}
 
 	public function init() {
@@ -119,6 +122,75 @@ class WooCommerce extends Helpers\Singleton {
 				'print'
 			);
 		}
+	}
+
+	/**
+	 * Loads attendance menu
+	 *
+	 * @return void
+	 */
+	public function attendance_menu() {
+		$icon = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OC4zNjkiIGhlaWdodD0iNzguMzY' .
+			'5IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3OC4zNjkgNzguMzY5IiB4bWw6c3BhY2U9InByZXNlcnZlIj' .
+			'48cGF0aCBkPSJNNzguMDQ5IDE5LjAxNSAyOS40NTggNjcuNjA2YTEuMDk0IDEuMDk0IDAgMCAxLTEuNTQ4IDBMLjMyIDQwL' .
+			'jAxNWExLjA5NCAxLjA5NCAwIDAgMSAwLTEuNTQ3bDYuNzA0LTYuNzA0YTEuMDk1IDEuMDk1IDAgMCAxIDEuNTQ4IDBsMjAu' .
+			'MTEzIDIwLjExMiA0MS4xMTMtNDEuMTEzYTEuMDk1IDEuMDk1IDAgMCAxIDEuNTQ4IDBsNi43MDMgNi43MDRhMS4wOTQgMS4' .
+			'wOTQgMCAwIDEgMCAxLjU0OHoiLz48L3N2Zz4=';
+		add_menu_page(
+			'Attendance Sheet',
+			'Attendance',
+			'edit_products',
+			'transgression_attendance',
+			[ $this, 'attendance_render' ],
+			"data:image/svg+xml;base64,{$icon}",
+			'56'
+		);
+	}
+
+	/**
+	 * Renders the attendance table
+	 *
+	 * @return void
+	 */
+	public function attendance_render() {
+		/** @var \WC_Product[] */
+		$products = wc_get_products( [
+			'limit' => 10,
+		] );
+		$product_id = absint( filter_input( INPUT_GET, 'product_id', FILTER_VALIDATE_INT ) );
+		if ( ! $product_id && count( $products ) ) {
+			$product_id = $products[0]->get_id();
+		}
+
+		/** @var string[] */
+		$order_ids = [];
+		if ( $product_id ) {
+			global $wpdb;
+			$query = $wpdb->prepare(
+				"SELECT order_id FROM {$wpdb->prefix}wc_order_product_lookup WHERE product_id = %d LIMIT 200",
+				$product_id
+			);
+			/** @var string[] */
+			$order_ids = array_unique( $wpdb->get_col( $query ), SORT_NUMERIC );
+		}
+
+		$orders = [];
+		foreach ( $order_ids as $order_id ) {
+			$order = wc_get_order( $order_id );
+			if ( $order->get_status() === 'completed' ) {
+				$user = $order->get_user();
+				$orders[] = [
+					'id' => $order->get_id(),
+					'name' => $user->display_name,
+					'email' => $user->user_email,
+					'user_id' => $user->ID,
+					'volunteer' => count( $order->get_coupons() ) > 0,
+				];
+			}
+		}
+		$orders = wp_list_sort( $orders, 'name' );
+
+		load_view( 'attendance-table', compact( 'products', 'product_id', 'orders' ) );
 	}
 
 	public static function add_title_prefix( WC_Product $product ): bool {

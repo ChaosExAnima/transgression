@@ -46,14 +46,6 @@ if ( defined( 'JET_FORM_BUILDER_VERSION' ) && version_compare( JET_FORM_BUILDER_
 	require_once 'inc/jetforms.php';
 }
 
-function theme_path( string $file = '' ): string {
-	$path = untrailingslashit( get_stylesheet_directory() );
-	if ( $file && file_exists( "{$path}/${file}" ) ) {
-		$path .= "/{$file}";
-	}
-	return $path;
-}
-
 function init() {
 	add_theme_support( 'editor-styles' );
 	add_editor_style( 'editor.css' );

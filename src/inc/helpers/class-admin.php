@@ -14,6 +14,8 @@ class Admin {
 
 	protected string $page_hook = '';
 
+	protected mixed $render_cb = null;
+
 	/**
 	 * Creates admin page
 	 *
@@ -38,7 +40,6 @@ class Admin {
 		$this->page_slug = self::SETTING_PREFIX . $page;
 		$callback = function () use ( $page, $label, $menu_label, $icon ) {
 			$admin_page = add_menu_page(
-				$page,
 				$label,
 				$menu_label ?? $label,
 				$this->permission,
@@ -90,6 +91,17 @@ class Admin {
 			$label,
 			$menu_label
 		);
+	}
+
+	/**
+	 * Sets the render callback
+	 *
+	 * @param callable $render
+	 * @return Admin
+	 */
+	public function set_render( callable $render ): Admin {
+		$this->render_cb = $render;
+		return $this;
 	}
 
 	/**
@@ -191,6 +203,9 @@ class Admin {
 		);
 		settings_fields( $this->setting_group );
 		do_settings_sections( $this->page_hook );
+		if ( is_callable( $this->render_cb ) ) {
+			call_user_func( $this->render_cb, $this );
+		}
 		submit_button( 'Save Settings' );
 		echo '</form></div>';
 	}

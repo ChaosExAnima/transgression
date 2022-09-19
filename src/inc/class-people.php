@@ -2,8 +2,7 @@
 
 namespace Transgression;
 
-use Error;
-use WC_Product;
+use WP_Post;
 use WP_User;
 
 class People extends Helpers\Singleton {
@@ -19,6 +18,7 @@ class People extends Helpers\Singleton {
 		add_action( 'woocommerce_save_account_details', [ $this, 'save_pronouns' ] );
 		add_action( 'admin_notices', [ $this, 'show_application' ] );
 		add_filter( 'user_contactmethods', [ $this, 'filter_contact_methods' ] );
+		add_filter( 'pre_get_avatar_data', [ $this, 'filter_avatar' ], 10, 2 );
 	}
 
 	public function handle_login() {
@@ -130,6 +130,44 @@ class People extends Helpers\Singleton {
 	public function filter_contact_methods( array $methods ): array {
 		$methods['pronouns'] = 'Pronouns';
 		return $methods;
+	}
+
+	/**
+	 * Filters the avatar function to get the application photo
+	 *
+	 * @param array $args
+	 * @param mixed $id_or_email
+	 * @return array
+	 */
+	public function filter_avatar( array $args, mixed $id_or_email ): array {
+		if ( is_int( $id_or_email ) ) {
+			$user = get_user_by( 'id', $id_or_email );
+		} else if ( $id_or_email instanceof WP_User ) {
+			$user = $id_or_email;
+		}
+		if ( ! $user ) {
+			return $args;
+		}
+
+		if ( $user->avatar ) {
+			$image = wp_get_attachment_image_src( $user->avatar, [ $args['width'], $args['height'] ] );
+			if ( ! $image ) {
+				return $args;
+			}
+			$args['url'] = $image[0];
+			$args['found_avatar'] = true;
+		} else if ( $user->application ) {
+			$application = get_post( $user->application );
+			if ( $application instanceof WP_Post ) {
+				$avatar_id = Applications::load_application_image( $application );
+				if ( $avatar_id ) {
+					update_user_meta( $user->ID, 'avatar', $avatar_id );
+					return $this->filter_avatar( $args, $id_or_email );
+				}
+			}
+		}
+
+		return $args;
 	}
 
 	/** Private methods */
