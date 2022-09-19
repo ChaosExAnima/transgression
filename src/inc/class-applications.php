@@ -449,7 +449,7 @@ class Applications extends Helpers\Singleton {
 			'post_title' => sanitize_file_name( basename( $image_path ) ),
 			'post_status' => 'inherit',
 		];
-		$avatar_id = wp_insert_attachment( $attachment, $image_path );
+		$avatar_id = wp_insert_attachment( $attachment, $image_path, $post->ID );
 		if ( ! is_wp_error( $avatar_id ) ) {
 			require_once ABSPATH . 'wp-admin/includes/image.php';
 			$avatar_data = wp_generate_attachment_metadata( $avatar_id, $path );
