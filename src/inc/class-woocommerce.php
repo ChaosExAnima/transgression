@@ -184,6 +184,10 @@ class WooCommerce extends Helpers\Singleton {
 			$order = wc_get_order( $order_id );
 			if ( $order->get_status() === 'completed' ) {
 				$user = $order->get_user();
+				if ( ! $user ) {
+					log_error( "No user for order ID {$order->get_id()}" );
+					continue;
+				}
 				$avatar_url = '';
 				if ( $user->image_url ) {
 					$avatar_url = $user->image_url;
