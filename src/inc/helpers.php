@@ -3,6 +3,23 @@
 namespace Transgression;
 
 /**
+ * Loads a view
+ *
+ * @param string $view
+ * @param array $params
+ * @return void
+ */
+function load_view( string $view, array $params = [] ) {
+	$path = __DIR__ . "/views/{$view}.php";
+	if ( ! file_exists( $path ) ) {
+		log_error( "Could not find view {$view}" );
+		return;
+	}
+
+	include $path;
+}
+
+/**
  * Returns a locale-formatted date string.
  *
  * @param integer|string $date
