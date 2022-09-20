@@ -477,6 +477,7 @@ class Applications extends Helpers\Singleton {
 		}
 
 		$email = sanitize_email( $post->email );
+		$image_url = $post->photo_img ?: $post->photo_url;
 		$user_id = wp_insert_user( [
 			'user_login' => $email,
 			'user_pass' => wp_generate_password( 100 ),
@@ -486,6 +487,7 @@ class Applications extends Helpers\Singleton {
 			'meta_input' => [
 				'pronouns' => $post->pronouns,
 				'application' => $post->ID,
+				'image_url' => $image_url,
 			],
 		] );
 
@@ -499,7 +501,6 @@ class Applications extends Helpers\Singleton {
 		$emails = Emails::instance();
 		$emails->send_user_email( $user_id, 'email_approved' );
 		$emails->subscribe_approved_user( $user_id );
-		wp_schedule_single_event( time(), 'trans_cron_user_avatar', [ $user_id ] );
 		return null;
 	}
 

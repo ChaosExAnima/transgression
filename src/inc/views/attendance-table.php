@@ -24,11 +24,11 @@ $orders = $params['orders'];
 		</p>
 	</form>
 
-	<table>
+	<table class="attendance">
 		<thead>
 			<tr>
 				<th>Order</th>
-				<th>Photo</th>
+				<th class="pic">Photo</th>
 				<th>Name</th>
 				<th>Email</th>
 				<th>Volunteering</th>
@@ -37,19 +37,25 @@ $orders = $params['orders'];
 		<tbody>
 			<?php foreach ( $orders as $order ) : ?>
 				<tr>
-					<td>
+					<td class="order">
 						<a href="<?php echo esc_url( get_edit_post_link( $order['id'] ) ); ?>">
 							#<?php echo esc_html( $order['id'] ); ?>
 						</a>
 					</td>
-					<td><?php echo get_avatar( $order['user_id'] ); ?></td>
-					<td>
+					<td class="pic">
+						<?php if ( $order['pic'] ) : ?>
+							<img src="<?php echo esc_url( $order['pic'] ); ?>" loading="lazy" width="96" height="96" />
+						<?php else : ?>
+							<em>None on record</em>
+						<?php endif; ?>
+					</td>
+					<td class="name">
 						<a href="<?php echo esc_url( get_edit_user_link( $order['user_id'] ) ); ?>">
 							<?php echo esc_html( $order['name'] ); ?>
 						</a>
 					</td>
-					<td><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
-					<td><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
+					<td class="email"><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
+					<td class="volunteer"><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
 				</tr>
 			<?php endforeach; ?>
 		</tbody>

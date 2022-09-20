@@ -121,6 +121,11 @@ class WooCommerce extends Helpers\Singleton {
 				null,
 				'print'
 			);
+		} else if ( $screen->base === 'toplevel_page_transgression_attendance' ) {
+			wp_enqueue_style(
+				'transgression-attendance',
+				get_theme_file_uri( 'assets/attendance.css' ),
+			);
 		}
 	}
 
@@ -179,9 +184,17 @@ class WooCommerce extends Helpers\Singleton {
 			$order = wc_get_order( $order_id );
 			if ( $order->get_status() === 'completed' ) {
 				$user = $order->get_user();
+				$avatar_url = '';
+				if ( $user->image_url ) {
+					$avatar_url = $user->image_url;
+				} else if ( $user->application ) {
+					$app = get_post( $user->application );
+					$avatar_url = $app->photo_img ?: $app->photo_url;
+				}
 				$orders[] = [
 					'id' => $order->get_id(),
-					'name' => $user->display_name,
+					'pic' => $avatar_url,
+					'name' => ucwords( $user->display_name ),
 					'email' => $user->user_email,
 					'user_id' => $user->ID,
 					'volunteer' => count( $order->get_coupons() ) > 0,
