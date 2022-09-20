@@ -191,6 +191,9 @@ class WooCommerce extends Helpers\Singleton {
 					$app = get_post( $user->application );
 					$avatar_url = $app->photo_img ?: $app->photo_url;
 				}
+				if ( $avatar_url && function_exists( 'jetpack_photon_url' ) ) {
+					$avatar_url = jetpack_photon_url( $avatar_url, [ 'resize' => '200,200' ] );
+				}
 				$orders[] = [
 					'id' => $order->get_id(),
 					'pic' => $avatar_url,
