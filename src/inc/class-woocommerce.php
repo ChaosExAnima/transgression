@@ -198,13 +198,23 @@ class WooCommerce extends Helpers\Singleton {
 				if ( $avatar_url && function_exists( 'jetpack_photon_url' ) ) {
 					$avatar_url = jetpack_photon_url( $avatar_url, [ 'resize' => '200,200' ] );
 				}
+				$is_volunteer = false;
+				if ( count( $order->get_coupons() ) > 0 ) {
+					$is_volunteer = true;
+				}
+				foreach ( $order->get_items() as $item ) {
+					if ( false !== stripos( $item->get_name(), 'volunteer' ) ) {
+						$is_volunteer = true;
+						break;
+					}
+				}
 				$orders[] = [
 					'id' => $order->get_id(),
 					'pic' => $avatar_url,
 					'name' => ucwords( $user->display_name ),
 					'email' => $user->user_email,
 					'user_id' => $user->ID,
-					'volunteer' => count( $order->get_coupons() ) > 0,
+					'volunteer' => $is_volunteer,
 				];
 			}
 		}
