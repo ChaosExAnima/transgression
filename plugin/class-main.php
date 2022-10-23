@@ -2,13 +2,13 @@
 
 namespace Transgression;
 
-use Transgression\Modules\Email\Emailer;
-use Transgression\Modules\People;
+use Transgression\Modules\{Applications, People, Email\Emailer};
 
 class Main {
 	public function init() {
 		$logger = new Logger();
 		$emailer = new Emailer();
 		$people = new People( $emailer, $logger );
+		$apps = new Applications( $emailer, $logger );
 	}
 }
