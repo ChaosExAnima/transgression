@@ -6,7 +6,7 @@ use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
 
-use function Transgression\{insert_in_array, is_url, load_view};
+use function Transgression\{insert_in_array, load_view};
 
 class Applications extends Module {
 	const POST_TYPE = 'application';
@@ -42,7 +42,7 @@ class Applications extends Module {
 	public function __construct( protected Emailer $emailer, protected Logger $logger ) {
 		// Actions
 		add_action( 'init', [ $this, 'init' ] );
-		add_action( 'save_post_' . self::POST_TYPE, [$this, 'save'], 10, 3 );
+		add_action( 'save_post_' . self::POST_TYPE, [$this, 'save'] );
 		add_action( 'post_action_verdict', [$this, 'action_verdict'] );
 
 		// Display
@@ -93,7 +93,7 @@ class Applications extends Module {
 		] );
 	}
 
-	public function save( int $post_id, WP_Post $post, bool $update ) {
+	public function save( int $post_id ) {
 		// New comments.
 		$new_comment = sanitize_textarea_field( $_POST['newcomment'] ?? '' );
 		if ( $new_comment ) {
@@ -257,45 +257,27 @@ class Applications extends Module {
 	}
 
 	public function render_metabox_photo( WP_Post $post ) {
+		$params = [
+			'input_label' => 'Add photo',
+			'mime_types' => implode( ',', array_values( self::MIME_TYPES ) ),
+			'social_url' => $post->photo_url,
+			'social_label' => 'Social link',
+		];
+
 		$image_url = $post->photo_img ?: $post->photo_url;
-		$social_url = $post->photo_url;
-		$input_label = 'Add photo';
-		$has_photo = false;
-
 		['ext' => $ext] = wp_check_filetype( $image_url, self::MIME_TYPES );
-
 		if ( $ext !== false ) {
-			printf(
-				'<a href="%1$s" target="_blank"><img src="%1$s" width="100%%" class="app-photo" /></a>',
-				esc_url( $image_url )
-			);
-			$input_label = 'Update photo';
-			$has_photo = true;
+			$params['photo_url'] = $image_url;
+			$params['input_label'] = 'Update photo';
 		}
 
-		if ( is_url( $social_url ) ) {
-			$social_name = 'Social Link';
-			if ( str_contains( $social_url, 'facebook.com' ) ) {
-				$social_name = 'Facebook';
-			} else if ( str_contains( $social_url, 'instagram.com' ) ) {
-				$social_name = 'Instagram';
-			}
-			printf(
-				'<p class="app-social"><a href="%s" target="_blank">%s</a></p>',
-				esc_url( $social_url ),
-				esc_html( $social_name )
-			);
-		} else if ( $social_url ) {
-			printf( '<p class="app-social">%s</p>', esc_html( $social_url ) );
-		} else if ( ! $has_photo ) {
-			echo '<p><strong>Nothing provided!</strong></p>';
+		if ( str_contains( $post->photo_url, 'facebook.com' ) ) {
+			$params['social_label'] = 'Facebook';
+		} else if ( str_contains( $post->photo_url, 'instagram.com' ) ) {
+			$params['social_label'] = 'Instagram';
 		}
-		printf(
-			'<p><label>%s: <input type="file" name="social_image" accept="%s" /></label></p>',
-			esc_html( $input_label ),
-			esc_attr( implode( ',', array_values( self::MIME_TYPES ) ) )
-		);
-		submit_button( 'Save image' );
+
+		load_view( 'applications/photo', $params );
 	}
 
 	public function reviewed_column_header( array $columns ): array {
@@ -352,38 +334,6 @@ class Applications extends Module {
 	public static function get_unreviewed_count(): int {
 		$counts = wp_count_posts( self::POST_TYPE );
 		return absint( $counts->pending ?? 0 );
-	}
-
-	/**
-	 * Sideloads the application image into an attachment
-	 *
-	 * @param WP_Post $post
-	 * @return integer|null
-	 */
-	public static function load_application_image( WP_Post $post ): ?int {
-		$image_url = $post->photo_img ?: $post->photo_url;
-		if ( ! $image_url || $post->tried_sideload ) {
-			return null;
-		}
-
-		update_post_meta( $post->ID, 'tried_sideload', true );
-
-		$image_path = ABSPATH . str_replace( home_url( '/' ), '', $image_url );
-		if ( ! is_readable( $image_path ) ) {
-			return null;
-		}
-		$attachment = [
-			'post_mime_type' => wp_get_image_mime( $image_path ),
-			'post_title' => sanitize_file_name( basename( $image_path ) ),
-			'post_status' => 'inherit',
-		];
-		$avatar_id = wp_insert_attachment( $attachment, $image_path, $post->ID );
-		if ( ! is_wp_error( $avatar_id ) ) {
-			require_once ABSPATH . 'wp-admin/includes/image.php';
-			$avatar_data = wp_generate_attachment_metadata( $avatar_id, $image_path );
-			wp_update_attachment_metadata( $avatar_id, $avatar_data );
-		}
-		return $avatar_id;
 	}
 
 	/**
