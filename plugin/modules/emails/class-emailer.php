@@ -58,6 +58,12 @@ class Emailer {
 		);
 	}
 
+	/**
+	 * Sends a test email for a template to the current user
+	 *
+	 * @param string $template_key
+	 * @return void
+	 */
 	public function do_test_email( string $template_key ) {
 		check_admin_referer( 'test-email-' . $template_key );
 		if ( ! isset( self::TEMPLATES[ $template_key ] ) ) {
