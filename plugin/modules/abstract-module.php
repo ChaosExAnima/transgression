@@ -1,6 +1,6 @@
 <?php declare( strict_types=1 );
 
-namespace Transgression\Abstract;
+namespace Transgression\Modules;
 
 abstract class Module {
 	/** @var array<string, string> */
