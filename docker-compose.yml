@@ -1,60 +1,63 @@
 version: "3.7"
 services:
-    wordpress:
-        image: chaosexanima/transgression-wordpress
-        environment:
-            WORDPRESS_DB_HOST: database
-            WORDPRESS_DB_USER: root
-            WORDPRESS_DB_PASSWORD: password
-            WORDPRESS_DEBUG: 1
-            WORDPRESS_CONFIG_EXTRA: |
-                define('MAILPOET_CRON_SITE_URL', 'http://nginx');
-        volumes:
-            - "${PWD}/wp_content:/var/www/html/wp-content"
-            - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
-            - wp_core:/var/www/html
-            - "${PWD}/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro"
+  wordpress:
+    image: chaosexanima/transgression-wordpress
+    environment:
+      WORDPRESS_DB_HOST: database
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: password
+      WORDPRESS_DEBUG: 1
+      WORDPRESS_CONFIG_EXTRA: |
+        define('MAILPOET_CRON_SITE_URL', 'http://nginx');
+    volumes:
+      - "${PWD}/wp_content:/var/www/html/wp-content"
+      - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
+      - "${PWD}/plugin:/var/www/html/wp-content/plugins/transgression"
+      - wp_core:/var/www/html
+      - "${PWD}/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro"
 
-    nginx:
-        image: nginx
-        ports:
-            - 8888:80
-        volumes:
-            - "${PWD}/wp_content:/var/www/html/wp-content"
-            - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
-            - wp_core:/var/www/html
-            - "${PWD}/nginx.conf:/etc/nginx/conf.d/default.conf:ro"
+  nginx:
+    image: nginx
+    ports:
+      - 8888:80
+    volumes:
+      - "${PWD}/wp_content:/var/www/html/wp-content"
+      - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
+      - "${PWD}/plugin:/var/www/html/wp-content/plugins/transgression"
+      - wp_core:/var/www/html
+      - "${PWD}/nginx.conf:/etc/nginx/conf.d/default.conf:ro"
 
-    database:
-        image: mariadb
-        ports:
-            - 8890:3306
-        volumes:
-            - "${PWD}/sql:/docker-entrypoint-initdb.d"
-        environment:
-            MARIADB_ROOT_PASSWORD: password
-            MARIADB_DATABASE: wordpress
+  database:
+    image: mariadb
+    ports:
+      - 8890:3306
+    volumes:
+      - "${PWD}/sql:/docker-entrypoint-initdb.d"
+    environment:
+      MARIADB_ROOT_PASSWORD: password
+      MARIADB_DATABASE: wordpress
 
-    mail:
-        image: mailhog/mailhog:v1.0.0
-        ports:
-            - 8889:8025
-        environment:
-            MH_STORAGE: maildir
-            MH_MAILDIR_PATH: /output
-        volumes:
-            - "${PWD}/wp_content/mail:/output"
+  mail:
+    image: mailhog/mailhog:v1.0.0
+    ports:
+      - 8889:8025
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /output
+    volumes:
+      - "${PWD}/wp_content/mail:/output"
 
-    cli:
-        image: chaosexanima/transgression-cli
-        environment:
-            WORDPRESS_DB_HOST: database
-            WORDPRESS_DB_USER: root
-            WORDPRESS_DB_PASSWORD: password
-        volumes:
-            - "${PWD}/wp_content:/var/www/html/wp-content"
-            - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
-            - wp_core:/var/www/html
+  cli:
+    image: chaosexanima/transgression-cli
+    environment:
+      WORDPRESS_DB_HOST: database
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: password
+    volumes:
+      - "${PWD}/wp_content:/var/www/html/wp-content"
+      - "${PWD}/src:/var/www/html/wp-content/themes/transgression"
+      - "${PWD}/plugin:/var/www/html/wp-content/plugins/transgression"
+      - wp_core:/var/www/html
 
 volumes:
-    wp_core:
+  wp_core:

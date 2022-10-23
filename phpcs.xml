@@ -9,4 +9,5 @@
 		<severity>0</severity>
 	</rule>
 	<file>./src</file>
+	<file>./plugin</file>
 </ruleset>
