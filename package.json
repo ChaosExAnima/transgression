@@ -7,7 +7,7 @@
 		"start": "yarn docker up -d",
 		"stop": "yarn docker down",
 		"logs": "yarn docker logs",
-		"wp": "yarn docker run cli wp",
+		"wp": "yarn docker exec wordpress wp",
 		"predocker": "docker context use default",
 		"docker": "docker compose",
 		"setup": "concurrently yarn:setup:plugins yarn:setup:theme",
