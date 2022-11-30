@@ -2,13 +2,17 @@
 
 namespace Transgression;
 
-use Transgression\Modules\{Applications, People, Email\Emailer};
+use Transgression\Modules\{Applications, Attendance, Discord, People, Email\Emailer, WooCommerce};
 
 class Main {
 	public function init() {
 		$logger = new Logger();
 		$emailer = new Emailer();
-		$people = new People( $emailer, $logger );
-		$apps = new Applications( $emailer, $logger );
+
+		new Applications( $emailer, $logger );
+		new Attendance( $logger );
+		new Discord();
+		new People( $emailer, $logger );
+		new WooCommerce( $logger );
 	}
 }

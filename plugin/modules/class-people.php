@@ -13,6 +13,10 @@ class People extends Module {
 	const REQUIRED_PLUGINS = ['woocommerce'];
 
 	public function __construct( protected Emailer $emailer, protected Logger $logger ) {
+		if ( !self::check_plugins() ) {
+			return;
+		}
+
 		// Logging in
 		add_action( 'template_redirect', [ $this, 'handle_login' ] );
 		add_action( 'template_redirect', [ $this, 'redirect_to_profile' ] );
