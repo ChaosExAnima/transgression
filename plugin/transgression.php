@@ -1,4 +1,11 @@
 <?php declare( strict_types=1 );
+/**
+ * Plugin Name: Transgression Ticketing System
+ * Plugin URI: https://transgression.party
+ * Description: Vetting system and event ticketing manager.
+ * Version: 0.1.0
+ * Requires PHP: 8.1
+ */
 
 namespace Transgression;
 
