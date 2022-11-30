@@ -10,7 +10,7 @@ use function Transgression\{get_current_url, strip_query};
 
 class People extends Module {
 	/** @inheritDoc */
-	const REQUIRED_PLUGINS = ['woocommerce'];
+	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
 
 	public function __construct( protected Emailer $emailer, protected Logger $logger ) {
 		if ( !self::check_plugins() ) {

@@ -6,7 +6,7 @@ use Transgression\Logger;
 
 class WooCommerce extends Module {
 	/** @inheritDoc */
-	const REQUIRED_PLUGINS = ['woocommerce'];
+	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
 
 	public function __construct( protected Logger $logger ) {
 		if ( !self::check_plugins() ) {

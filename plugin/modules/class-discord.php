@@ -8,7 +8,7 @@ use WP_Post;
 class Discord extends Module {
 	protected Admin $admin;
 
-	protected function __construct() {
+	public function __construct() {
 		$admin = new Admin( 'discord' );
 		$admin->as_post_subpage(
 			Applications::POST_TYPE,

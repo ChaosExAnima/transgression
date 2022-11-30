@@ -8,7 +8,7 @@ use function Transgression\load_view;
 
 class Attendance extends Module {
 	/** @inheritDoc */
-	const REQUIRED_PLUGINS = ['woocommerce'];
+	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
 
 	const ICON = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OC4zNjkiIGhlaWdodD0iNzguMzY' .
 	'5IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3OC4zNjkgNzguMzY5IiB4bWw6c3BhY2U9InByZXNlcnZlIj' .
