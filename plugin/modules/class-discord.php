@@ -2,14 +2,14 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Helpers\{Admin, Admin_Option};
+use Transgression\Admin\{Page, Option};
 use WP_Post;
 
 class Discord extends Module {
-	protected Admin $admin;
+	protected Page $admin;
 
 	public function __construct() {
-		$admin = new Admin( 'discord' );
+		$admin = new Page( 'discord' );
 		$admin->as_post_subpage(
 			Applications::POST_TYPE,
 			'discord',
@@ -17,12 +17,12 @@ class Discord extends Module {
 		);
 		$admin->add_action( 'test-hook', [ $this, 'send_test' ] );
 
-		( new Admin_Option( 'app_discord_hook', 'Application Webhook' ) )
+		( new Option( 'app_discord_hook', 'Application Webhook' ) )
 			->of_type( 'url' )
 			->render_after( [ $this, 'render_test_button' ] )
 			->on_page( $admin );
 		if ( WooCommerce::check_plugins() ) {
-			( new Admin_Option( 'woo_discord_hook', 'Purchase Webhook' ) )
+			( new Option( 'woo_discord_hook', 'Purchase Webhook' ) )
 				->of_type( 'url' )
 				->render_after( [ $this, 'render_test_button' ] )
 				->on_page( $admin );
@@ -130,10 +130,10 @@ class Discord extends Module {
 	/**
 	 * Renders a button that triggers
 	 *
-	 * @param Admin_Option $option
+	 * @param Option $option
 	 * @return void
 	 */
-	public function render_test_button( Admin_Option $option ): void {
+	public function render_test_button( Option $option ): void {
 		$test_url = $this->admin->get_url( [
 			'test-hook' => $option->key,
 			'_wpnonce' => wp_create_nonce( "test-hook-{$option->key}" ),
