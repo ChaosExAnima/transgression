@@ -67,7 +67,7 @@ class Applications extends Module {
 			'register_meta_box_cb' => [$this, 'meta_boxes'],
 			'delete_with_user' => true,
 			'capabilities' => [
-				'create_posts' => false,
+				'create_posts' => 'do_not_allow',
 			],
 			'map_meta_cap' => true,
 		] );
