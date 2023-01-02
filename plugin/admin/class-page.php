@@ -18,6 +18,8 @@ class Page {
 
 	protected mixed $render_cb = null;
 
+	protected string $description = '';
+
 	/**
 	 * Creates admin page
 	 *
@@ -93,6 +95,11 @@ class Page {
 			$label,
 			$menu_label
 		);
+	}
+
+	public function with_description( string $description ): self {
+		$this->description = $description;
+		return $this;
 	}
 
 	/**
@@ -208,6 +215,12 @@ class Page {
 			'<div class="wrap"><h1>%s</h1><form action="options.php" method="post">',
 			esc_html( get_admin_page_title() )
 		);
+		if ( $this->description ) {
+			printf(
+				'<p>%s</p>',
+				wp_kses_post( $this->description )
+			);
+		}
 		settings_fields( $this->setting_group );
 		do_settings_sections( $this->page_hook );
 		if ( is_callable( $this->render_cb ) ) {

@@ -6,7 +6,6 @@ use Error;
 use Transgression\Admin\Option;
 
 abstract class Email {
-	protected string $body;
 	protected ?string $template = null;
 	protected bool $is_html = false;
 	protected array $replace_urls = [];
@@ -63,6 +62,15 @@ abstract class Email {
 	 * @return Option
 	 */
 	abstract public function template_option( string $key, string $name ): Option;
+
+	/**
+	 * Adds description in admin page header
+	 *
+	 * @return string
+	 */
+	public function admin_description(): string {
+		return '';
+	}
 
 	protected function process_body( string $body ): string {
 		return str_replace(

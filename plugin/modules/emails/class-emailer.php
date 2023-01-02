@@ -22,6 +22,7 @@ class Emailer {
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
 
 		$email = $this->create();
+		$admin->with_description( $email->admin_description() );
 		foreach ( self::TEMPLATES as $key => $name ) {
 			$email->template_option( $key, $name )
 				->render_after( [ $this, 'render_test_button' ] )
@@ -76,7 +77,11 @@ class Emailer {
 		$user_id = get_current_user_id();
 		$email = $this->create();
 		try {
-			$email->to_user( $user_id )->with_template( $template_key )->send();
+			$email
+				->to_user( $user_id )
+				->with_subject( "Testing template {$template_key}" )
+				->with_template( $template_key )
+				->send();
 		} catch ( \Error $error ) {
 			$this->admin->add_message( $error->getMessage(), 'error' );
 			return;

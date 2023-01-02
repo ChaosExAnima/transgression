@@ -15,7 +15,7 @@ class Option_Textarea extends Option {
 		public string $label,
 		public mixed $default = null
 	) {
-		$this->sanitize_cb = [ $this, 'sanitize_text_field' ];
+		$this->sanitize_cb = 'sanitize_text_field';
 		$this->render_cb = [ $this, 'render_text_area' ];
 		parent::__construct( $key, $label, $default );
 	}
