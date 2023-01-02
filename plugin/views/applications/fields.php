@@ -14,9 +14,9 @@ $post = $params['post'];
 				<th><?php echo esc_html( $name ); ?></th>
 				<td>
 					<?php $value = $post->{$key}; ?>
-					<?php if ( !$value ) : ?>
+					<?php if ( ! $value ) : ?>
 						<em>Not provided</em>
-					<?php else if ( 'email' === $key ) : ?>
+					<?php elseif ( 'email' === $key ) : ?>
 						<a href="mailto:<?php echo esc_attr( $value ); ?>" target="_blank">
 							<?php echo esc_attr( $value ); ?>
 						</a>

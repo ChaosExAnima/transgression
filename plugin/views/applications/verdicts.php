@@ -18,7 +18,7 @@ if ( count( $verdicts ) > 0 ) :
 			printf(
 				'%s - %s, ',
 				$verdict['approved'] === true ? '✅' : '❌',
-				esc_html( $user->display_name ),
+				esc_html( get_userdata( $verdict['user_id'] )->display_name ?? 'None' ),
 			);
 			render_time( $verdict['date'], true );
 			?>

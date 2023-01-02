@@ -6,7 +6,7 @@ $photo_url = $params['photo_url'];
 $social_label = $params['social_label'];
 $social_url = $params['social_url'];
 $input_label = $params['input_label'];
-$mime_types = $param['mime_types'];
+$mime_types = $params['mime_types'];
 ?>
 
 <?php if ( $photo_url ) : ?>

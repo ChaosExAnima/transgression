@@ -258,6 +258,7 @@ class Applications extends Module {
 
 	public function render_metabox_photo( WP_Post $post ) {
 		$params = [
+			'photo_url' => null,
 			'input_label' => 'Add photo',
 			'mime_types' => implode( ',', array_values( self::MIME_TYPES ) ),
 			'social_url' => $post->photo_url,
