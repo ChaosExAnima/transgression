@@ -11,6 +11,7 @@ use MailPoet\Newsletter\Renderer\{Renderer, Blocks\Renderer as BlocksRenderer, C
 use MailPoet\Newsletter\Shortcodes\Shortcodes;
 use MailPoet\Segments\SegmentsRepository;
 use MailPoet\Subscribers\SubscribersRepository;
+use MailPoet\WP\Functions;
 use MailPoetVendor\CSS;
 use Transgression\Admin\Option;
 use Transgression\Admin\Option_Select;
@@ -102,6 +103,7 @@ class MailPoet extends Email {
 			$this->mailpoet_container->get( Preprocessor::class ),
 			$this->mailpoet_container->get( CSS::class ),
 			$this->mailpoet_container->get( ServicesChecker::class ),
+			$this->mailpoet_container->get( Functions::class )
 		);
 	}
 
