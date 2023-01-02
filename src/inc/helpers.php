@@ -1,6 +1,6 @@
 <?php declare( strict_types=1 );
 
-namespace Transgression;
+namespace TransgressionTheme;
 
 /**
  * Loads a view

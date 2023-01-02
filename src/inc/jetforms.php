@@ -1,11 +1,14 @@
 <?php declare( strict_types=1 );
 
-namespace Transgression;
+namespace TransgressionTheme;
 
 use Jet_Form_Builder\Actions\Action_Handler;
 use Jet_Form_Builder\Actions\Types\Base;
 use Jet_Form_Builder\Blocks\Block_Helper;
-use WP_Error;
+
+if ( ! defined( 'JET_FORM_BUILDER_VERSION' ) || version_compare( JET_FORM_BUILDER_VERSION, '2.0.6', '<' ) ) {
+	return;
+}
 
 function before_application_insert( bool $return ): bool {
 	if ( isset( $_REQUEST['email'] ) ) {
