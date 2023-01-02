@@ -22,6 +22,7 @@ services:
     depends_on:
       - database
     volumes:
+      - "${PWD}/fast_cgi.conf:/opt/bitnami/nginx/conf/server_blocks/fast_cgi.conf:ro"
       - "${PWD}/wp_content:/bitnami/wordpress/wp-content"
       - "${PWD}/src:/bitnami/wordpress/wp-content/themes/transgression"
       - "${PWD}/plugin:/bitnami/wordpress/wp-content/plugins/transgression"
