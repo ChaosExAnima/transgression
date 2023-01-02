@@ -2,7 +2,7 @@
 
 namespace Transgression\Modules\Email;
 
-use Transgression\Admin\Option;
+use Transgression\Admin\Option_Textarea;
 
 class WPMail extends Email {
 	public function send() {
@@ -13,7 +13,7 @@ class WPMail extends Email {
 		);
 	}
 
-	public function template_option( string $key, string $name ): Option {
-		return ( new Option( $key, $name ) );
+	public function template_option( string $key, string $name ): Option_Textarea {
+		return ( new Option_Textarea( $key, $name ) );
 	}
 }

@@ -4,6 +4,7 @@ namespace Transgression\Modules\Email;
 
 use Transgression\Admin\Option;
 use Transgression\Admin\Page;
+use Transgression\Modules\Applications;
 
 class Emailer {
 	public const TEMPLATES = [
@@ -17,6 +18,7 @@ class Emailer {
 
 	public function __construct() {
 		$admin = new Page( 'emails' );
+		$admin->as_post_subpage( Applications::POST_TYPE, 'emails', 'Emails' );
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
 
 		$email = $this->create();
