@@ -2,8 +2,7 @@
 
 namespace Transgression\Modules\Email;
 
-use Transgression\Admin\Option;
-use Transgression\Admin\Page;
+use Transgression\Admin\{Option, Page};
 use Transgression\Modules\Applications;
 
 class Emailer {
@@ -13,23 +12,23 @@ class Emailer {
 		'email_duplicate' => 'Duplicate Application Template',
 		'email_login' => 'Login Template',
 	];
+	public array $templates = [];
 
 	protected Page $admin;
 
 	public function __construct() {
 		$admin = new Page( 'emails' );
+		$this->admin = $admin;
+
 		$admin->as_post_subpage( Applications::POST_TYPE, 'emails', 'Emails' );
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
 
 		$email = $this->create();
 		$admin->with_description( $email->admin_description() );
 		foreach ( self::TEMPLATES as $key => $name ) {
-			$email->template_option( $key, $name )
-				->render_after( [ $this, 'render_test_button' ] )
-				->on_page( $admin );
+			$this->add_template( $key, $name );
 		}
 
-		$this->admin = $admin;
 	}
 
 	/**
@@ -44,6 +43,16 @@ class Emailer {
 			return new MailPoet( $to, $subject );
 		}
 		return new WPMail( $to, $subject );
+	}
+
+	public function add_template( string $key, string $name, string $description = '' ): Option {
+		$email = $this->create();
+		$option = $email->template_option( $key, $name );
+		$this->templates[ $key ] = $option
+			->describe( $description )
+			->render_after( [$this, 'render_test_button'] )
+			->on_page( $this->admin );
+		return $option;
 	}
 
 	/**
