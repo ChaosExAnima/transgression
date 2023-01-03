@@ -13,7 +13,7 @@ class People extends Module {
 	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
 
 	public function __construct( protected Emailer $emailer, protected Logger $logger ) {
-		if ( !self::check_plugins() ) {
+		if ( ! self::check_plugins() ) {
 			return;
 		}
 
@@ -48,10 +48,13 @@ class People extends Module {
 		// Try logging in?
 		if ( $this->check_login( get_current_url() ) ) {
 			$user_id = email_exists( $_GET['email'] );
+			$user = get_userdata( $user_id );
+			$this->redirect_to_login_if_not_customer( $user );
+
 			wp_set_auth_cookie( $user_id );
 			wc_add_notice( sprintf(
 				'You are now logged in, %s. <a href="%s">Log out</a>',
-				esc_html( get_userdata( $user_id )->display_name ),
+				esc_html( $user->display_name ),
 				esc_url( wp_logout_url( $current_url ) )
 			) );
 			wp_safe_redirect( $current_url );
@@ -261,17 +264,19 @@ class People extends Module {
 		}
 
 		// Does this user exist?
-		if ( !email_exists( $email ) ) {
+		$user_id = email_exists( $email );
+		if ( ! $user_id ) {
 			$this->logger->log( "Login email check failed for {$email}" );
 			return false;
 		}
 
-		// Finally, check the token.
+		// Check the token.
 		$token = get_transient( $key );
-		if ( false === $token ) {
+		if ( false === $token || ! hash_equals( $token, $_GET['token'] ) ) {
 			return false;
 		}
-		return hash_equals( $token, $_GET['token'] );
+
+		return true;
 	}
 
 	/**
@@ -281,7 +286,7 @@ class People extends Module {
 	 * @return void
 	 */
 	private function redirect_to_login_if_not_customer( WP_User $user ) {
-		if ( !$this->is_passwordless( $user->ID ) ) {
+		if ( ! $this->is_passwordless( $user->ID ) ) {
 			$url = add_query_arg( 'action', 'purchase', wp_login_url( get_current_url() ) );
 			wp_safe_redirect( $url );
 			exit;

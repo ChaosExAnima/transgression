@@ -35,15 +35,15 @@ class Emailer {
 	/**
 	 * Gets an email class reference
 	 *
-	 * @param string|null $email
+	 * @param string|null $to
 	 * @param string|null $subject
 	 * @return Email
 	 */
-	public function create( ?string $email = null, ?string $subject = null ): Email {
+	public function create( ?string $to = null, ?string $subject = null ): Email {
 		if ( is_plugin_active( 'mailpoet' ) ) {
-			return new MailPoet( $email, $subject );
+			return new MailPoet( $to, $subject );
 		}
-		return new WPMail( $email, $subject );
+		return new WPMail( $to, $subject );
 	}
 
 	/**

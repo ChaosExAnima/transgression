@@ -16,6 +16,7 @@ class WPMail extends Email {
 		}
 		$headers = [
 			sprintf( 'From: %s', sanitize_email( get_bloginfo( 'admin_email' ) ) ),
+			'Content-type: text/html',
 		];
 
 		wp_mail(
@@ -33,11 +34,5 @@ class WPMail extends Email {
 
 	public function template_option( string $key, string $name ): Option_Textarea {
 		return ( new Option_Textarea( $key, $name ) );
-	}
-
-	protected function process_body( string $body ): string {
-		// TODO: Clear global shortcodes, register new ones, process body.
-		// Alternatively: handle easier route to do fake shortcodes?
-		return $body;
 	}
 }
