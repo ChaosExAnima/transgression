@@ -233,7 +233,8 @@ class People extends Module {
 		$email = $this->emailer->create();
 		$email
 			->to_user( $user_id )
-			->with_template( 'email_login' )
+			->with_template( 'people_login' )
+			->with_subject( 'Login here' )
 			->set_url( 'login-url', $login_url )
 			->send();
 	}

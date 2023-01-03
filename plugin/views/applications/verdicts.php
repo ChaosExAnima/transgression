@@ -4,10 +4,12 @@ namespace Transgression;
 
 /** @var array */
 $verdicts = $params['verdicts'];
+$is_finalized = $params['finalized'];
 
 $yes_link = $params['yes_link'];
 $no_link = $params['no_link'];
 $finalize_link = $params['finalize_link'];
+$email_link = $params['email_link'];
 
 if ( count( $verdicts ) > 0 ) :
 ?>
@@ -37,9 +39,12 @@ if ( count( $verdicts ) > 0 ) :
 </p>
 
 <p>
-	<?php if ( count( $verdicts ) > 0 ) : ?>
+	<?php if ( count( $verdicts ) > 0 && ! $is_finalized ) : ?>
 		<a href="<?php echo esc_url( $finalize_link ); ?>" class="button button-primary">Finalize Verdict</a>
 	<?php else : ?>
 		<button class="button" disabled>Finalize Verdict</button>
+	<?php endif; ?>
+	<?php if ( $is_finalized ) : ?>
+		<a href="<?php echo esc_url( $email_link ); ?>" class="button">Resend Email</a>
 	<?php endif; ?>
 </p>

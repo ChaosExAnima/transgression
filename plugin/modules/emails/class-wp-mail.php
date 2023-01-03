@@ -8,11 +8,11 @@ class WPMail extends Email {
 	public function send() {
 		$body = '';
 		if ( $this->template ) {
-			$option = $this->template_option( $this->template, '' );
+			$option = self::template_option( $this->template, '' );
 			$body = $option->get();
 		}
 		if ( ! $body ) {
-			return;
+			throw new \Error( 'No body set' );
 		}
 		$headers = [
 			sprintf( 'From: %s', sanitize_email( get_bloginfo( 'admin_email' ) ) ),

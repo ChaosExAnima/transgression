@@ -133,13 +133,16 @@ class Applications extends Module {
 	public function action_verdict( int $post_id ) {
 		check_admin_referer( "verdict-{$post_id}" );
 		$post = get_post( $post_id );
-		if ( $post->post_type !== self::POST_TYPE || !current_user_can( 'edit_post', $post_id ) ) {
+		if ( $post->post_type !== self::POST_TYPE || ! current_user_can( 'edit_post', $post_id ) ) {
 			wp_die();
 		}
 
 		$verdict = $_GET['verdict'];
 		if ( $verdict === 'finalize' ) {
 			$message = $this->finalize( $post );
+		} else if ( $verdict === 'email' && $post->post_status !== 'pending' ) {
+			$this->email_result( $post );
+			$message = 104;
 		} else {
 			$meta = [
 				'approved' => $verdict === 'yes',
@@ -254,8 +257,9 @@ class Applications extends Module {
 	public function render_metabox_verdict( WP_Post $post ) {
 		$params = [
 			'verdicts' => $this->get_unique_verdicts( $post->ID ),
+			'finalized' => $post->post_status !== 'pending',
 		];
-		foreach ( [ 'yes', 'no', 'finalize' ] as $type ) {
+		foreach ( [ 'yes', 'no', 'finalize', 'email' ] as $type ) {
 			$params["{$type}_link"] = add_query_arg( [
 				'action' => 'verdict',
 				'verdict' => $type,
@@ -332,6 +336,7 @@ class Applications extends Module {
 			101 => 'Rejection sent',
 			102 => 'Application approved',
 			103 => 'Error creating new user',
+			104 => 'Emailed application results',
 		];
 		return $messages;
 	}
@@ -358,10 +363,9 @@ class Applications extends Module {
 		$approved = count( $verdict_results ) === count( array_filter( $verdict_results ) );
 		update_post_meta( $post->ID, 'status', $approved ? 'approved' : 'denied' );
 		if ( ! $approved ) {
-			$email = $this->emailer->create( $post->email );
-			$email->with_template( 'email_denied' )->send();
 			$post->post_status = self::STATUS_DENIED;
 			wp_update_post( $post );
+			$this->email_result( $post );
 			return null;
 		}
 
@@ -387,9 +391,40 @@ class Applications extends Module {
 		$post->post_status = self::STATUS_APPROVED;
 		wp_update_post( $post );
 		update_post_meta( $post->ID, 'created_user', $user_id );
-		$email = $this->emailer->create();
-		$email->to_user( $user_id )->with_template( 'email_approved' )->send();
+		$this->email_result( $post );
 		return null;
+	}
+
+	private function email_result( WP_Post $post ): void {
+		$status = $post->post_status;
+		$template = null;
+		if ( $status === self::STATUS_APPROVED ) {
+			$template = 'app_approved';
+		} else if ( $status === self::STATUS_DENIED ) {
+			$template = 'app_denied';
+		}
+
+		if ( ! $template ) {
+			return;
+		}
+
+		try {
+			$email = $this->emailer
+				->create( $post->email )
+				->with_template( $template );
+			$email->with_subject(
+				// TODO: Allow subject customization
+				$status === self::STATUS_APPROVED
+					? 'You’re approved!'
+					: 'Application denied'
+			);
+			if ( $post->created_user ) {
+				$email->to_user( intval( $post->created_user ) );
+			}
+			$email->send();
+		} catch ( \Throwable $err ) {
+			$this->logger->error( $err );
+		}
 	}
 
 	private function get_unique_verdicts( int $post_id ): array {
