@@ -88,6 +88,8 @@ abstract class Email {
 		}
 
 		$body = wp_kses_post( $body );
+		$body = wpautop( $body );
+		$body = wptexturize( $body );
 		$body = do_shortcode( $body );
 
 		remove_all_shortcodes();

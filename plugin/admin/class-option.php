@@ -150,6 +150,7 @@ class Option {
 				'href' => true,
 				'target' => true,
 			],
+			'code' => [],
 		];
 		printf(
 			'<p class="description">%s</p>',
