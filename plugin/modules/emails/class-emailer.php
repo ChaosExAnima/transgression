@@ -6,13 +6,7 @@ use Transgression\Admin\{Option, Page};
 use Transgression\Modules\Applications;
 
 class Emailer {
-	public const TEMPLATES = [
-		'email_approved' => 'Approved Template',
-		'email_denied' => 'Denied Template',
-		'email_duplicate' => 'Duplicate Application Template',
-		'email_login' => 'Login Template',
-	];
-	public array $templates = [];
+	protected array $templates = [];
 
 	protected Page $admin;
 
@@ -23,12 +17,7 @@ class Emailer {
 		$admin->as_post_subpage( Applications::POST_TYPE, 'emails', 'Emails' );
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
 
-		$email = $this->create();
-		$admin->with_description( $email->admin_description() );
-		foreach ( self::TEMPLATES as $key => $name ) {
-			$this->add_template( $key, $name );
-		}
-
+		$admin->with_description( call_user_func( [ $this->get_email_class(), 'admin_description' ] ) );
 	}
 
 	/**
@@ -39,20 +28,38 @@ class Emailer {
 	 * @return Email
 	 */
 	public function create( ?string $to = null, ?string $subject = null ): Email {
-		if ( is_plugin_active( 'mailpoet' ) ) {
-			return new MailPoet( $to, $subject );
+		$email_class = $this->get_email_class();
+		if ( $email_class === MailPoet::class ) {
+			return new MailPoet( $this, $to, $subject );
 		}
-		return new WPMail( $to, $subject );
+		return new WPMail( $this, $to, $subject );
 	}
 
+	/**
+	 * Registers an email template.
+	 *
+	 * @param string $key
+	 * @param string $name
+	 * @param string $description
+	 * @return Option
+	 */
 	public function add_template( string $key, string $name, string $description = '' ): Option {
-		$email = $this->create();
-		$option = $email->template_option( $key, $name );
+		$option = call_user_func( [ $this->get_email_class(), 'template_option' ], $key, $name );
 		$this->templates[ $key ] = $option
 			->describe( $description )
 			->render_after( [$this, 'render_test_button'] )
 			->on_page( $this->admin );
 		return $option;
+	}
+
+	/**
+	 * Checks if a template of a given key is set.
+	 *
+	 * @param string $key
+	 * @return boolean
+	 */
+	public function is_template( string $key ): bool {
+		return isset( $this->templates[ $key ] );
 	}
 
 	/**
@@ -78,7 +85,7 @@ class Emailer {
 	 */
 	public function do_test_email( string $template_key ) {
 		check_admin_referer( 'test-email-' . $template_key );
-		if ( ! isset( self::TEMPLATES[ $template_key ] ) ) {
+		if ( ! $this->is_template( $template_key ) ) {
 			$this->admin->add_message( 'Could not find template', 'error' );
 			return;
 		}
@@ -90,6 +97,7 @@ class Emailer {
 				->to_user( $user_id )
 				->with_subject( "Testing template {$template_key}" )
 				->with_template( $template_key )
+				->set_url( 'login-url', wc_get_page_permalink( 'shop' ) )
 				->send();
 		} catch ( \Error $error ) {
 			$this->admin->add_message( $error->getMessage(), 'error' );
@@ -97,5 +105,12 @@ class Emailer {
 		}
 		$user = get_userdata( $user_id );
 		$this->admin->add_message( "Email sent to {$user->user_email}!", 'success' );
+	}
+
+	protected function get_email_class(): string {
+		if ( is_plugin_active( 'mailpoet/mailpoet.php' ) ) {
+			return MailPoet::class;
+		}
+		return WPMail::class;
 	}
 }

@@ -17,7 +17,7 @@ abstract class Email {
 	 * @param string|null $email
 	 * @param string|null $subject
 	 */
-	public function __construct( public ?string $email = null, public ?string $subject = null ) {}
+	public function __construct( protected Emailer $emailer, public ?string $email = null, public ?string $subject = null ) {}
 
 	/**
 	 * Sets the email via user ID
@@ -47,7 +47,7 @@ abstract class Email {
 	}
 
 	public function with_template( string $template ): self {
-		if ( !isset( Emailer::TEMPLATES[$template] ) ) {
+		if ( ! $this->emailer->is_template( $template ) ) {
 			throw new Error( "Could not find template of {$template}" );
 		}
 		$this->template = $template;
@@ -55,24 +55,6 @@ abstract class Email {
 	}
 
 	abstract public function send();
-
-	/**
-	 * Creates an admin option for templates
-	 *
-	 * @param string $key
-	 * @param string $name
-	 * @return Option
-	 */
-	abstract public function template_option( string $key, string $name ): Option;
-
-	/**
-	 * Adds description in admin page header
-	 *
-	 * @return string
-	 */
-	public function admin_description(): string {
-		return '';
-	}
 
 	public function do_shortcode( mixed $atts, ?string $content, string $tag ): string {
 		if ( empty( $this->shortcodes[ $tag ] ) ) {
@@ -82,9 +64,6 @@ abstract class Email {
 		$callback = $this->shortcodes[ $tag ];
 		if ( is_callable( $callback ) ) {
 			return call_user_func( $callback, $content, $atts );
-		}
-		if ( is_array( $callback ) && count( $callback ) > 0 ) {
-			return call_user_func_array( [ $this, $callback[0] ], array_slice( $callback, 1 ) );
 		}
 
 		if ( is_string( $callback ) ) {
@@ -130,5 +109,23 @@ abstract class Email {
 		if ( ! isset( $sc['events'] ) ) {
 			$this->set_url( 'events', wc_get_page_permalink( 'shop' ) );
 		}
+	}
+
+	/**
+	 * Creates an admin option for templates
+	 *
+	 * @param string $key
+	 * @param string $name
+	 * @return Option
+	 */
+	abstract static public function template_option( string $key, string $name ): Option;
+
+	/**
+	 * Adds description in admin page header
+	 *
+	 * @return string
+	 */
+	public static function admin_description(): string {
+		return '';
 	}
 }

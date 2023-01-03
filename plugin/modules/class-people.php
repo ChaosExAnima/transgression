@@ -30,6 +30,13 @@ class People extends Module {
 		add_action( 'admin_notices', [ $this, 'show_application' ] );
 		add_filter( 'user_row_actions', [ $this, 'filter_admin_row' ], 10, 2 );
 		add_filter( 'user_contactmethods', [ $this, 'filter_contact_methods' ] );
+
+		// Email templates
+		$emailer->add_template(
+			'people_login',
+			'Login Email',
+			'Use tag <code>[login-url]text[/login-url]</code> for special login link'
+		);
 	}
 
 	/**

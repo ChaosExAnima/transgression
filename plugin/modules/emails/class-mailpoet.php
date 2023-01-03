@@ -21,7 +21,7 @@ class MailPoet extends Email {
 	private $mailpoet_container = null;
 
 	public function __construct() {
-		if ( !class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
+		if ( ! class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
 			throw new Error( 'MailPoet is not loaded' );
 		}
 		$this->mailpoet_container = \MailPoet\DI\ContainerWrapper::getInstance();
@@ -56,14 +56,6 @@ class MailPoet extends Email {
 		);
 	}
 
-	public function template_option( string $key, string $name ): Option {
-		$newsletters = [];
-		foreach ( $this->get_newsletter_templates() as $newsletter ) {
-			$newsletters[ $newsletter->getId() ] = $newsletter->getSubject();
-		}
-		return ( new Option_Select( $key, $name ) )->with_options( $newsletters );
-	}
-
 	protected function load_template(): int {
 		if ( !$this->template ) {
 			throw new Error( 'MailPoet requires a template' );
@@ -77,10 +69,6 @@ class MailPoet extends Email {
 
 	private function get_newsletter_repo(): NewslettersRepository {
 		return $this->mailpoet_container->get( NewslettersRepository::class );
-	}
-
-	private function get_newsletter_templates(): array {
-		return $this->get_newsletter_repo()->findDraftByTypes( [NewsletterEntity::TYPE_STANDARD] );
 	}
 
 	private function get_newsletter( int $id ): ?NewsletterEntity {
@@ -130,5 +118,21 @@ class MailPoet extends Email {
 		$body = $shortcodes->replace( $body );
 
 		return $body;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function template_option( string $key, string $name ): Option {
+		$newsletters = [];
+		if ( class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
+			$templates = \MailPoet\DI\ContainerWrapper::getInstance()
+				->get( NewslettersRepository::class )
+				->findDraftByTypes( [ NewsletterEntity::TYPE_STANDARD ] );
+			foreach ( $templates as $newsletter ) {
+				$newsletters[ $newsletter->getId() ] = $newsletter->getSubject();
+			}
+		}
+		return ( new Option_Select( $key, $name ) )->with_options( $newsletters );
 	}
 }

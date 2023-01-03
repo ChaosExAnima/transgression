@@ -27,12 +27,18 @@ class WPMail extends Email {
 		);
 	}
 
-	public function admin_description(): string {
+	/**
+	 * @inheritDoc
+	 */
+	public static function admin_description(): string {
 		return 'Template replacements: <code>[name]</code> the name of the person, ' .
 			'<code>[events]text[/events]</code> for the events link';
 	}
 
-	public function template_option( string $key, string $name ): Option_Textarea {
+	/**
+	 * @inheritDoc
+	 */
+	public static function template_option( string $key, string $name ): Option_Textarea {
 		return ( new Option_Textarea( $key, $name ) );
 	}
 }

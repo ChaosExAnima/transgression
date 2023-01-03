@@ -54,6 +54,15 @@ class Applications extends Module {
 		add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', [ $this, 'reviewed_column' ], 10, 2 );
 		add_filter( 'post_row_actions', [$this, 'remove_bulk_actions'], 10, 2 );
 		add_filter( 'comments_list_table_query_args', [$this, 'hide_review_comments'] );
+
+		// Email templates
+		$emailer->add_template( 'app_approved', 'Application Approved' );
+		$emailer->add_template( 'app_denied', 'Application Denied' );
+		$emailer->add_template(
+			'app_dupe',
+			'Application Duplicate',
+			'When someone submits an application but their email is already approved'
+		);
 	}
 
 	public function init() {
