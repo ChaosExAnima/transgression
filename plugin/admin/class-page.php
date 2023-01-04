@@ -16,6 +16,9 @@ class Page {
 
 	protected string $page_hook = '';
 
+	/** @var string[] */
+	protected array $sections = [];
+
 	protected mixed $render_cb = null;
 
 	protected string $description = '';
@@ -135,6 +138,18 @@ class Page {
 	}
 
 	/**
+	 * Adds a section
+	 *
+	 * @param string $key
+	 * @param string $name
+	 * @return self
+	 */
+	public function add_section( string $key, string $name ): self {
+		$this->sections[ $key ] = $name;
+		return $this;
+	}
+
+	/**
 	 * Gets the page URL based off of the page hook
 	 *
 	 * @param array $params
@@ -186,7 +201,13 @@ class Page {
 		}
 
 		$section = "{$this->setting_group}_section";
-		add_settings_section( $section, '', '', $this->page_hook );
+		if ( count( $this->sections ) === 0 ) {
+			add_settings_section( $section, '', '', $this->page_hook );
+		} else {
+			foreach ( $this->sections as $section_key => $section_name ) {
+				add_settings_section( $section_key, $section_name, '', $this->page_hook );
+			}
+		}
 		foreach ( $this->page_options as $admin_option ) {
 			$admin_option->register(
 				$this->page_hook,

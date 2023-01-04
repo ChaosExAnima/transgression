@@ -7,6 +7,8 @@ class Option {
 	protected mixed $render_cb = null;
 	protected array $render_args = [];
 	protected string $description = '';
+	protected ?string $section = null;
+
 
 	/**
 	 * Creates an admin option
@@ -70,6 +72,11 @@ class Option {
 		return $this;
 	}
 
+	public function in_section( string $section ): self {
+		$this->section = $section;
+		return $this;
+	}
+
 	public function get(): mixed {
 		return get_option( $this->key, $this->default );
 	}
@@ -105,6 +112,10 @@ class Option {
 
 		if ( ! $this->render_cb ) {
 			$this->of_type();
+		}
+		// Use set section if provided.
+		if ( $this->section ) {
+			$section = $this->section;
 		}
 		add_settings_field(
 			$this->key,
