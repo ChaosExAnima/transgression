@@ -45,12 +45,23 @@ class Emailer {
 	 * @return Option
 	 */
 	public function add_template( string $key, string $name, string $description = '' ): Option {
+		/** @var Option */
 		$option = call_user_func( [ $this->get_email_class(), 'template_option' ], $key, $name );
 		$this->templates[ $key ] = $option
 			->describe( $description )
-			->render_after( [$this, 'render_test_button'] )
+			->render_after( [ $this, 'render_test_button' ] )
 			->on_page( $this->admin );
 		return $option;
+	}
+
+	/**
+	 * Gets a template for a given key.
+	 *
+	 * @param string $key
+	 * @return Option
+	 */
+	public function get_template( string $key ): Option {
+		return $this->templates[ $key ];
 	}
 
 	/**
@@ -130,6 +141,11 @@ class Emailer {
 		}
 	}
 
+	/**
+	 * Gets the class string of the email to use..
+	 *
+	 * @return string
+	 */
 	protected function get_email_class(): string {
 		if ( is_plugin_active( 'mailpoet/mailpoet.php' ) ) {
 			return MailPoet::class;
