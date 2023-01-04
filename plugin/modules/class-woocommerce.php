@@ -2,16 +2,21 @@
 
 namespace Transgression\Modules;
 
+use Transgression\Admin\Option_Checkbox;
+use Transgression\Admin\Page;
 use Transgression\Logger;
+
+use function Transgression\load_view;
 
 class WooCommerce extends Module {
 	/** @inheritDoc */
 	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
 
-	public function __construct( protected Logger $logger ) {
-		if ( !self::check_plugins() ) {
+	public function __construct( protected Logger $logger, protected Page $settings_page ) {
+		if ( ! self::check_plugins() ) {
 			return;
 		}
+
 		add_action( 'template_redirect', [ $this, 'skip_cart' ] );
 		add_action( 'template_redirect', [ $this, 'clear_cart' ] );
 		add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'prevent_variation_dupes' ], 10, 2 );
@@ -20,6 +25,19 @@ class WooCommerce extends Module {
 		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' );
 		add_filter( 'woocommerce_navigation_wp_toolbar_disabled', '__return_false' );
 		add_filter( 'woocommerce_customer_meta_fields', '__return_empty_array' );
+
+		// Adds settings
+		/** @var \Transgression\Admin\Option[] */
+		$settings = [];
+		$settings[] = ( new Option_Checkbox( 'shop_title', 'Show shop page title', 1 ) )
+		->describe( 'Changes the page title to use your page title instead of Products' );
+
+		$settings_page->add_section( 'woo', 'WooCommerce' );
+		foreach ( $settings as $setting ) {
+			$settings_page->add_setting( $setting->in_section( 'woo' ) );
+		}
+
+		add_filter( 'post_type_archive_title', [ $this, 'show_shop_page_title' ], 10, 2 );
 	}
 
 	/**
@@ -97,6 +115,22 @@ class WooCommerce extends Module {
 		}
 
 		return $is_valid;
+	}
+
+	/**
+	 * Settings
+	 */
+	public function show_shop_page_title( string $page_title, string $post_type ): string {
+		if ( $post_type !== 'product' ) {
+			return $page_title;
+		}
+
+		$option = $this->settings_page->get_setting( 'shop_title' );
+		if ( $option && $option->get() ) {
+			$page_id = wc_get_page_id( 'shop' );
+			return get_the_title( $page_id );
+		}
+		return $page_title;
 	}
 
 	/**
