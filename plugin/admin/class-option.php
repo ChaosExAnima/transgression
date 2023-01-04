@@ -9,6 +9,15 @@ class Option {
 	protected string $description = '';
 	protected ?string $section = null;
 
+	protected const KSES_TAGS = [
+		'strong' => [],
+		'em' => [],
+		'a' => [
+			'href' => true,
+			'target' => true,
+		],
+		'code' => [],
+	];
 
 	/**
 	 * Creates an admin option
@@ -144,22 +153,13 @@ class Option {
 		);
 	}
 
-	protected function render_description() {
+	protected function render_description(): void {
 		if ( ! $this->description ) {
 			return;
 		}
-		$kses_tags = [
-			'strong' => [],
-			'em' => [],
-			'a' => [
-				'href' => true,
-				'target' => true,
-			],
-			'code' => [],
-		];
 		printf(
 			'<p class="description">%s</p>',
-			wp_kses( $this->description, $kses_tags ),
+			wp_kses( $this->description, self::KSES_TAGS ),
 		);
 	}
 }
