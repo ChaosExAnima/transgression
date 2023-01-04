@@ -222,10 +222,6 @@ class Page {
 			wp_die();
 		}
 
-		if ( ! isset( $this->actions['save_message'] ) ) {
-			$this->save_message();
-		}
-
 		foreach ( $this->actions as $key ) {
 			if ( isset( $_REQUEST[ $key ] ) ) {
 				do_action(
@@ -236,7 +232,12 @@ class Page {
 			}
 		}
 
-		settings_errors( "{$this->setting_group}_messages" );
+		// For options pages, this is run automatically
+		$screen = get_current_screen();
+		if ( $screen->parent_file !== 'options-general.php' ) {
+			settings_errors();
+		}
+
 		printf(
 			'<div class="wrap"><h1>%s</h1><form action="options.php" method="post">',
 			esc_html( get_admin_page_title() )
@@ -254,11 +255,5 @@ class Page {
 		}
 		submit_button( 'Save Settings' );
 		echo '</form></div>';
-	}
-
-	protected function save_message() {
-		if ( isset( $_GET['settings-updated'] ) ) {
-			$this->add_message( 'Settings Saved', 'updated' );
-		}
 	}
 }
