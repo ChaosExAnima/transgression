@@ -16,6 +16,7 @@ class Emailer {
 
 		$admin->as_post_subpage( Applications::POST_TYPE, 'emails', 'Emails' );
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
+		$admin->add_action( 'email-result', [ $this, 'handle_email_result' ] );
 
 		$admin->with_description( call_user_func( [ $this->get_email_class(), 'admin_description' ] ) );
 	}
@@ -83,11 +84,12 @@ class Emailer {
 	 * @param string $template_key
 	 * @return void
 	 */
-	public function do_test_email( string $template_key ) {
+	public function do_test_email( string $template_key ): void {
 		check_admin_referer( 'test-email-' . $template_key );
+		$result = null;
+		$extra = [];
 		if ( ! $this->is_template( $template_key ) ) {
-			$this->admin->add_message( 'Could not find template', 'error' );
-			return;
+			$result = 'invalid';
 		}
 
 		$user_id = get_current_user_id();
@@ -95,16 +97,37 @@ class Emailer {
 		try {
 			$email
 				->to_user( $user_id )
-				->with_subject( "Testing template {$template_key}" )
 				->with_template( $template_key )
 				->set_url( 'login-url', wc_get_page_permalink( 'shop' ) )
 				->send();
+			$result = 'success';
 		} catch ( \Error $error ) {
-			$this->admin->add_message( $error->getMessage(), 'error' );
+			$result = 'error';
+			$extra = [ 'error' => base64_encode( $error->getMessage() ) ];
+		}
+
+		if ( ! $result ) {
 			return;
 		}
-		$user = get_userdata( $user_id );
-		$this->admin->add_message( "Email sent to {$user->user_email}!", 'success' );
+		$redirect_url = $this->admin->get_url( array_merge( [
+			'email-result' => $result,
+			'_wpnonce' => wp_create_nonce( "email-result-{$result}" ),
+		], $extra ) );
+		wp_safe_redirect( $redirect_url );
+		exit;
+	}
+
+	public function handle_email_result( string $email_result ): void {
+		check_admin_referer( "email-result-{$email_result}" );
+		if ( $email_result === 'invalid' ) {
+			$this->admin->add_message( 'Could not find template' );
+		} else if ( $email_result === 'success' ) {
+			$user = get_userdata( get_current_user_id() );
+			$this->admin->add_message( "Email sent to {$user->user_email}!", 'success' );
+		} else if ( $email_result === 'error' ) {
+			$error_msg = base64_decode( $_GET['error'] );
+			$this->admin->add_message( "Error sending email: {$error_msg}" );
+		}
 	}
 
 	protected function get_email_class(): string {

@@ -165,7 +165,7 @@ class Page {
 	 * @param string $type Type of message. One of notice, error, success, or warning
 	 * @return void
 	 */
-	public function add_message( string $message, string $type ) {
+	public function add_message( string $message, string $type = 'error' ) {
 		add_settings_error(
 			"{$this->setting_group}_messages",
 			sanitize_title( substr( $message, 0, 10 ) ),
