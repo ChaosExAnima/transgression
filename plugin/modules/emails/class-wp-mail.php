@@ -18,16 +18,12 @@ class WPMail extends Email {
 		if ( ! $body ) {
 			throw new \Error( 'No body set' );
 		}
-		$headers = [
-			sprintf( 'From: %s', sanitize_email( get_bloginfo( 'admin_email' ) ) ),
-			'Content-type: text/html',
-		];
 
 		wp_mail(
 			$this->email,
 			$this->subject,
 			$this->process_body( $body ),
-			$headers
+			$this->get_headers()
 		);
 	}
 

@@ -81,7 +81,7 @@ abstract class Email {
 		return '';
 	}
 
-	protected function process_body( string $body ): string {
+	protected function process_body( string $body, bool $do_wp_stuff = true ): string {
 		$this->set_default_tags();
 
 		global $shortcode_tags;
@@ -92,9 +92,11 @@ abstract class Email {
 			add_shortcode( $tag, [ $this, 'do_shortcode' ] );
 		}
 
-		$body = wp_kses_post( $body );
-		$body = wpautop( $body );
-		$body = wptexturize( $body );
+		if ( $do_wp_stuff ) {
+			$body = wp_kses_post( $body );
+			$body = wpautop( $body );
+			$body = wptexturize( $body );
+		}
 		$body = do_shortcode( $body );
 
 		remove_all_shortcodes();
@@ -116,6 +118,14 @@ abstract class Email {
 		if ( ! isset( $sc['events'] ) ) {
 			$this->set_url( 'events', wc_get_page_permalink( 'shop' ) );
 		}
+	}
+
+	protected function get_headers( bool $is_html = true ): array {
+		$headers = [ sprintf( 'From: %s', sanitize_email( get_bloginfo( 'admin_email' ) ) ) ];
+		if ( $is_html ) {
+			$headers[] = 'Content-Type: text/html; charset=UTF-8';
+		}
+		return $headers;
 	}
 
 	/**

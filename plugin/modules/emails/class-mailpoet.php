@@ -51,16 +51,11 @@ class MailPoet extends Email {
 		$subject = $newsletter->getSubject();
 		$body = $this->render_newsletter( $newsletter, !$is_html );
 
-		$headers = [];
-		if ( $is_html ) {
-			$headers[] = 'Content-Type: text/html; charset=UTF-8';
-		}
-
 		wp_mail(
 			$this->email,
 			$subject,
-			$this->process_body( $body ),
-			$headers
+			$this->process_body( $body, false ),
+			$this->get_headers( $is_html )
 		);
 	}
 
