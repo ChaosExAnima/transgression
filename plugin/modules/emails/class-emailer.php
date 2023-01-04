@@ -8,7 +8,7 @@ use Transgression\Modules\Applications;
 class Emailer {
 	protected array $templates = [];
 
-	protected Page $admin;
+	public Page $admin;
 
 	public function __construct() {
 		$admin = new Page( 'emails' );
@@ -18,7 +18,7 @@ class Emailer {
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
 		$admin->add_action( 'email-result', [ $this, 'handle_email_result' ] );
 
-		$admin->with_description( call_user_func( [ $this->get_email_class(), 'admin_description' ] ) );
+		call_user_func( [ $this->get_email_class(), 'init' ], $this );
 	}
 
 	/**
@@ -103,10 +103,9 @@ class Emailer {
 			$result = 'invalid';
 		}
 
-		$user_id = get_current_user_id();
-		$email = $this->create();
 		try {
-			$email
+			$user_id = get_current_user_id();
+			$this->create()
 				->to_user( $user_id )
 				->with_template( $template_key )
 				->set_url( 'login-url', wc_get_page_permalink( 'shop' ) )
@@ -135,7 +134,7 @@ class Emailer {
 		} else if ( $email_result === 'success' ) {
 			$user = get_userdata( get_current_user_id() );
 			$this->admin->add_message( "Email sent to {$user->user_email}!", 'success' );
-		} else if ( $email_result === 'error' ) {
+		} else if ( $email_result === 'error' && ! empty( $_GET['error'] ) ) {
 			$error_msg = base64_decode( $_GET['error'] );
 			$this->admin->add_message( "Error sending email: {$error_msg}" );
 		}

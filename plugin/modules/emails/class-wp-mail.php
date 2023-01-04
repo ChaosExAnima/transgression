@@ -34,9 +34,9 @@ class WPMail extends Email {
 	/**
 	 * @inheritDoc
 	 */
-	public static function admin_description(): string {
-		return 'Template replacements: <code>[name]</code> the name of the person, ' .
-			'<code>[events]text[/events]</code> for the events link';
+	public static function init( Emailer $emailer ): void {
+		$emailer->admin->with_description( 'Template replacements: <code>[name]</code> the name of ' .
+			'the person, <code>[events]text[/events]</code> for the events link' );
 	}
 
 	/**

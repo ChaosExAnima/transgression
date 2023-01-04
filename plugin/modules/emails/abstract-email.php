@@ -14,10 +14,15 @@ abstract class Email {
 	/**
 	 * Creates an email
 	 *
+	 * @param Emailer $emailer
 	 * @param string|null $email
 	 * @param string|null $subject
 	 */
-	public function __construct( protected Emailer $emailer, public ?string $email = null, public ?string $subject = null ) {}
+	public function __construct(
+		protected Emailer $emailer,
+		public ?string $email = null,
+		public ?string $subject = null
+	) {}
 
 	/**
 	 * Sets the email via user ID
@@ -114,6 +119,14 @@ abstract class Email {
 	}
 
 	/**
+	 * Initialization. Runs on Emailer start, defaults to no-op.
+	 *
+	 * @param Emailer $emailer
+	 * @return void
+	 */
+	static public function init( Emailer $emailer ): void {}
+
+	/**
 	 * Creates an admin option for templates
 	 *
 	 * @param string $key
@@ -121,13 +134,4 @@ abstract class Email {
 	 * @return Option
 	 */
 	abstract static public function template_option( string $key, string $name ): Option;
-
-	/**
-	 * Adds description in admin page header
-	 *
-	 * @return string
-	 */
-	public static function admin_description(): string {
-		return '';
-	}
 }

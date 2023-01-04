@@ -20,11 +20,19 @@ class MailPoet extends Email {
 	/** @var ?\MailPoet\DI\ContainerWrapper; */
 	private $mailpoet_container = null;
 
-	public function __construct() {
+	/**
+	 * @inheritDoc
+	 */
+	public function __construct(
+		protected Emailer $emailer,
+		public ?string $email = null,
+		public ?string $subject = null
+	 ) {
 		if ( ! class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
 			throw new Error( 'MailPoet is not loaded' );
 		}
 		$this->mailpoet_container = \MailPoet\DI\ContainerWrapper::getInstance();
+		parent::__construct( $emailer, $email, $subject );
 	}
 
 	public function send() {
@@ -61,7 +69,7 @@ class MailPoet extends Email {
 			throw new Error( 'MailPoet requires a template' );
 		}
 		$template_id = absint( get_option( $this->template, 0 ) );
-		if ( !$template_id ) {
+		if ( ! $template_id ) {
 			throw new Error( 'Template not set' );
 		}
 		return $template_id;
@@ -73,15 +81,6 @@ class MailPoet extends Email {
 
 	private function get_newsletter( int $id ): ?NewsletterEntity {
 		return $this->get_newsletter_repo()->findOneById( $id );
-	}
-
-	/**
-	 * @return SegmentEntity[]
-	 */
-	private function get_segments(): array {
-		/** @var SegmentsRepository */
-		$segments_repo = $this->mailpoet_container->get( SegmentsRepository::class );
-		return $segments_repo->findBy( ['type' => SegmentEntity::TYPE_DEFAULT, 'deletedAt' => null] );
 	}
 
 	private function get_renderer(): ?Renderer {
@@ -118,6 +117,24 @@ class MailPoet extends Email {
 		$body = $shortcodes->replace( $body );
 
 		return $body;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function init( Emailer $emailer ): void {
+		$segments = [];
+		if ( class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
+			$segment_entities = \MailPoet\DI\ContainerWrapper::getInstance()
+				->get( SegmentsRepository::class )
+				->findBy( [ 'type' => SegmentEntity::TYPE_DEFAULT, 'deletedAt' => null ] );
+			foreach ( $segment_entities as $segment ) {
+				$segments[ $segment->getId() ] = $segment->getName();
+			}
+		}
+		$segment_option = ( new Option_Select( 'app_list', 'Approved member optional list' ) )
+			->with_options( $segments );
+		$emailer->admin->add_setting( $segment_option );
 	}
 
 	/**
