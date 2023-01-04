@@ -11,7 +11,7 @@ class Page {
 
 	protected string $page_slug = '';
 
-	/** @var callable[] */
+	/** @var string[] */
 	protected array $actions = [];
 
 	protected string $page_hook = '';
@@ -154,7 +154,8 @@ class Page {
 	 * @return Admin
 	 */
 	public function add_action( string $key, callable $callback ): self {
-		$this->actions[ $key ] = $callback;
+		$this->actions[] = $key;
+		add_action( self::SETTING_PREFIX . "admin_{$this->setting_group}_action_{$key}", $callback, 10, 2 );
 		return $this;
 	}
 
@@ -204,9 +205,13 @@ class Page {
 			$this->save_message();
 		}
 
-		foreach ( $this->actions as $key => $action ) {
+		foreach ( $this->actions as $key ) {
 			if ( isset( $_REQUEST[ $key ] ) ) {
-				call_user_func( $action, sanitize_text_field( $_REQUEST[ $key ] ), $this );
+				do_action(
+					self::SETTING_PREFIX . "admin_{$this->setting_group}_action_{$key}",
+					sanitize_text_field( $_REQUEST[ $key ] ),
+					$this
+				);
 			}
 		}
 
