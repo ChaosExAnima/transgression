@@ -14,6 +14,7 @@ use MailPoet\Newsletter\Shortcodes\Shortcodes;
 use MailPoet\Segments\SegmentsRepository;
 use MailPoet\Settings\SettingsController;
 use MailPoet\Subscribers\{ConfirmationEmailMailer, Source, SubscribersRepository};
+use MailPoet\WP\Functions;
 use MailPoetVendor\CSS;
 use Transgression\Helpers\{Admin, Admin_Option, Admin_Select_Option};
 
@@ -244,6 +245,7 @@ class Emails extends Helpers\Singleton {
 			$this->mailpoet_container->get( Preprocessor::class ),
 			$this->mailpoet_container->get( CSS::class ),
 			$this->mailpoet_container->get( ServicesChecker::class ),
+			$this->mailpoet_container->get( Functions::class ),
 		);
 	}
 
