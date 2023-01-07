@@ -19,6 +19,7 @@ class WooCommerce extends Helpers\Singleton {
 		add_action( 'template_redirect', [ $this, 'skip_cart' ] );
 		add_action( 'template_redirect', [ $this, 'clear_cart' ] );
 		add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'prevent_variation_dupes' ], 10, 2 );
+		add_filter( 'woocommerce_checkout_fields', [ $this, 'remove_required_billing_shipping' ] );
 		add_action( 'woocommerce_checkout_order_processed', [ $this, 'skip_processing' ] );
 
 		// Attendance page
@@ -80,6 +81,12 @@ class WooCommerce extends Helpers\Singleton {
 		}
 		$order = wc_get_order( $order_id );
 		$order->update_status( 'completed' );
+	}
+
+	public function remove_required_billing_shipping( array $fields ): array {
+		unset( $fields['billing'] );
+		unset( $fields['shipping'] );
+		return $fields;
 	}
 
 	public function prevent_variation_dupes( bool $is_valid, int $product_id ): bool {
