@@ -252,4 +252,21 @@ class WooCommerce extends Helpers\Singleton {
 		$value = $wpdb->get_var( $query );
 		return floatval( $value );
 	}
+
+	public static function get_total_sales_by_status( int $product_id, string $order_status = 'completed' ): int {
+		global $wpdb;
+
+		$query = $wpdb->prepare(
+			"SELECT SUM( product_qty )
+			FROM {$wpdb->prefix}wc_order_product_lookup
+			INNER JOIN {$wpdb->posts}
+			ON order_id = {$wpdb->posts}.ID
+			AND post_status = %s
+			AND product_id = %d",
+			$order_status,
+			$product_id
+		);
+		$value = $wpdb->get_var( $query );
+		return intval( $value );
+	}
 }
