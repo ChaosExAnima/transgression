@@ -269,12 +269,12 @@ class Applications extends Helpers\Singleton {
 		foreach ( $comments as $comment ) {
 			echo '<li>';
 			printf(
-				'<q>%1$s</q> - %2$s, ',
-				esc_html( $comment->comment_content ),
+				'<blockquote>%1$s</blockquote>- <em>%2$s, ',
+				wp_kses( wpautop( $comment->comment_content ), [ 'p' => [], 'br' => [] ] ),
 				esc_html( $comment->comment_author )
 			);
 			render_time( $comment->comment_date_gmt, true );
-			echo '</li>';
+			echo '</em></li>';
 		}
 		echo '</ul>';
 		echo '<hr />';
