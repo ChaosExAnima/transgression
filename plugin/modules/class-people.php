@@ -72,15 +72,24 @@ class People extends Module {
 			return;
 		}
 
-		$email = sanitize_email( $_POST['login-email'] );
-		$user_id = email_exists( $email );
-		if ( is_integer( $user_id ) ) {
-			$this->send_login_email( $user_id );
-		}
-
 		// Set the session cookie so notices work.
 		if ( ! WC()->session->has_session() ) {
 			WC()->session->set_customer_session_cookie( true );
+		}
+
+		$email = sanitize_email( $_POST['login-email'] );
+		$user_id = email_exists( $email );
+		if ( $user_id ) {
+			$key = $this->get_login_key( $email );
+			if ( get_transient( $key ) !== false ) {
+				wc_add_notice(
+					'This email was already used to log in. If you haven&rsquo;t gotten it yet, ' .
+					'give it five minutes and try again.'
+				);
+				wp_safe_redirect( $current_url );
+				exit;
+			}
+			$this->send_login_email( $user_id );
 		}
 
 		wc_add_notice( sprintf(
@@ -198,6 +207,10 @@ class People extends Module {
 
 	/** Private methods */
 
+	private function get_login_key( string $email ): string {
+		return "user_login_{$email}";
+	}
+
 	/**
 	 * Sends a login email
 	 *
@@ -214,7 +227,7 @@ class People extends Module {
 		$this->redirect_to_login_if_not_customer( $user );
 
 		// Generate a random value.
-		$key = "user_login_{$user->user_email}";
+		$key = $this->get_login_key( $user->user_email );
 		$token = wp_generate_password( 20, false );
 		set_transient( $key, $token, MINUTE_IN_SECONDS * 5 );
 

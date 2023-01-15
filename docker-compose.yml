@@ -17,15 +17,16 @@ services:
       PHP_ENABLE_OPCACHE: no
       WORDPRESS_SMTP_HOST: mail
       WORDPRESS_SMTP_PORT_NUMBER: 1025
-      WORDPRESS_EXTRA_WP_CONFIG_CONTENT: "define('MAILPOET_CRON_SITE_URL', 'http://nginx');"
       WORDPRESS_SKIP_BOOTSTRAP: true
     depends_on:
       - database
+      - redis
     volumes:
       - "${PWD}/fast_cgi.conf:/opt/bitnami/nginx/conf/server_blocks/fast_cgi.conf:ro"
       - "${PWD}/wp_content:/bitnami/wordpress/wp-content"
       - "${PWD}/src:/bitnami/wordpress/wp-content/themes/transgression"
       - "${PWD}/plugin:/bitnami/wordpress/wp-content/plugins/transgression"
+      - "${PWD}/wp-config.php:/bitnami/wordpress/wp-config.php"
       - wp_core:/bitnami/wordpress
 
   database:
@@ -38,6 +39,13 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: password
       MARIADB_DATABASE: wordpress
+
+  redis:
+    image: redis:alpine
+    ports:
+      - 8891:6379
+    volumes:
+      - wp_redis:/data
 
   mail:
     image: mailhog/mailhog:v1.0.0
@@ -52,3 +60,4 @@ services:
 volumes:
   wp_db:
   wp_core:
+  wp_redis:
