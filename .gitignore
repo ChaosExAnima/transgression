@@ -4,3 +4,4 @@
 /sql
 node_modules
 /vendor
+*.zip
