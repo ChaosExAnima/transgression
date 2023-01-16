@@ -39,7 +39,11 @@ class Applications extends Module {
 		'webp' => 'image/webp',
 	];
 
-	public function __construct( protected Emailer $emailer, protected Logger $logger ) {
+	public function __construct(
+		protected JetForms $jetForms,
+		protected Emailer $emailer,
+		protected Logger $logger
+	) {
 		// Actions
 		add_action( 'init', [ $this, 'init' ] );
 		add_action( 'save_post_' . self::POST_TYPE, [$this, 'save'] );
@@ -237,8 +241,9 @@ class Applications extends Module {
 		$fields = self::FIELDS;
 		$original_field_keys = array_keys( $fields );
 		if ( $post->_form_id ) {
-			// $form_fields = get_form_fields_for_meta( absint( $post->_form_id ) );
-			// $fields = array_merge( $form_fields, $fields );
+			$form_fields = $this->jetForms
+				->get_form_fields_for_meta( absint( $post->_form_id ) );
+			$fields = array_merge( $form_fields, $fields );
 		}
 		load_view( 'applications/fields', compact( 'post', 'fields' ) );
 	}

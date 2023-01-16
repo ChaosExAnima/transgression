@@ -2,7 +2,6 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\Option;
 use Transgression\Admin\Option_Checkbox;
 use Transgression\Admin\Page;
 use Transgression\Logger;

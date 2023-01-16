@@ -3,7 +3,7 @@
 namespace Transgression;
 
 use Transgression\Admin\Page;
-use Transgression\Modules\{Applications, Attendance, Discord, People, Email\Emailer, WooCommerce};
+use Transgression\Modules\{Applications, Attendance, Discord, People, Email\Emailer, JetForms, WooCommerce};
 
 class Main {
 	public function init() {
@@ -13,7 +13,8 @@ class Main {
 		$settings = new Page( 'transgression_settings' );
 		$settings->as_subpage( 'options-general.php', 'ticketing', 'Ticketing Settings', 'Ticketing' );
 
-		new Applications( $emailer, $logger );
+		$jetforms = new JetForms( $emailer );
+		new Applications( $jetforms, $emailer, $logger );
 		new Attendance( $logger );
 		new Discord();
 		new People( $emailer, $logger );
