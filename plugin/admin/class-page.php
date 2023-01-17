@@ -11,12 +11,17 @@ class Page {
 
 	protected string $page_slug = '';
 
-	/** @var callable[] */
+	/** @var string[] */
 	protected array $actions = [];
 
 	protected string $page_hook = '';
 
+	/** @var string[] */
+	protected array $sections = [];
+
 	protected mixed $render_cb = null;
+
+	protected string $description = '';
 
 	/**
 	 * Creates admin page
@@ -95,6 +100,11 @@ class Page {
 		);
 	}
 
+	public function with_description( string $description ): self {
+		$this->description = $description;
+		return $this;
+	}
+
 	/**
 	 * Sets the render callback
 	 *
@@ -128,6 +138,18 @@ class Page {
 	}
 
 	/**
+	 * Adds a section
+	 *
+	 * @param string $key
+	 * @param string $name
+	 * @return self
+	 */
+	public function add_section( string $key, string $name ): self {
+		$this->sections[ $key ] = $name;
+		return $this;
+	}
+
+	/**
 	 * Gets the page URL based off of the page hook
 	 *
 	 * @param array $params
@@ -147,7 +169,8 @@ class Page {
 	 * @return Admin
 	 */
 	public function add_action( string $key, callable $callback ): self {
-		$this->actions[ $key ] = $callback;
+		$this->actions[] = $key;
+		add_action( self::SETTING_PREFIX . "admin_{$this->setting_group}_action_{$key}", $callback, 10, 2 );
 		return $this;
 	}
 
@@ -158,7 +181,7 @@ class Page {
 	 * @param string $type Type of message. One of notice, error, success, or warning
 	 * @return void
 	 */
-	public function add_message( string $message, string $type ) {
+	public function add_message( string $message, string $type = 'error' ) {
 		add_settings_error(
 			"{$this->setting_group}_messages",
 			sanitize_title( substr( $message, 0, 10 ) ),
@@ -178,7 +201,13 @@ class Page {
 		}
 
 		$section = "{$this->setting_group}_section";
-		add_settings_section( $section, '', '', $this->page_hook );
+		if ( count( $this->sections ) === 0 ) {
+			add_settings_section( $section, '', '', $this->page_hook );
+		} else {
+			foreach ( $this->sections as $section_key => $section_name ) {
+				add_settings_section( $section_key, $section_name, '', $this->page_hook );
+			}
+		}
 		foreach ( $this->page_options as $admin_option ) {
 			$admin_option->register(
 				$this->page_hook,
@@ -193,21 +222,32 @@ class Page {
 			wp_die();
 		}
 
-		if ( ! isset( $this->actions['save_message'] ) ) {
-			$this->save_message();
-		}
-
-		foreach ( $this->actions as $key => $action ) {
+		foreach ( $this->actions as $key ) {
 			if ( isset( $_REQUEST[ $key ] ) ) {
-				call_user_func( $action, sanitize_text_field( $_REQUEST[ $key ] ), $this );
+				do_action(
+					self::SETTING_PREFIX . "admin_{$this->setting_group}_action_{$key}",
+					sanitize_text_field( $_REQUEST[ $key ] ),
+					$this
+				);
 			}
 		}
 
-		settings_errors( "{$this->setting_group}_messages" );
+		// For options pages, this is run automatically
+		$screen = get_current_screen();
+		if ( $screen->parent_file !== 'options-general.php' ) {
+			settings_errors();
+		}
+
 		printf(
 			'<div class="wrap"><h1>%s</h1><form action="options.php" method="post">',
 			esc_html( get_admin_page_title() )
 		);
+		if ( $this->description ) {
+			printf(
+				'<p>%s</p>',
+				wp_kses_post( $this->description )
+			);
+		}
 		settings_fields( $this->setting_group );
 		do_settings_sections( $this->page_hook );
 		if ( is_callable( $this->render_cb ) ) {
@@ -215,11 +255,5 @@ class Page {
 		}
 		submit_button( 'Save Settings' );
 		echo '</form></div>';
-	}
-
-	protected function save_message() {
-		if ( isset( $_GET['settings-updated'] ) ) {
-			$this->add_message( 'Settings Saved', 'updated' );
-		}
 	}
 }

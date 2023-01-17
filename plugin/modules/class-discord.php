@@ -155,7 +155,7 @@ class Discord extends Module {
 		check_admin_referer( "test-hook-{$hook_type}" );
 		$hook = $this->admin->get_setting( $hook_type )?->get();
 		if ( ! $hook ) {
-			$this->admin->add_message( 'Hook not configured', 'error' );
+			$this->admin->add_message( 'Hook not configured' );
 			return;
 		}
 

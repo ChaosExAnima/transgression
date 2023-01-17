@@ -13,7 +13,7 @@ class People extends Module {
 	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
 
 	public function __construct( protected Emailer $emailer, protected Logger $logger ) {
-		if ( !self::check_plugins() ) {
+		if ( ! self::check_plugins() ) {
 			return;
 		}
 
@@ -30,6 +30,13 @@ class People extends Module {
 		add_action( 'admin_notices', [ $this, 'show_application' ] );
 		add_filter( 'user_row_actions', [ $this, 'filter_admin_row' ], 10, 2 );
 		add_filter( 'user_contactmethods', [ $this, 'filter_contact_methods' ] );
+
+		// Email templates
+		$emailer->add_template(
+			'people_login',
+			'Login Email',
+			'Use tag <code>[login-url]text[/login-url]</code> for special login link'
+		);
 	}
 
 	/**
@@ -48,10 +55,13 @@ class People extends Module {
 		// Try logging in?
 		if ( $this->check_login( get_current_url() ) ) {
 			$user_id = email_exists( $_GET['email'] );
+			$user = get_userdata( $user_id );
+			$this->redirect_to_login_if_not_customer( $user );
+
 			wp_set_auth_cookie( $user_id );
 			wc_add_notice( sprintf(
 				'You are now logged in, %s. <a href="%s">Log out</a>',
-				esc_html( get_userdata( $user_id )->display_name ),
+				esc_html( $user->display_name ),
 				esc_url( wp_logout_url( $current_url ) )
 			) );
 			wp_safe_redirect( $current_url );
@@ -62,15 +72,24 @@ class People extends Module {
 			return;
 		}
 
-		$email = sanitize_email( $_POST['login-email'] );
-		$user_id = email_exists( $email );
-		if ( is_integer( $user_id ) ) {
-			$this->send_login_email( $user_id );
-		}
-
 		// Set the session cookie so notices work.
 		if ( ! WC()->session->has_session() ) {
 			WC()->session->set_customer_session_cookie( true );
+		}
+
+		$email = sanitize_email( $_POST['login-email'] );
+		$user_id = email_exists( $email );
+		if ( $user_id ) {
+			$key = $this->get_login_key( $email );
+			if ( get_transient( $key ) !== false ) {
+				wc_add_notice(
+					'This email was already used to log in. If you haven&rsquo;t gotten it yet, ' .
+					'give it five minutes and try again.'
+				);
+				wp_safe_redirect( $current_url );
+				exit;
+			}
+			$this->send_login_email( $user_id );
 		}
 
 		wc_add_notice( sprintf(
@@ -188,6 +207,10 @@ class People extends Module {
 
 	/** Private methods */
 
+	private function get_login_key( string $email ): string {
+		return "user_login_{$email}";
+	}
+
 	/**
 	 * Sends a login email
 	 *
@@ -204,7 +227,7 @@ class People extends Module {
 		$this->redirect_to_login_if_not_customer( $user );
 
 		// Generate a random value.
-		$key = "user_login_{$user->user_email}";
+		$key = $this->get_login_key( $user->user_email );
 		$token = wp_generate_password( 20, false );
 		set_transient( $key, $token, MINUTE_IN_SECONDS * 5 );
 
@@ -223,7 +246,8 @@ class People extends Module {
 		$email = $this->emailer->create();
 		$email
 			->to_user( $user_id )
-			->with_template( 'email_login' )
+			->with_template( 'people_login' )
+			->with_subject( 'Login here' )
 			->set_url( 'login-url', $login_url )
 			->send();
 	}
@@ -261,17 +285,19 @@ class People extends Module {
 		}
 
 		// Does this user exist?
-		if ( !email_exists( $email ) ) {
+		$user_id = email_exists( $email );
+		if ( ! $user_id ) {
 			$this->logger->log( "Login email check failed for {$email}" );
 			return false;
 		}
 
-		// Finally, check the token.
+		// Check the token.
 		$token = get_transient( $key );
-		if ( false === $token ) {
+		if ( false === $token || ! hash_equals( $token, $_GET['token'] ) ) {
 			return false;
 		}
-		return hash_equals( $token, $_GET['token'] );
+
+		return true;
 	}
 
 	/**
@@ -281,7 +307,7 @@ class People extends Module {
 	 * @return void
 	 */
 	private function redirect_to_login_if_not_customer( WP_User $user ) {
-		if ( !$this->is_passwordless( $user->ID ) ) {
+		if ( ! $this->is_passwordless( $user->ID ) ) {
 			$url = add_query_arg( 'action', 'purchase', wp_login_url( get_current_url() ) );
 			wp_safe_redirect( $url );
 			exit;

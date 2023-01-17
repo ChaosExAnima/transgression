@@ -4,20 +4,25 @@ namespace Transgression\Modules\Email;
 
 use Error;
 use Transgression\Admin\Option;
+use WP_User;
 
 abstract class Email {
-	protected string $body;
 	protected ?string $template = null;
-	protected bool $is_html = false;
-	protected array $replace_urls = [];
+	protected ?WP_User $user = null;
+	protected array $shortcodes = [];
 
 	/**
 	 * Creates an email
 	 *
+	 * @param Emailer $emailer
 	 * @param string|null $email
 	 * @param string|null $subject
 	 */
-	public function __construct( public ?string $email = null, public ?string $subject = null ) {}
+	public function __construct(
+		protected Emailer $emailer,
+		public ?string $email = null,
+		public ?string $subject = null
+	) {}
 
 	/**
 	 * Sets the email via user ID
@@ -31,6 +36,7 @@ abstract class Email {
 			throw new Error( "Could not find user with ID {$user_id}" );
 		}
 
+		$this->user = $user;
 		$this->email = $user->user_email;
 		return $this;
 	}
@@ -41,12 +47,12 @@ abstract class Email {
 	}
 
 	public function set_url( string $key, string $url ): self {
-		$this->replace_urls["[{$key}]"] = $url;
+		$this->shortcodes[ $key ] = $url;
 		return $this;
 	}
 
 	public function with_template( string $template ): self {
-		if ( !isset( Emailer::TEMPLATES[$template] ) ) {
+		if ( ! $this->emailer->is_template( $template ) ) {
 			throw new Error( "Could not find template of {$template}" );
 		}
 		$this->template = $template;
@@ -55,6 +61,81 @@ abstract class Email {
 
 	abstract public function send();
 
+	public function do_shortcode( mixed $atts, ?string $content, string $tag ): string {
+		if ( empty( $this->shortcodes[ $tag ] ) ) {
+			return '';
+		}
+
+		$callback = $this->shortcodes[ $tag ];
+		if ( is_callable( $callback ) ) {
+			return call_user_func( $callback, $content, $atts );
+		}
+
+		if ( is_string( $callback ) ) {
+			return sprintf(
+				'<a href="%1$s">%2$s</a>',
+				esc_url( $callback ),
+				do_shortcode( $content ) ?? esc_url( $callback )
+			);
+		}
+		return '';
+	}
+
+	protected function process_body( string $body, bool $do_wp_stuff = true ): string {
+		$this->set_default_tags();
+
+		global $shortcode_tags;
+		$old_tags = $shortcode_tags;
+		remove_all_shortcodes();
+
+		foreach ( array_keys( $this->shortcodes ) as $tag ) {
+			add_shortcode( $tag, [ $this, 'do_shortcode' ] );
+		}
+
+		if ( $do_wp_stuff ) {
+			$body = wp_kses_post( $body );
+			$body = wpautop( $body );
+			$body = wptexturize( $body );
+		}
+		$body = do_shortcode( $body );
+
+		remove_all_shortcodes();
+		$shortcode_tags = $old_tags;
+
+		return $body;
+	}
+
+	protected function set_default_tags(): void {
+		$sc = $this->shortcodes;
+		if ( ! isset( $sc['name'] ) ) {
+			$this->shortcodes['name'] = function (): string {
+				if ( $this->user ) {
+					return $this->user->display_name;
+				}
+				return 'there';
+			};
+		}
+		if ( ! isset( $sc['events'] ) ) {
+			$this->set_url( 'events', wc_get_page_permalink( 'shop' ) );
+		}
+	}
+
+	protected function get_headers( bool $is_html = true ): array {
+		$headers = [ sprintf( 'From: %s', sanitize_email( get_bloginfo( 'admin_email' ) ) ) ];
+		if ( $is_html ) {
+			$headers[] = 'Content-Type: text/html; charset=UTF-8';
+		}
+		return $headers;
+	}
+
+	/**
+	 * Initialization. Runs on Emailer start, defaults to no-op.
+	 *
+	 * @param Emailer $emailer
+	 * @return void
+	 */
+	static public function init( Emailer $emailer ): void {}
+
 	/**
 	 * Creates an admin option for templates
 	 *
@@ -62,13 +143,5 @@ abstract class Email {
 	 * @param string $name
 	 * @return Option
 	 */
-	abstract public function template_option( string $key, string $name ): Option;
-
-	protected function process_body( string $body ): string {
-		return str_replace(
-			array_keys( $this->replace_urls ),
-			array_values( $this->replace_urls ),
-			$body
-		);
-	}
+	abstract static public function template_option( string $key, string $name ): Option;
 }

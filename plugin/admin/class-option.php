@@ -5,10 +5,19 @@ namespace Transgression\Admin;
 class Option {
 	protected mixed $sanitize_cb = null;
 	protected mixed $render_cb = null;
-	protected mixed $render_before = null;
-	protected mixed $render_after = null;
 	protected array $render_args = [];
 	protected string $description = '';
+	protected ?string $section = null;
+
+	protected const KSES_TAGS = [
+		'strong' => [],
+		'em' => [],
+		'a' => [
+			'href' => true,
+			'target' => true,
+		],
+		'code' => [],
+	];
 
 	/**
 	 * Creates an admin option
@@ -72,6 +81,11 @@ class Option {
 		return $this;
 	}
 
+	public function in_section( string $section ): self {
+		$this->section = $section;
+		return $this;
+	}
+
 	public function get(): mixed {
 		return get_option( $this->key, $this->default );
 	}
@@ -81,12 +95,12 @@ class Option {
 	}
 
 	public function render_before( callable $callback ): self {
-		$this->render_before = $callback;
+		add_action( "option_{$this->key}_before_render", $callback );
 		return $this;
 	}
 
 	public function render_after( callable $callback ): self {
-		$this->render_after = $callback;
+		add_action( "option_{$this->key}_after_render", $callback );
 		return $this;
 	}
 
@@ -108,6 +122,10 @@ class Option {
 		if ( ! $this->render_cb ) {
 			$this->of_type();
 		}
+		// Use set section if provided.
+		if ( $this->section ) {
+			$section = $this->section;
+		}
 		add_settings_field(
 			$this->key,
 			$this->label,
@@ -116,17 +134,13 @@ class Option {
 			$section,
 			[ 'label_for' => $this->key, 'option' => $this ]
 		);
+		do_action( "option_{$this->key}_after_register", $this, $page, $group, $section );
 	}
 
 	public function render(): void {
-		if ( is_callable( $this->render_before ) ) {
-			call_user_func( $this->render_before, $this );
-		}
+		do_action( "option_{$this->key}_before_render", $this );
 		call_user_func( $this->render_cb );
-
-		if ( is_callable( $this->render_after ) ) {
-			call_user_func( $this->render_after, $this );
-		}
+		do_action( "option_{$this->key}_after_render", $this );
 		$this->render_description();
 	}
 
@@ -139,21 +153,13 @@ class Option {
 		);
 	}
 
-	protected function render_description() {
-		if ( !$this->description ) {
+	protected function render_description(): void {
+		if ( ! $this->description ) {
 			return;
 		}
-		$kses_tags = [
-			'strong' => [],
-			'em' => [],
-			'a' => [
-				'href' => true,
-				'target' => true,
-			],
-		];
 		printf(
 			'<p class="description">%s</p>',
-			wp_kses( $this->description, $kses_tags ),
+			wp_kses( $this->description, self::KSES_TAGS ),
 		);
 	}
 }

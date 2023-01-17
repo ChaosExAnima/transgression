@@ -39,7 +39,11 @@ class Applications extends Module {
 		'webp' => 'image/webp',
 	];
 
-	public function __construct( protected Emailer $emailer, protected Logger $logger ) {
+	public function __construct(
+		protected JetForms $jetForms,
+		protected Emailer $emailer,
+		protected Logger $logger
+	) {
 		// Actions
 		add_action( 'init', [ $this, 'init' ] );
 		add_action( 'save_post_' . self::POST_TYPE, [$this, 'save'] );
@@ -54,6 +58,15 @@ class Applications extends Module {
 		add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', [ $this, 'reviewed_column' ], 10, 2 );
 		add_filter( 'post_row_actions', [$this, 'remove_bulk_actions'], 10, 2 );
 		add_filter( 'comments_list_table_query_args', [$this, 'hide_review_comments'] );
+
+		// Email templates
+		$emailer->add_template( 'app_approved', 'Application Approved' );
+		$emailer->add_template( 'app_denied', 'Application Denied' );
+		$emailer->add_template(
+			'app_dupe',
+			'Application Duplicate',
+			'When someone submits an application but their email is already approved'
+		);
 	}
 
 	public function init() {
@@ -124,13 +137,16 @@ class Applications extends Module {
 	public function action_verdict( int $post_id ) {
 		check_admin_referer( "verdict-{$post_id}" );
 		$post = get_post( $post_id );
-		if ( $post->post_type !== self::POST_TYPE || !current_user_can( 'edit_post', $post_id ) ) {
+		if ( $post->post_type !== self::POST_TYPE || ! current_user_can( 'edit_post', $post_id ) ) {
 			wp_die();
 		}
 
 		$verdict = $_GET['verdict'];
 		if ( $verdict === 'finalize' ) {
 			$message = $this->finalize( $post );
+		} else if ( $verdict === 'email' && $post->post_status !== 'pending' ) {
+			$this->email_result( $post );
+			$message = 104;
 		} else {
 			$meta = [
 				'approved' => $verdict === 'yes',
@@ -225,8 +241,9 @@ class Applications extends Module {
 		$fields = self::FIELDS;
 		$original_field_keys = array_keys( $fields );
 		if ( $post->_form_id ) {
-			// $form_fields = get_form_fields_for_meta( absint( $post->_form_id ) );
-			// $fields = array_merge( $form_fields, $fields );
+			$form_fields = $this->jetForms
+				->get_form_fields_for_meta( absint( $post->_form_id ) );
+			$fields = array_merge( $form_fields, $fields );
 		}
 		load_view( 'applications/fields', compact( 'post', 'fields' ) );
 	}
@@ -245,8 +262,9 @@ class Applications extends Module {
 	public function render_metabox_verdict( WP_Post $post ) {
 		$params = [
 			'verdicts' => $this->get_unique_verdicts( $post->ID ),
+			'finalized' => $post->post_status !== 'pending',
 		];
-		foreach ( [ 'yes', 'no', 'finalize' ] as $type ) {
+		foreach ( [ 'yes', 'no', 'finalize', 'email' ] as $type ) {
 			$params["{$type}_link"] = add_query_arg( [
 				'action' => 'verdict',
 				'verdict' => $type,
@@ -258,6 +276,7 @@ class Applications extends Module {
 
 	public function render_metabox_photo( WP_Post $post ) {
 		$params = [
+			'photo_url' => null,
 			'input_label' => 'Add photo',
 			'mime_types' => implode( ',', array_values( self::MIME_TYPES ) ),
 			'social_url' => $post->photo_url,
@@ -322,6 +341,7 @@ class Applications extends Module {
 			101 => 'Rejection sent',
 			102 => 'Application approved',
 			103 => 'Error creating new user',
+			104 => 'Emailed application results',
 		];
 		return $messages;
 	}
@@ -348,10 +368,9 @@ class Applications extends Module {
 		$approved = count( $verdict_results ) === count( array_filter( $verdict_results ) );
 		update_post_meta( $post->ID, 'status', $approved ? 'approved' : 'denied' );
 		if ( ! $approved ) {
-			$email = $this->emailer->create( $post->email );
-			$email->with_template( 'email_denied' )->send();
 			$post->post_status = self::STATUS_DENIED;
 			wp_update_post( $post );
+			$this->email_result( $post );
 			return null;
 		}
 
@@ -377,9 +396,40 @@ class Applications extends Module {
 		$post->post_status = self::STATUS_APPROVED;
 		wp_update_post( $post );
 		update_post_meta( $post->ID, 'created_user', $user_id );
-		$email = $this->emailer->create();
-		$email->to_user( $user_id )->with_template( 'email_approved' )->send();
+		$this->email_result( $post );
 		return null;
+	}
+
+	private function email_result( WP_Post $post ): void {
+		$status = $post->post_status;
+		$template = null;
+		if ( $status === self::STATUS_APPROVED ) {
+			$template = 'app_approved';
+		} else if ( $status === self::STATUS_DENIED ) {
+			$template = 'app_denied';
+		}
+
+		if ( ! $template ) {
+			return;
+		}
+
+		try {
+			$email = $this->emailer
+				->create( $post->email )
+				->with_template( $template );
+			$email->with_subject(
+				// TODO: Allow subject customization
+				$status === self::STATUS_APPROVED
+					? 'You’re approved!'
+					: 'Application denied'
+			);
+			if ( $post->created_user ) {
+				$email->to_user( intval( $post->created_user ) );
+			}
+			$email->send();
+		} catch ( \Throwable $err ) {
+			$this->logger->error( $err );
+		}
 	}
 
 	private function get_unique_verdicts( int $post_id ): array {
