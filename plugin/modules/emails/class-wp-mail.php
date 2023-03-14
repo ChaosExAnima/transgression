@@ -5,6 +5,8 @@ namespace Transgression\Modules\Email;
 use Transgression\Admin\Option;
 use Transgression\Admin\Option_Textarea;
 
+use const Transgression\PLUGIN_SLUG;
+
 class WPMail extends Email {
 	public function send() {
 		$body = '';
@@ -39,7 +41,7 @@ class WPMail extends Email {
 	 * @inheritDoc
 	 */
 	public static function template_option( string $key, string $name ): Option_Textarea {
-		add_action( "option_{$key}_after_register", [ __CLASS__, 'register_subject' ], 10, 3 );
+		add_action( PLUGIN_SLUG . "_option_{$key}_after_register", [ __CLASS__, 'register_subject' ], 10, 3 );
 		$render_subject = function() use ( $key, $name ) {
 			printf(
 				'<input id="%1$s" class="large-text" type="text" name="%1$s" value="%2$s" placeholder="Subject" />',
