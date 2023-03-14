@@ -85,7 +85,10 @@ class MailPoet extends Email {
 			$this->mailpoet_container->get( Preprocessor::class ),
 			$this->mailpoet_container->get( CSS::class ),
 			$this->mailpoet_container->get( ServicesChecker::class ),
-			$this->mailpoet_container->get( Functions::class )
+			$this->mailpoet_container->get( Functions::class ),
+			$this->mailpoet_container->get( LoggerFactory::class ),
+			$this->get_newsletter_repo(),
+			$this->mailpoet_container->get( SendingQueuesRepository::class )
 		);
 	}
 
