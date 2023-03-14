@@ -2,6 +2,8 @@
 
 namespace Transgression\Admin;
 
+use const Transgression\PLUGIN_SLUG;
+
 class Option {
 	protected mixed $sanitize_cb = null;
 	protected mixed $render_cb = null;
@@ -95,12 +97,12 @@ class Option {
 	}
 
 	public function render_before( callable $callback ): self {
-		add_action( "option_{$this->key}_before_render", $callback );
+		add_action( PLUGIN_SLUG . "_option_{$this->key}_before_render", $callback );
 		return $this;
 	}
 
 	public function render_after( callable $callback ): self {
-		add_action( "option_{$this->key}_after_render", $callback );
+		add_action( PLUGIN_SLUG . "_option_{$this->key}_after_render", $callback );
 		return $this;
 	}
 
@@ -134,13 +136,13 @@ class Option {
 			$section,
 			[ 'label_for' => $this->key, 'option' => $this ]
 		);
-		do_action( "option_{$this->key}_after_register", $this, $page, $group, $section );
+		do_action( PLUGIN_SLUG . "_option_{$this->key}_after_register", $this, $page, $group, $section );
 	}
 
 	public function render(): void {
-		do_action( "option_{$this->key}_before_render", $this );
+		do_action( PLUGIN_SLUG . "_option_{$this->key}_before_render", $this );
 		call_user_func( $this->render_cb );
-		do_action( "option_{$this->key}_after_render", $this );
+		do_action( PLUGIN_SLUG . "_option_{$this->key}_after_render", $this );
 		$this->render_description();
 	}
 

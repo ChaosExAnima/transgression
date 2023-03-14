@@ -4,12 +4,12 @@ Theme URI: https://transgression.party
 Author: Echo
 Author URI: https://echonyc.blog
 Description: Theme for the Transgression event website
-Requires at least: 5.8
-Tested up to: 5.9
-Requires PHP: 5.7
-Version: 0.0.1
-License: GNU General Public License v2 or later
-License URI: https://raw.githubusercontent.com/Automattic/themes/trunk/LICENSE
+Requires at least: 6.0
+Tested up to: 6.1.1
+Requires PHP: 8.0
+Version: 1.0.0
+License: GNU General Public License v3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Template: blockbase
 Text Domain: transgression
 Tags: one-column, custom-colors, custom-menu, custom-logo, editor-style, featured-images, full-site-editing, rtl-language-support, theme-options, threaded-comments, translation-ready, wide-blocks

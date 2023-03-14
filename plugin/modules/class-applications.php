@@ -89,9 +89,11 @@ class Applications extends Module {
 			'label' => 'Approved',
 			'show_in_admin_all_list' => false,
 			'show_in_admin_status_list' => true,
+			// translators: approved application count
 			'label_count' => _n_noop(
 				'Approved <span class="count">(%s)</span>',
-				'Approved <span class="count">(%s)</span>'
+				'Approved <span class="count">(%s)</span>',
+				'transgression'
 			),
 		] );
 
@@ -99,9 +101,11 @@ class Applications extends Module {
 			'label' => 'Denied',
 			'show_in_admin_all_list' => false,
 			'show_in_admin_status_list' => true,
+			// translators: denied application count
 			'label_count' => _n_noop(
 				'Denied <span class="count">(%s)</span>',
-				'Denied <span class="count">(%s)</span>'
+				'Denied <span class="count">(%s)</span>',
+				'transgression'
 			),
 		] );
 	}

@@ -1,49 +1,11 @@
 <?php declare( strict_types=1 );
 
-namespace Transgression;
+namespace TransgressionTheme;
 
-use Exception;
+use WC_Product;
 
-/**
- * Enable autoloading of plugin classes in namespace
- * @param string $class_name
- */
-function autoload( string $class_name ) {
-	// Only autoload classes from this namespace
-	if ( false === str_starts_with( $class_name, __NAMESPACE__ ) ) {
-		return;
-	}
-
-	// Remove namespace from class name
-	$class_file = str_replace( __NAMESPACE__ . '\\', '', $class_name );
-
-	// Convert class name format to file name format
-	$class_file = strtolower( $class_file );
-	$class_file = str_replace( '_', '-', $class_file );
-
-	// Convert sub-namespaces into directories
-	$class_path = explode( '\\', $class_file );
-	$class_file = array_pop( $class_path );
-	$class_path = implode( '/', $class_path );
-
-	// Load the class
-	$types = ['abstract', 'trait', 'enum', 'class'];
-	foreach ( $types as $type ) {
-		$path = __DIR__ . "/inc/{$class_path}/{$type}-{$class_file}.php";
-		if ( file_exists(  $path ) ) {
-			require_once $path;
-			return;
-		}
-	}
-	throw new Exception( "Could not find class ${class_file} at {$path}" );
-}
-
-spl_autoload_register( cb( 'autoload' ) );
-
-// Includes
-require_once 'inc/helpers.php';
-if ( defined( 'JET_FORM_BUILDER_VERSION' ) && version_compare( JET_FORM_BUILDER_VERSION, '2.0.6', '>=' ) ) {
-	require_once 'inc/jetforms.php';
+function cb( string $func ): Callable {
+    return __NAMESPACE__ . '\\' . $func;
 }
 
 function init() {
@@ -51,12 +13,19 @@ function init() {
 	add_editor_style( 'editor.css' );
 
 	add_theme_support( 'woocommerce' );
+	remove_theme_support(  'wc-product-gallery-slider' );
+	remove_theme_support( 'wc-product-gallery-zoom' );
+	remove_theme_support( 'wc-product-gallery-lightbox' );
 
-	Applications::instance()->init();
-	Discord::instance()->init();
-	Emails::instance()->init();
-	People::instance()->init();
-	WooCommerce::instance()->init();
+	// Woo
+	if ( defined( 'WC_PLUGIN_FILE' ) ) {
+		add_filter( 'the_title', cb( 'filter_wc_title' ), 10, 2 );
+		add_action( 'woocommerce_checkout_order_review', cb( 'render_wc_clear_cart' ), 15 );
+
+		remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
+		remove_action( 'woocommerce_order_details_after_order_table', 'woocommerce_order_again_button' );
+		add_filter( 'wc_add_to_cart_message_html', '__return_empty_string' );
+	}
 }
 add_action( 'init', cb( 'init' ) );
 
@@ -73,19 +42,20 @@ function redirect() {
 }
 add_action( 'template_redirect', cb( 'redirect' ) );
 
-function log_error( \Throwable|\WP_Error|string $error ) {
-	if ( $error instanceof \Throwable ) {
-		error_log( $error->__toString() );
-	} else if ( $error instanceof \WP_Error ) {
-		foreach ( $error->get_error_codes() as $error_code ) {
-			$message = $error->get_error_message( $error_code );
-			error_log( "{$error_code}: {$message}" );
-		}
-	} else if ( is_string( $error ) ) {
-		error_log( $error );
+function filter_wc_title( string $title, int $post_id ): string {
+	if ( get_post_type( $post_id ) === 'product' ) {
+		return ltrim( str_replace( 'Transgression:', '', $title ) );
 	}
+	return $title;
 }
 
-function cb( string $func ): Callable {
-    return __NAMESPACE__ . '\\' . $func;
+function render_wc_clear_cart() {
+	printf(
+		'<p><a href="%s" class="clear-cart">Clear Cart</a></p>',
+		esc_url( add_query_arg( 'empty_cart', 'yes' ) )
+	);
+}
+
+function add_wc_title_prefix( WC_Product $product ): bool {
+	return strpos( $product->get_name(), 'Transgression:' ) === 0;
 }
