@@ -6,8 +6,10 @@ use Error;
 use MailPoet\Config\ServicesChecker;
 
 use MailPoet\Entities\{NewsletterEntity, SegmentEntity, SubscriberEntity};
+use MailPoet\Logging\LoggerFactory;
 use MailPoet\Newsletter\{NewslettersRepository, Renderer\Preprocessor};
 use MailPoet\Newsletter\Renderer\{Renderer, Blocks\Renderer as BlocksRenderer, Columns\Renderer as ColumnsRenderer};
+use MailPoet\Newsletter\Sending\SendingQueuesRepository;
 use MailPoet\Newsletter\Shortcodes\Shortcodes;
 use MailPoet\Segments\SegmentsRepository;
 use MailPoet\Subscribers\SubscribersRepository;
@@ -27,7 +29,7 @@ class MailPoet extends Email {
 		protected Emailer $emailer,
 		public ?string $email = null,
 		public ?string $subject = null
-	 ) {
+	) {
 		if ( ! class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
 			throw new Error( 'MailPoet is not loaded' );
 		}
@@ -37,7 +39,7 @@ class MailPoet extends Email {
 
 	public function send() {
 		$template_id = absint( get_option( $this->template, 0 ) );
-		if ( !$template_id ) {
+		if ( ! $template_id ) {
 			throw new Error( 'Template not set' );
 		}
 
@@ -49,7 +51,7 @@ class MailPoet extends Email {
 
 		$newsletter = $this->get_newsletter( $template_id );
 		$subject = $newsletter->getSubject();
-		$body = $this->render_newsletter( $newsletter, !$is_html );
+		$body = $this->render_newsletter( $newsletter, ! $is_html );
 
 		wp_mail(
 			$this->email,
@@ -60,7 +62,7 @@ class MailPoet extends Email {
 	}
 
 	protected function load_template(): int {
-		if ( !$this->template ) {
+		if ( ! $this->template ) {
 			throw new Error( 'MailPoet requires a template' );
 		}
 		$template_id = absint( get_option( $this->template, 0 ) );
@@ -85,7 +87,10 @@ class MailPoet extends Email {
 			$this->mailpoet_container->get( Preprocessor::class ),
 			$this->mailpoet_container->get( CSS::class ),
 			$this->mailpoet_container->get( ServicesChecker::class ),
-			$this->mailpoet_container->get( Functions::class )
+			$this->mailpoet_container->get( Functions::class ),
+			$this->mailpoet_container->get( LoggerFactory::class ),
+			$this->get_newsletter_repo(),
+			$this->mailpoet_container->get( SendingQueuesRepository::class )
 		);
 	}
 
@@ -122,7 +127,12 @@ class MailPoet extends Email {
 		if ( class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
 			$segment_entities = \MailPoet\DI\ContainerWrapper::getInstance()
 				->get( SegmentsRepository::class )
-				->findBy( [ 'type' => SegmentEntity::TYPE_DEFAULT, 'deletedAt' => null ] );
+				->findBy(
+					[
+						'type' => SegmentEntity::TYPE_DEFAULT,
+						'deletedAt' => null,
+					]
+				);
 			foreach ( $segment_entities as $segment ) {
 				$segments[ $segment->getId() ] = $segment->getName();
 			}

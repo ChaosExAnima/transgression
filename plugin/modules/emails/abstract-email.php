@@ -14,7 +14,7 @@ abstract class Email {
 	/**
 	 * Creates an email
 	 *
-	 * @param Emailer $emailer
+	 * @param Emailer     $emailer
 	 * @param string|null $email
 	 * @param string|null $subject
 	 */
@@ -134,7 +134,7 @@ abstract class Email {
 	 * @param Emailer $emailer
 	 * @return void
 	 */
-	static public function init( Emailer $emailer ): void {}
+	public static function init( Emailer $emailer ): void {}
 
 	/**
 	 * Creates an admin option for templates
@@ -143,5 +143,5 @@ abstract class Email {
 	 * @param string $name
 	 * @return Option
 	 */
-	abstract static public function template_option( string $key, string $name ): Option;
+	abstract public static function template_option( string $key, string $name ): Option;
 }

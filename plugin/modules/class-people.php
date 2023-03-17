@@ -103,7 +103,7 @@ class People extends Module {
 	}
 
 	public function redirect_to_profile() {
-		if ( !is_edit_account_page() || !is_user_logged_in() ) {
+		if ( ! is_edit_account_page() || ! is_user_logged_in() ) {
 			return;
 		}
 

@@ -1,10 +1,10 @@
 === Transgression ===
 Contributors: echo
-Requires at least: 5.8
-Tested up to: 5.9
-Requires PHP: 5.7
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Requires at least: 6.0
+Tested up to: 6.1.1
+Requires PHP: 8.0
+License: GNU General Public License v3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 == Description ==
 
@@ -12,12 +12,15 @@ Theme for the Transgression event website
 
 == Changelog ==
 
+= 1.0.0 =
+Strips out logic for plugin component.
+
 = 0.0.1 =
 * Initial release
 
 == Copyright ==
 
-Transgression WordPress Theme, (C) 2022
+Transgression WordPress Theme, (C) 2023
 Transgression is distributed under the terms of the GNU GPL.
 
 This program is free software: you can redistribute it and/or modify

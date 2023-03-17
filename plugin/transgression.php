@@ -21,6 +21,6 @@ require_once PLUGIN_ROOT . '/modules/index.php';
 require_once PLUGIN_ROOT . '/class-logger.php';
 require_once PLUGIN_ROOT . '/class-main.php';
 
-$application = new Main();
+$transgression_application = new Main();
 
-add_action( 'plugins_loaded', [ $application, 'init' ] );
+add_action( 'plugins_loaded', [ $transgression_application, 'init' ] );
