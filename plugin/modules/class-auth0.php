@@ -4,7 +4,8 @@ namespace Transgression\Modules;
 
 use Transgression\Admin\{Option, Page};
 use Transgression\Logger;
-use WP_User;
+
+use const Transgression\PLUGIN_ROOT;
 
 use function Transgression\{get_current_url, strip_query};
 
@@ -39,9 +40,15 @@ class Auth0 extends Module {
 		}
 		foreach ( self::PROVIDERS as $provider ) {
 			printf(
-				'<a href="?social-login=%1$s">%1$s</a>',
+				'<a href="?social-login=%1$s" class="social-login %1$s">',
 				esc_attr( $provider )
 			);
+			if ( file_exists( PLUGIN_ROOT . "/assets/{$provider}.svg" ) ) {
+				include PLUGIN_ROOT . "/assets/{$provider}.svg";
+			} else {
+				echo esc_html( $provider );
+			}
+			echo '</a> ';
 		}
 	}
 
