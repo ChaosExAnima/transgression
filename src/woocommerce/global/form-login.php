@@ -4,7 +4,7 @@
  *
  * @see         https://docs.woocommerce.com/document/template-structure/
  * @package     WooCommerce\Templates
- * @version     3.6.0
+ * @version     7.0.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,7 +27,7 @@ if ( is_user_logged_in() ) {
 	<?php echo ( $message ) ? wpautop( wptexturize( $message ) ) : ''; // @codingStandardsIgnoreLine ?>
 
 	<p class="form-row woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
-		<label for="login-email"><?php esc_html_e( 'Enter your email', 'woocommerce' ); ?></label>
+		<label for="login-email"><?php esc_html_e( 'Enter your email', 'transgression' ); ?></label>
 		<input type="text" class="input-text" name="login-email" id="login-email" autocomplete="email" required />
 	</p>
 	<div class="clear"></div>
@@ -41,8 +41,8 @@ if ( is_user_logged_in() ) {
 			type="submit"
 			class="woocommerce-button button woocommerce-form-login__submit"
 			name="login"
-			value="<?php esc_attr_e( 'Login', 'woocommerce' ); ?>"
-		><?php esc_html_e( 'Login', 'woocommerce' ); ?></button>
+			value="<?php esc_attr_e( 'Login', 'transgression' ); ?>"
+		><?php esc_html_e( 'Login', 'transgression' ); ?></button>
 	</p>
 
 	<div class="clear"></div>

@@ -12,7 +12,7 @@
  *
  * @see https://docs.woocommerce.com/document/template-structure/
  * @package WooCommerce\Templates
- * @version 3.5.0
+ * @version 7.0.1
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -25,7 +25,7 @@ do_action( 'woocommerce_before_edit_account_form' ); ?>
 
 	<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
 		<label for="account_display_name">
-			<?php esc_html_e( 'Name', 'woocommerce' ); ?>&nbsp;<span class="required">*</span>
+			<?php esc_html_e( 'Name', 'transgression' ); ?>&nbsp;<span class="required">*</span>
 		</label>
 		<input
 			type="text"
@@ -39,7 +39,7 @@ do_action( 'woocommerce_before_edit_account_form' ); ?>
 
 	<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
 		<label for="account_email">
-			<?php esc_html_e( 'Email address', 'woocommerce' ); ?>&nbsp;<span class="required">*</span>
+			<?php esc_html_e( 'Email address', 'transgression' ); ?>&nbsp;<span class="required">*</span>
 		</label>
 		<input
 			type="email"
@@ -54,7 +54,7 @@ do_action( 'woocommerce_before_edit_account_form' ); ?>
 
 	<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
 		<label for="account_pronouns">
-			<?php esc_html_e( 'Pronouns', 'woocommerce' ); ?>
+			<?php esc_html_e( 'Pronouns', 'transgression' ); ?>
 		</label>
 		<input
 			type="text"
@@ -73,9 +73,9 @@ do_action( 'woocommerce_before_edit_account_form' ); ?>
 			type="submit"
 			class="woocommerce-Button button"
 			name="save_account_details"
-			value="<?php esc_attr_e( 'Save changes', 'woocommerce' ); ?>"
+			value="<?php esc_attr_e( 'Save changes', 'transgression' ); ?>"
 		>
-			<?php esc_html_e( 'Save changes', 'woocommerce' ); ?>
+			<?php esc_html_e( 'Save changes', 'transgression' ); ?>
 		</button>
 		<input type="hidden" name="action" value="save_account_details" />
 	</p>

@@ -7,13 +7,14 @@
  * @version 3.6.0
  */
 
+namespace TransgressionTheme;
+
+use function Transgression\get_current_url;
+use function Transgression\strip_query;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-
-use Transgression\WooCommerce;
-
-use function Transgression\{get_current_url, strip_query};
 
 global $product;
 
@@ -43,7 +44,7 @@ if ( post_password_required() ) {
  */
 do_action( 'woocommerce_before_single_product_summary' );
 
-if ( WooCommerce::add_title_prefix( $product ) ) {
+if ( add_wc_title_prefix( $product ) ) {
 	echo '<h2 class="trans__product__subtitle">Transgression:</h2>';
 }
 the_title(
@@ -62,13 +63,13 @@ the_title(
 		enctype="multipart/form-data"
 	>
 		<?php do_action( 'woocommerce_before_add_to_cart_form' ); ?>
-		<?php if ( $product->is_type( 'variable' ) ): ?>
+		<?php if ( $product->is_type( 'variable' ) ) : ?>
 			<?php $default_variation = $product->get_variation_default_attribute( 'tier' ); ?>
 			<fieldset>
 				<legend class="trans__product__cart__title">
 					<?php echo esc_html( wc_attribute_label( 'tier', $product ) ); ?>
 				</legend>
-				<?php foreach ( $product->get_available_variations() as $variation ): ?>
+				<?php foreach ( $product->get_available_variations() as $variation ) : ?>
 					<?php
 						$variation_name = $variation['attributes']['attribute_tier'];
 					?>
@@ -87,7 +88,7 @@ the_title(
 		<?php endif; ?>
 		<?php echo wc_get_stock_html( $product ); ?>
 
-		<?php if ( is_user_logged_in() ): ?>
+		<?php if ( is_user_logged_in() ) : ?>
 			<input type="hidden" name="add-to-cart" value="<?php the_ID(); ?>" />
 		<?php else : ?>
 			<p><input type="email" name="login-email" placeholder="Email" required /></p>
