@@ -6,7 +6,7 @@ use Transgression\Admin\Option;
 use Transgression\Admin\Page;
 
 class Auth0 extends Module {
-	public function __construct( protected Page $settings ) {
+	public function __construct( protected People $people, protected Page $settings, protected Logger $logger ) {
 		$this->settings->add_section( 'auth0', 'Auth0' );
 		$this->settings->add_settings( 'auth0',
 			( new Option( 'auth0_baseurl', 'Base URL' ) )->of_type( 'url' ),

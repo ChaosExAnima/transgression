@@ -16,9 +16,9 @@ class Main {
 		$jetforms = new JetForms( $emailer );
 		new Applications( $jetforms, $emailer, $logger );
 		new Attendance( $logger );
-		new Auth0( $settings );
+		$people = new People( $emailer, $logger );
+		new Auth0( $people, $settings, $logger );
 		new Discord();
-		new People( $emailer, $logger );
 		new WooCommerce( $logger, $settings );
 	}
 }
