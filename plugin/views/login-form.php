@@ -13,6 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<p>
 		<input type="email" id="login-email" name="login-email" placeholder="Email" required class="shop-login input-text" />
 	</p>
+	<?php if ( apply_filters( 'transgression_social_configured', false ) ) : ?>
+	<p>
+		Or log in here: <?php do_action( 'transgression_social_login' ); ?>
+	</p>
+	<?php endif; ?>
 	<button type="submit" class="single_add_to_cart_button button alt">
 		Log in
 	</button>

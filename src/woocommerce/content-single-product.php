@@ -92,6 +92,11 @@ the_title(
 			<input type="hidden" name="add-to-cart" value="<?php the_ID(); ?>" />
 		<?php else : ?>
 			<p><input type="email" name="login-email" placeholder="Email" required /></p>
+			<?php if ( apply_filters( 'transgression_social_configured', false ) ) : ?>
+				<p class="trans__login__oauth">
+					Log in with: <?php do_action( 'transgression_social_login' ); ?>
+				</p>
+			<?php endif; ?>
 		<?php endif; ?>
 		<button
 			type="submit"
