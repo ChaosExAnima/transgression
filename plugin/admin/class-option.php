@@ -66,6 +66,9 @@ class Option {
 				}
 				$this->render_args = [ 'type' => 'number' ];
 				break;
+			case 'password':
+				$this->render_args = [ 'type' => 'password' ];
+				break;
 			case 'text':
 			default:
 				$this->sanitize_cb = 'sanitize_text_field';
@@ -147,11 +150,12 @@ class Option {
 	}
 
 	public function render_text_field() {
+		$type = $this->render_args['type'] ?? 'text';
 		printf(
 			'<input id="%1$s" class="regular-text" type="%3$s" name="%1$s" value="%2$s" />',
 			esc_attr( $this->key ),
-			esc_attr( $this->get() ),
-			esc_attr( $this->render_args['type'] ?? 'text' )
+			esc_attr( $type === 'password' && $this->get() ? 'secret' : $this->get() ),
+			esc_attr( $type )
 		);
 	}
 

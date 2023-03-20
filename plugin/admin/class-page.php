@@ -27,7 +27,7 @@ class Page {
 	 * Creates admin page
 	 *
 	 * @param string $setting_group Main group name
-	 * @param Admin_Option[] $page_options Array of admin options
+	 * @param Option[] $page_options Array of admin options
 	 * @param string $permission Access permission
 	 */
 	public function __construct(
@@ -109,7 +109,7 @@ class Page {
 	 * Sets the render callback
 	 *
 	 * @param callable $render
-	 * @return Admin
+	 * @return self
 	 */
 	public function set_render( callable $render ): self {
 		$this->render_cb = $render;
@@ -120,7 +120,7 @@ class Page {
 	 * Adds a new setting
 	 *
 	 * @param Option $option
-	 * @return Admin
+	 * @return self
 	 */
 	public function add_setting( Option $option ): self {
 		$this->page_options[ $option->key ] = $option;
@@ -128,13 +128,43 @@ class Page {
 	}
 
 	/**
+	 * Adds multiple settings
+	 *
+	 * @param Option|string $section_option
+	 * @param Option $options
+	 * @return self
+	 */
+	public function add_settings( Option|string $section_option, Option ...$options ): self {
+		if ( $section_option instanceof Option ) {
+			$options[] = $section_option;
+		}
+		foreach ( $options as $option ) {
+			if ( is_string( $section_option ) ) {
+				$option->in_section( $section_option );
+			}
+			$this->add_setting( $option );
+		}
+		return $this;
+	}
+
+	/**
 	 * Gets a setting
 	 *
 	 * @param string $key
-	 * @return Admin_Option|null
+	 * @return Option|null
 	 */
 	public function get_setting( string $key ): ?Option {
 		return $this->page_options[ $key ] ?? null;
+	}
+
+	/**
+	 * Gets a setting's value
+	 *
+	 * @param string $key
+	 * @return mixed|null
+	 */
+	public function value( string $key ): mixed {
+		return ( $this->page_options[ $key ] )->get() ?? null;
 	}
 
 	/**

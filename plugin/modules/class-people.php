@@ -306,7 +306,7 @@ class People extends Module {
 	 * @param WP_User $user
 	 * @return void
 	 */
-	private function redirect_to_login_if_not_customer( WP_User $user ) {
+	public function redirect_to_login_if_not_customer( WP_User $user ) {
 		if ( ! $this->is_passwordless( $user->ID ) ) {
 			$url = add_query_arg( 'action', 'purchase', wp_login_url( get_current_url() ) );
 			wp_safe_redirect( $url );

@@ -93,7 +93,6 @@ function is_url( string $url ): bool {
 function strip_query( string $url ): string {
 	$result = strtok( $url, '?' );
 	if ( false === $result ) {
-		log_error( "Was provided invalid URL: $url" );
 		return $url;
 	}
 	return $result;

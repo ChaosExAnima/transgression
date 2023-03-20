@@ -95,7 +95,8 @@ input[type="radio"]:checked {
 	margin-bottom: 1em;
 }
 
-.jet-form-builder-row> :is(.jet-form-builder__field-wrap, .jet-form-builder__fields-group) {
+.jet-form-builder-row
+	> :is(.jet-form-builder__field-wrap, .jet-form-builder__fields-group) {
 	order: 1;
 }
 
@@ -110,11 +111,11 @@ input[type="radio"]:checked {
 	color: var(--wp--preset--color--primary);
 }
 
-.jet-form-builder__field-wrap> :is(textarea, input) {
+.jet-form-builder__field-wrap > :is(textarea, input) {
 	transition: border-color var(--wp--custom--timing--short);
 }
 
-.jet-form-builder__field-label.for-checkbox :checked+span::before {
+.jet-form-builder__field-label.for-checkbox :checked + span::before {
 	background-color: var(--wp--preset--color--primary);
 	border-color: var(--wp--preset--color--secondary);
 }
@@ -177,7 +178,7 @@ input[type="radio"]:checked {
 	display: block;
 }
 
-.woocommerce-loop-product__link>img {
+.woocommerce-loop-product__link > img {
 	margin: 0 !important;
 }
 
@@ -246,16 +247,32 @@ input[type="radio"]:checked {
 	line-height: 1;
 }
 
-.trans__product__cart label input:checked+span.price.price {
+.trans__product__cart label input:checked + span.price.price {
 	color: var(--wp--preset--color--primary);
 }
 
+.trans__login__oauth {
+	align-items: center;
+	display: flex;
+	font-size: 1.6rem;
+	gap: 1em;
+}
+
+.trans__login__oauth > .social-login {
+	transition: color var(--wp--custom--timing--short);
+	width: 1em;
+}
+
+.trans__login__oauth > .social-login:hover {
+	color: var(--wp--preset--color--secondary);
+}
+
 /** CHECKOUT PAGE */
-#customer_details>.col-1 {
+#customer_details > .col-1 {
 	display: none;
 }
 
-#customer_details>.col-2 {
+#customer_details > .col-2 {
 	float: none;
 	width: auto;
 }
@@ -295,7 +312,7 @@ input[type="radio"]:checked {
 	float: none;
 }
 
-.wc_payment_method>label {
+.wc_payment_method > label {
 	display: initial;
 }
 
@@ -309,7 +326,7 @@ input[type="radio"]:checked {
 	padding: 0;
 	display: flex;
 	flex-direction: column;
-	gap: .5em;
+	gap: 0.5em;
 }
 
 .woocommerce ul.order_details li {
