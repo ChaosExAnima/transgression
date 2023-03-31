@@ -79,26 +79,33 @@ class People extends Module {
 
 		$email = sanitize_email( $_POST['login-email'] );
 		$user_id = email_exists( $email );
+		$message = 'Uh-oh, something happened. Try again or %2$s.';
+		$type = 'notice';
 		if ( $user_id ) {
 			$key = $this->get_login_key( $email );
 			if ( get_transient( $key ) !== false ) {
 				$this->logger->log( "Repeat login attempt for {$email}" );
-				wc_add_notice(
-					'This email was already used to log in. If you haven&rsquo;t gotten it yet, ' .
-					'give it five minutes and try again.'
-				);
-				wp_safe_redirect( $current_url );
-				exit;
+				$message = 'This email was already used to log in. If you haven&rsquo;t gotten it yet, ' .
+					'give it five minutes and try again.';
+			} else {
+				$this->send_login_email( $user_id );
+				$message = 'Check your email %1$s for a login link. If you don&rsquo;t see it, %2$s.';
+				$type = 'success';
 			}
-			$this->send_login_email( $user_id );
+		} else {
+			$this->logger->log( "Unknown login from {$email}" );
+			$message = 'We don&rsquo;t recognize the email %1$s. If you have issues with your email, %2$s.';
+			$type = 'error';
 		}
 
 		wc_add_notice( sprintf(
-			'Check your email %s for a login link. If you don&rsquo;t see it, ' .
-			'<a href="%s" target="_blank">contact us</a>.',
+			$message,
 			esc_html( $email ),
-			esc_url( 'mailto:' . get_option( 'admin_email' ) . '?subject=Login Issues' )
-		) );
+			sprintf(
+				'<a href="%s" target="_blank">contact us</a>',
+				esc_url( 'mailto:' . get_option( 'admin_email' ) . '?subject=Login Issues' )
+			)
+		), $type );
 		wp_safe_redirect( $current_url );
 		exit;
 	}
