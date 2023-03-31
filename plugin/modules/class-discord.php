@@ -7,9 +7,12 @@ use Transgression\{Logger, LoggerLevels};
 use WP_Post;
 
 class Discord extends Module {
+	protected const ACTION_RESULT = 'hook-result';
+
 	public function __construct( protected Page $settings, protected Logger $logger ) {
 		$settings->add_section( 'discord', 'Discord' );
 		$settings->add_action( 'test-hook', [ $this, 'send_test' ] );
+		$settings->add_action( self::ACTION_RESULT, [ $this, 'test_message' ] );
 		$settings->add_settings( 'discord',
 			( new Option( DiscordHooks::Application->hook(), 'Application Webhook' ) )
 				->of_type( 'url' )
@@ -154,8 +157,7 @@ class Discord extends Module {
 			$this->logger->error( $error );
 		}
 		if ( ! $url ) {
-			$this->settings->add_message( 'Hook not configured' );
-			return;
+			$this->settings->action_redirect( self::ACTION_RESULT, 'not-conf' );
 		}
 
 		$this->send_discord_message(
@@ -164,7 +166,21 @@ class Discord extends Module {
 			site_url(),
 			'This is a message to check things are working!'
 		);
-		$this->settings->add_message( 'Sent test message', 'success' );
+		$this->settings->action_redirect( self::ACTION_RESULT, 'success' );
+	}
+
+	/**
+	 * Shows the hook test result message
+	 *
+	 * @param string $result
+	 * @return void
+	 */
+	public function test_message( string $result ): void {
+		if ( $result === 'not-conf' ) {
+			$this->settings->add_message( 'Hook not configured' );
+		} else if ( $result === 'success' ) {
+			$this->settings->add_message( 'Sent test message', 'success' );
+		}
 	}
 
 	/**
@@ -176,7 +192,7 @@ class Discord extends Module {
 	 * @return void
 	 */
 	public function send_logging_message( string $message, LoggerLevels $severity ) {
-		$this->send_discord_message( DiscordHooks::Application, $severity->value, null, $message );
+		$this->send_discord_message( DiscordHooks::Logging, $severity->value, null, $message, [], true );
 	}
 
 	/**
@@ -185,30 +201,39 @@ class Discord extends Module {
 	 * @param DiscordHooks $webhook
 	 * @param string $title
 	 * @param string|null $url
-	 * @param string|null $body The description
+	 * @param string|null $content The description
 	 * @param array $extra_fields
+	 * @param bool $simple
 	 * @return void
 	 */
 	protected function send_discord_message(
 		DiscordHooks $webhook,
 		string $title,
 		?string $url = null,
-		?string $body = null,
-		array $extra_fields = []
+		?string $content = null,
+		array $extra_fields = [],
+		bool $simple = false
 	): void {
 		$url = $this->settings->value( $webhook->hook() );
 		if ( ! $url ) {
 			return;
 		}
-		$embed = array_merge( $extra_fields, [
-			'title' => esc_html( $title ),
-			'type' => 'rich',
-			'url' => $url,
-			'description' => $body,
-		] );
+		$body = [];
+		if ( ! $simple ) {
+			$embed = array_merge( $extra_fields, [
+				'title' => esc_html( $title ),
+				'type' => 'rich',
+				'url' => $url,
+				'description' => $content,
+			] );
+			$body['embeds'] = [ $embed ];
+		} else {
+			$body = $extra_fields;
+			$body['content'] = "{$title}: {$content}";
+		}
 
 		$args = [
-			'body' => wp_json_encode( [ 'embeds' => [ $embed ] ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+			'body' => wp_json_encode( $body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
 			'headers' => [ 'Content-Type' => 'application/json' ],
 			'blocking' => false,
 		];

@@ -9,7 +9,7 @@ enum LoggerLevels: string {
 }
 
 class Logger {
-	public const ACTION_NAME = 'transgression_log';
+	public const ACTION_NAME = PLUGIN_SLUG . '_log';
 
 	public function __construct() {
 		add_action( self::ACTION_NAME, [ $this, 'php_log' ], 10, 2 );
