@@ -12,7 +12,7 @@ class People extends Module {
 	/** @inheritDoc */
 	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
 
-	public function __construct( protected Emailer $emailer, protected Logger $logger ) {
+	public function __construct( protected Emailer $emailer ) {
 		if ( ! self::check_plugins() ) {
 			return;
 		}
@@ -79,25 +79,33 @@ class People extends Module {
 
 		$email = sanitize_email( $_POST['login-email'] );
 		$user_id = email_exists( $email );
+		$message = 'Uh-oh, something happened. Try again or %2$s.';
+		$type = 'notice';
 		if ( $user_id ) {
 			$key = $this->get_login_key( $email );
 			if ( get_transient( $key ) !== false ) {
-				wc_add_notice(
-					'This email was already used to log in. If you haven&rsquo;t gotten it yet, ' .
-					'give it five minutes and try again.'
-				);
-				wp_safe_redirect( $current_url );
-				exit;
+				Logger::info( "Repeat login attempt for {$email}" );
+				$message = 'This email was already used to log in. If you haven&rsquo;t gotten it yet, ' .
+					'give it five minutes and try again.';
+			} else {
+				$this->send_login_email( $user_id );
+				$message = 'Check your email %1$s for a login link. If you don&rsquo;t see it, %2$s.';
+				$type = 'success';
 			}
-			$this->send_login_email( $user_id );
+		} else {
+			Logger::info( "Unknown login from {$email}" );
+			$message = 'We don&rsquo;t recognize the email %1$s. If you have issues with your email, %2$s.';
+			$type = 'error';
 		}
 
 		wc_add_notice( sprintf(
-			'Check your email %s for a login link. If you don&rsquo;t see it, ' .
-			'<a href="%s" target="_blank">contact us</a>.',
+			$message,
 			esc_html( $email ),
-			esc_url( 'mailto:' . get_option( 'admin_email' ) . '?subject=Login Issues' )
-		) );
+			sprintf(
+				'<a href="%s" target="_blank">contact us</a>',
+				esc_url( 'mailto:' . get_option( 'admin_email' ) . '?subject=Login Issues' )
+			)
+		), $type );
 		wp_safe_redirect( $current_url );
 		exit;
 	}
@@ -220,7 +228,7 @@ class People extends Module {
 	private function send_login_email( int $user_id ) {
 		$user = get_user_by( 'id', $user_id );
 		if ( !$user ) {
-			$this->logger->error( "Tried to log in with user ID of {$user_id}" );
+			Logger::error( "Tried to log in with user ID of {$user_id}" );
 			return;
 		}
 
@@ -273,21 +281,21 @@ class People extends Module {
 		$email = sanitize_email( $_GET['email'] );
 		$hash = wp_hash( remove_query_arg( 'hash', $url ) );
 		if ( empty( $_GET['hash'] ) || ! hash_equals( $hash, $_GET['hash'] ) ) {
-			$this->logger->log( "Login hash check failed for {$email}" );
+			Logger::info( "Login hash check failed for {$email}" );
 			return false;
 		}
 
 		// Check the nonce.
 		$key = "user_login_{$email}";
 		if ( wp_verify_nonce( $_GET['nonce'], $key ) !== 1 ) {
-			$this->logger->log( "Login nonce check failed for {$email}" );
+			Logger::info( "Login nonce check failed for {$email}" );
 			return false;
 		}
 
 		// Does this user exist?
 		$user_id = email_exists( $email );
 		if ( ! $user_id ) {
-			$this->logger->log( "Login email check failed for {$email}" );
+			Logger::info( "Login email check failed for {$email}" );
 			return false;
 		}
 

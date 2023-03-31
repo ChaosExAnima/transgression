@@ -2,16 +2,47 @@
 
 namespace Transgression;
 
+enum LoggerLevels: string {
+	case INFO = 'Info';
+	case WARNING = 'Warning';
+	case ERROR = 'Error';
+}
+
 class Logger {
-	public function log( mixed $message ) {
-		error_log( $this->to_string( $message ) );
+	protected const ACTION_NAME = PLUGIN_SLUG . '_log';
+
+	public function __construct( bool $default_destination = true ) {
+		if ( $default_destination ) {
+			$this->register_destination( [ $this, 'php_log' ] );
+		}
 	}
 
-	public function error( mixed $error ) {
-		error_log( 'Error: ' . $this->to_string( $error ) );
+	/**
+	 * Registers a logging destination
+	 *
+	 * @param callable $destination
+	 * @return void
+	 */
+	public function register_destination( callable $destination ) {
+		add_action( self::ACTION_NAME, $destination, 10, 3 );
 	}
 
-	protected function to_string( mixed $message ): string {
+	public function php_log( string $message, LoggerLevels $severity ) {
+		if ( $severity !== LoggerLevels::INFO ) {
+			$message = "{$severity->value}: {$message}";
+		}
+		error_log( $message );
+	}
+
+	public static function info( mixed $message ) {
+		do_action( self::ACTION_NAME, self::to_string( $message ), LoggerLevels::INFO, $message );
+	}
+
+	public static function error( mixed $error ) {
+		do_action( self::ACTION_NAME, self::to_string( $error ), LoggerLevels::ERROR, $error );
+	}
+
+	protected static function to_string( mixed $message ): string {
 		if ( $message instanceof \Throwable ) {
 			return $message->__toString();
 		} else if ( $message instanceof \WP_Error ) {

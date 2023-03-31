@@ -12,7 +12,8 @@
 		"docker": "docker compose",
 		"setup": "concurrently yarn:setup:plugins yarn:setup:theme",
 		"setup:plugins": "yarn wp plugin install --activate $(cat plugins.txt)",
-		"setup:theme": "yarn wp theme install blockbase; yarn wp theme activate transgression"
+		"setup:theme": "yarn wp theme install blockbase; yarn wp theme activate transgression",
+		"cron": "yarn wp cron event run --due-now"
 	},
 	"repository": "git@github.com:ChaosExAnima/transgression.git",
 	"author": "echo <ChaosExAnima@users.noreply.github.com>",

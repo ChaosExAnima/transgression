@@ -14,11 +14,11 @@ class Main {
 		$settings->as_subpage( 'options-general.php', 'ticketing', 'Ticketing Settings', 'Ticketing' );
 
 		$jetforms = new JetForms( $emailer );
-		new Applications( $jetforms, $emailer, $logger );
-		new Attendance( $logger );
-		$people = new People( $emailer, $logger );
-		new Auth0( $people, $settings, $logger );
-		new Discord();
-		new WooCommerce( $logger, $settings );
+		new Applications( $jetforms, $emailer );
+		new Attendance();
+		$people = new People( $emailer );
+		new Auth0( $people, $settings );
+		new Discord( $settings, $logger );
+		new WooCommerce( $settings );
 	}
 }

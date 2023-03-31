@@ -8,7 +8,7 @@ use Transgression\Admin\Option_Textarea;
 use const Transgression\PLUGIN_SLUG;
 
 class WPMail extends Email {
-	public function send() {
+	protected function attempt_send(): bool {
 		$body = '';
 		if ( $this->template ) {
 			$option = $this->emailer->get_template( $this->template );
@@ -21,7 +21,7 @@ class WPMail extends Email {
 			throw new \Error( 'No body set' );
 		}
 
-		wp_mail(
+		return wp_mail(
 			$this->email,
 			$this->subject,
 			$this->process_body( $body ),

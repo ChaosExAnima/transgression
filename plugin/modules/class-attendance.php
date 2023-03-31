@@ -17,7 +17,7 @@ class Attendance extends Module {
 	'MTEzIDIwLjExMiA0MS4xMTMtNDEuMTEzYTEuMDk1IDEuMDk1IDAgMCAxIDEuNTQ4IDBsNi43MDMgNi43MDRhMS4wOTQgMS4' .
 	'wOTQgMCAwIDEgMCAxLjU0OHoiLz48L3N2Zz4=';
 
-	public function __construct( protected Logger $logger ) {
+	public function __construct() {
 		if ( self::check_plugins() ) {
 			add_action( 'admin_menu', [ $this, 'attendance_menu' ] );
 		}
@@ -73,7 +73,7 @@ class Attendance extends Module {
 			if ( $order->get_status() === 'completed' ) {
 				$user = $order->get_user();
 				if ( ! $user ) {
-					$this->logger->error( "No user for order ID {$order->get_id()}" );
+					Logger::info( "Attendance: no user for order ID {$order->get_id()}" );
 					continue;
 				}
 				$avatar_url = '';

@@ -4,6 +4,7 @@ namespace Transgression\Modules\Email;
 
 use Error;
 use Transgression\Admin\Option;
+use Transgression\Logger;
 use WP_User;
 
 abstract class Email {
@@ -33,7 +34,7 @@ abstract class Email {
 	public function to_user( int $user_id ): self {
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			throw new Error( "Could not find user with ID {$user_id}" );
+			Logger::error( "Could not find user with ID {$user_id}" );
 		}
 
 		$this->user = $user;
@@ -53,13 +54,34 @@ abstract class Email {
 
 	public function with_template( string $template ): self {
 		if ( ! $this->emailer->is_template( $template ) ) {
-			throw new Error( "Could not find template of {$template}" );
+			Logger::error( new Error( "Could not find template of {$template}" ) );
 		}
 		$this->template = $template;
 		return $this;
 	}
 
-	abstract public function send();
+	/**
+	 * Sends an email
+	 *
+	 * @return void
+	 */
+	public function send() {
+		try {
+			$success = $this->attempt_send();
+			if ( ! $success ) {
+				throw new Error( 'Could not send email' );
+			}
+		} catch ( Error $error ) {
+			Logger::error( $error );
+		}
+	}
+
+	/**
+	 * Attempts to send an email
+	 *
+	 * @return bool True if email was successfully sent
+	 */
+	abstract protected function attempt_send(): bool;
 
 	public function do_shortcode( mixed $atts, ?string $content, string $tag ): string {
 		if ( empty( $this->shortcodes[ $tag ] ) ) {
@@ -117,6 +139,9 @@ abstract class Email {
 		}
 		if ( ! isset( $sc['events'] ) ) {
 			$this->set_url( 'events', wc_get_page_permalink( 'shop' ) );
+		}
+		if ( ! isset( $sc['account'] ) ) {
+			$this->set_url( 'account', wc_get_page_permalink( 'myaccount' ) );
 		}
 	}
 
