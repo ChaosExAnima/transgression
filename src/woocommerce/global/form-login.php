@@ -26,6 +26,12 @@ if ( is_user_logged_in() ) {
 
 	<?php echo ( $message ) ? wpautop( wptexturize( $message ) ) : ''; // @codingStandardsIgnoreLine ?>
 
+	<?php if ( apply_filters( 'transgression_social_configured', false ) ) : ?>
+		<p class="form-row">
+			Log in with: <?php do_action( 'transgression_social_login' ); ?>
+		</p>
+	<?php endif; ?>
+
 	<p class="form-row woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
 		<label for="login-email"><?php esc_html_e( 'Enter your email', 'transgression' ); ?></label>
 		<input type="text" class="input-text" name="login-email" id="login-email" autocomplete="email" required />

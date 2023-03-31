@@ -64,6 +64,10 @@ input {
 	transition: var(--wp--custom--timing--short) border-color linear;
 }
 
+input:disabled {
+	cursor: not-allowed;
+}
+
 input[type="radio"] {
 	appearance: none;
 	border-radius: 50%;
@@ -259,12 +263,19 @@ input[type="radio"]:checked {
 }
 
 .trans__login__oauth > .social-login {
-	transition: color var(--wp--custom--timing--short);
 	width: 1em;
 }
 
-.trans__login__oauth > .social-login:hover {
+a.social-login {
+	transition: color var(--wp--custom--timing--short);
+}
+
+a.social-login:hover {
 	color: var(--wp--preset--color--secondary);
+}
+
+span.social-login {
+	cursor: not-allowed;
 }
 
 /** CHECKOUT PAGE */
@@ -337,6 +348,13 @@ input[type="radio"]:checked {
 }
 
 /** ACCOUNT PAGE */
+.form-row > .social-login {
+	display: inline-block;
+	height: 1em;
+	line-height: 1;
+	margin: 0 0.2em;
+	width: 1em;
+}
 .woocommerce-MyAccount-navigation {
 	font-size: var(--wp--preset--font-size--medium);
 }

@@ -91,10 +91,18 @@ the_title(
 		<?php if ( is_user_logged_in() ) : ?>
 			<input type="hidden" name="add-to-cart" value="<?php the_ID(); ?>" />
 		<?php else : ?>
-			<p><input type="email" name="login-email" placeholder="Email" required /></p>
+			<p>
+				<input
+					type="email"
+					name="login-email"
+					placeholder="Email"
+					required
+					<?php disabled( ! $product->is_in_stock() ) ?>
+				/>
+			</p>
 			<?php if ( apply_filters( 'transgression_social_configured', false ) ) : ?>
 				<p class="trans__login__oauth">
-					Log in with: <?php do_action( 'transgression_social_login' ); ?>
+					Log in with: <?php do_action( 'transgression_social_login', $product->is_in_stock() ); ?>
 				</p>
 			<?php endif; ?>
 		<?php endif; ?>

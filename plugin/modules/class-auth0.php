@@ -32,23 +32,31 @@ class Auth0 extends Module {
 	/**
 	 * Displays login buttons. Called via action.
 	 *
+	 * @param bool $enabled
 	 * @return void
 	 */
-	public function display_login_buttons() {
+	public function display_login_buttons( bool $enabled = true ) {
 		if ( ! $this->is_configured() ) {
 			return;
 		}
 		foreach ( self::PROVIDERS as $provider ) {
-			printf(
-				'<a href="?social-login=%1$s" class="social-login %1$s">',
-				esc_attr( $provider )
-			);
+			if ( $enabled ) {
+				printf(
+					'<a href="?social-login=%1$s" class="social-login %1$s">',
+					esc_attr( $provider )
+				);
+			} else {
+				printf(
+					'<span class="social-login disabled %1$s">',
+					esc_attr( $provider )
+				);
+			}
 			if ( file_exists( PLUGIN_ROOT . "/assets/{$provider}.svg" ) ) {
 				include PLUGIN_ROOT . "/assets/{$provider}.svg";
 			} else {
 				echo esc_html( $provider );
 			}
-			echo '</a> ';
+			echo $enabled ? '</a> ' : '</span> ';
 		}
 	}
 
