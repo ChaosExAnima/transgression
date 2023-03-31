@@ -262,8 +262,6 @@ class Page {
 			}
 		}
 
-		// For options pages, this is run automatically
-		$screen = get_current_screen();
 		settings_errors( "{$this->setting_group}_messages" );
 
 		printf(
