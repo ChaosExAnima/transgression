@@ -94,11 +94,14 @@ abstract class Email {
 		}
 
 		if ( is_string( $callback ) ) {
-			return sprintf(
-				'<a href="%1$s">%2$s</a>',
-				esc_url( $callback ),
-				do_shortcode( $content ) ?? esc_url( $callback )
-			);
+			if ( $content ) {
+				return sprintf(
+					'<a href="%1$s">%2$s</a>',
+					esc_url( $callback ),
+					do_shortcode( $content ) ?? esc_url( $callback )
+				);
+			}
+			return esc_url( $callback );
 		}
 		return '';
 	}
