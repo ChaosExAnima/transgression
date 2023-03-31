@@ -21,7 +21,7 @@ class Applications extends Module {
 	];
 
 	const FIELDS = [
-		'name' => 'Name',
+		'post_title' => 'Name',
 		'pronouns' => 'Pronouns',
 		'email' => 'Email',
 		'identify' => 'How they identify',
@@ -242,11 +242,6 @@ class Applications extends Module {
 
 	public function render_metabox_fields( WP_Post $post ) {
 		$fields = self::FIELDS;
-		if ( $post->_form_id ) {
-			$form_fields = $this->jetForms
-				->get_form_fields_for_meta( absint( $post->_form_id ) );
-			$fields = array_merge( $form_fields, $fields );
-		}
 		load_view( 'applications/fields', compact( 'post', 'fields' ) );
 	}
 
