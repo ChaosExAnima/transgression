@@ -154,7 +154,7 @@ class Option {
 		printf(
 			'<input id="%1$s" class="regular-text" type="%3$s" name="%1$s" value="%2$s" />',
 			esc_attr( $this->key ),
-			esc_attr( $type === 'password' && $this->get() ? 'secret' : $this->get() ),
+			esc_attr( $this->get() ),
 			esc_attr( $type )
 		);
 	}
