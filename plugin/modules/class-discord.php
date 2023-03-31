@@ -35,9 +35,7 @@ class Discord extends Module {
 		if ( $logging_hook->get() ) {
 			$logger->register_destination( [ $this, 'send_logging_message' ] );
 		}
-	}
 
-	public function init() {
 		add_action( 'save_post_' . Applications::POST_TYPE, [ $this, 'send_app_message' ], 10, 3 );
 		add_action( 'woocommerce_order_status_completed', [ $this, 'send_woo_message' ] );
 	}

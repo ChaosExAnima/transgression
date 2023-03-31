@@ -73,6 +73,14 @@ class JetForms extends Module {
 		$blocks = Block_Helper::filter_blocks_by_namespace( $content );
 
 		foreach ( $blocks as $block ) {
+			$name = $block['attrs']['name'] ?? null;
+			if (
+				! $name ||
+				str_contains( $name, 'photo' ) ||
+				str_contains( $block['blockName'], 'checkbox' )
+			) {
+				continue;
+			}
 			if ( ! empty( $block['attrs']['label'] ) ) {
 				$fields[ $block['attrs']['name'] ] = $block['attrs']['label'];
 			}

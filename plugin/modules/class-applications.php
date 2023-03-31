@@ -21,14 +21,14 @@ class Applications extends Module {
 	];
 
 	const FIELDS = [
-		'post_title' => 'Name',
-		'email' => 'Email',
+		'name' => 'Name',
 		'pronouns' => 'Pronouns',
-		'identity' => 'How they identify',
-		'associates' => 'Who they know',
-		'referrer' => 'How they know us',
-		'warnings' => 'Potential conflicts',
+		'email' => 'Email',
+		'identify' => 'How they identify',
 		'accessibility' => 'Accessibility concerns',
+		'source' => 'How they know us',
+		'associates' => 'Who they know',
+		'conflicts' => 'Potential conflicts',
 		'extra' => 'Additional comments',
 	];
 
@@ -242,7 +242,6 @@ class Applications extends Module {
 
 	public function render_metabox_fields( WP_Post $post ) {
 		$fields = self::FIELDS;
-		$original_field_keys = array_keys( $fields );
 		if ( $post->_form_id ) {
 			$form_fields = $this->jetForms
 				->get_form_fields_for_meta( absint( $post->_form_id ) );

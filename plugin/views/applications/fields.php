@@ -11,7 +11,7 @@ $post = $params['post'];
 	<tbody>
 		<?php foreach ( $fields as $key => $name ) : ?>
 			<tr id="<?php echo esc_attr( $key ); ?>">
-				<th><?php echo esc_html( $name ); ?></th>
+				<th align="left"><?php echo esc_html( $name ); ?></th>
 				<td>
 					<?php $value = $post->{$key}; ?>
 					<?php if ( ! $value ) : ?>
