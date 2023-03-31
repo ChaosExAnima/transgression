@@ -73,7 +73,7 @@ class Attendance extends Module {
 			if ( $order->get_status() === 'completed' ) {
 				$user = $order->get_user();
 				if ( ! $user ) {
-					$this->logger->error( "No user for order ID {$order->get_id()}" );
+					$this->logger->log( "Attendance: no user for order ID {$order->get_id()}" );
 					continue;
 				}
 				$avatar_url = '';

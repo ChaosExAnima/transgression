@@ -17,6 +17,7 @@ use MailPoet\WP\Functions;
 use MailPoetVendor\CSS;
 use Transgression\Admin\Option;
 use Transgression\Admin\Option_Select;
+use Transgression\Logger;
 
 class MailPoet extends Email {
 	/** @var ?\MailPoet\DI\ContainerWrapper; */
@@ -27,6 +28,7 @@ class MailPoet extends Email {
 	 */
 	public function __construct(
 		protected Emailer $emailer,
+		protected Logger $logger,
 		public ?string $email = null,
 		public ?string $subject = null
 	) {
@@ -34,10 +36,10 @@ class MailPoet extends Email {
 			throw new Error( 'MailPoet is not loaded' );
 		}
 		$this->mailpoet_container = \MailPoet\DI\ContainerWrapper::getInstance();
-		parent::__construct( $emailer, $email, $subject );
+		parent::__construct( $emailer, $logger, $email, $subject );
 	}
 
-	public function send() {
+	protected function attempt_send(): bool {
 		$template_id = absint( get_option( $this->template, 0 ) );
 		if ( ! $template_id ) {
 			throw new Error( 'Template not set' );
@@ -53,23 +55,12 @@ class MailPoet extends Email {
 		$subject = $newsletter->getSubject();
 		$body = $this->render_newsletter( $newsletter, ! $is_html );
 
-		wp_mail(
+		return wp_mail(
 			$this->email,
 			$subject,
 			$this->process_body( $body, false ),
 			$this->get_headers( $is_html )
 		);
-	}
-
-	protected function load_template(): int {
-		if ( ! $this->template ) {
-			throw new Error( 'MailPoet requires a template' );
-		}
-		$template_id = absint( get_option( $this->template, 0 ) );
-		if ( ! $template_id ) {
-			throw new Error( 'Template not set' );
-		}
-		return $template_id;
 	}
 
 	private function get_newsletter_repo(): NewslettersRepository {

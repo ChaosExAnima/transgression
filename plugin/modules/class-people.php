@@ -82,6 +82,7 @@ class People extends Module {
 		if ( $user_id ) {
 			$key = $this->get_login_key( $email );
 			if ( get_transient( $key ) !== false ) {
+				$this->logger->log( "Repeat login attempt for {$email}" );
 				wc_add_notice(
 					'This email was already used to log in. If you haven&rsquo;t gotten it yet, ' .
 					'give it five minutes and try again.'

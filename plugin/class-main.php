@@ -8,7 +8,7 @@ use Transgression\Modules\{Applications, Attendance, Auth0, Discord, People, Ema
 class Main {
 	public function init() {
 		$logger = new Logger();
-		$emailer = new Emailer();
+		$emailer = new Emailer( $logger );
 
 		$settings = new Page( 'transgression_settings' );
 		$settings->as_subpage( 'options-general.php', 'ticketing', 'Ticketing Settings', 'Ticketing' );

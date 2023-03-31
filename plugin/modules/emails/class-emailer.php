@@ -3,6 +3,7 @@
 namespace Transgression\Modules\Email;
 
 use Transgression\Admin\{Option, Page};
+use Transgression\Logger;
 use Transgression\Modules\Applications;
 
 class Emailer {
@@ -10,7 +11,7 @@ class Emailer {
 
 	public Page $admin;
 
-	public function __construct() {
+	public function __construct( protected Logger $logger ) {
 		$admin = new Page( 'emails' );
 		$this->admin = $admin;
 
@@ -30,10 +31,14 @@ class Emailer {
 	 */
 	public function create( ?string $to = null, ?string $subject = null ): Email {
 		$email_class = $this->get_email_class();
-		if ( $email_class === MailPoet::class ) {
-			return new MailPoet( $this, $to, $subject );
+		try {
+			if ( $email_class === MailPoet::class ) {
+				return new MailPoet( $this, $this->logger, $to, $subject );
+			}
+		} catch ( \Error $error ) {
+			$this->logger->error( $error );
 		}
-		return new WPMail( $this, $to, $subject );
+		return new WPMail( $this, $this->logger, $to, $subject );
 	}
 
 	/**
@@ -114,6 +119,7 @@ class Emailer {
 		} catch ( \Error $error ) {
 			$result = 'error';
 			$extra = [ 'error' => base64_encode( $error->getMessage() ) ];
+			$this->logger->error( $error );
 		}
 
 		if ( ! $result ) {

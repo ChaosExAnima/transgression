@@ -84,6 +84,7 @@ class Auth0 extends Module {
 		if ( isset( $_GET['social-login'] ) ) {
 			$provider = $_GET['social-login'];
 			if ( ! in_array( $provider, self::PROVIDERS, true ) ) {
+				$this->logger->log( "Invalid social login: {$_GET['social-login']}" );
 				wc_add_notice( 'Invalid login type', 'error' );
 				wp_safe_redirect( $current_url );
 				exit;
