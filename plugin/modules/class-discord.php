@@ -3,32 +3,35 @@
 namespace Transgression\Modules;
 
 use Transgression\Admin\{Page, Option};
+use Transgression\{Logger, LoggerLevels};
 use WP_Post;
 
 class Discord extends Module {
-	protected Page $admin;
-
-	public function __construct() {
-		$admin = new Page( 'discord' );
-		$admin->as_post_subpage(
-			Applications::POST_TYPE,
-			'discord',
-			'Discord'
-		);
-		$admin->add_action( 'test-hook', [ $this, 'send_test' ] );
-
-		( new Option( 'app_discord_hook', 'Application Webhook' ) )
-			->of_type( 'url' )
-			->render_after( [ $this, 'render_test_button' ] )
-			->on_page( $admin );
-		if ( WooCommerce::check_plugins() ) {
-			( new Option( 'woo_discord_hook', 'Purchase Webhook' ) )
+	public function __construct( protected Page $settings ) {
+		$settings->add_section( 'discord', 'Discord' );
+		$settings->add_action( 'test-hook', [ $this, 'send_test' ] );
+		$settings->add_settings( 'discord',
+			( new Option( 'app_discord_hook', 'Application Webhook' ) )
 				->of_type( 'url' )
 				->render_after( [ $this, 'render_test_button' ] )
-				->on_page( $admin );
+		);
+		if ( WooCommerce::check_plugins() ) {
+			$settings->add_setting(
+				( new Option( 'woo_discord_hook', 'Purchase Webhook' ) )
+					->in_section( 'discord' )
+					->of_type( 'url' )
+					->render_after( [ $this, 'render_test_button' ] )
+			);
 		}
 
-		$this->admin = $admin;
+		$logging_hook = ( new Option( 'logging_discord_hook', 'Logging Webhook' ) )
+			->in_section( 'discord' )
+			->of_type( 'url' )
+			->render_after( [ $this, 'render_test_button' ] )
+			->on_page( $settings );
+		if ( $logging_hook->get() ) {
+			add_action( Logger::ACTION_NAME, [ $this, 'send_logging_message' ], 10, 3 );
+		}
 	}
 
 	public function init() {
@@ -49,7 +52,7 @@ class Discord extends Module {
 			return; // Only for first insert
 		}
 
-		$hook = $this->admin->get_setting( 'app_discord_hook' )?->get();
+		$hook = $this->settings->get_setting( 'app_discord_hook' )?->get();
 		if ( ! $hook ) {
 			return;
 		}
@@ -74,7 +77,7 @@ class Discord extends Module {
 	 * @return void
 	 */
 	public function send_woo_message( int $order_id ): void {
-		$hook = $this->admin->get_setting( 'woo_discord_hook' )?->get();
+		$hook = $this->settings->get_setting( 'woo_discord_hook' )?->get();
 		if ( ! $hook ) {
 			return;
 		}
@@ -134,7 +137,7 @@ class Discord extends Module {
 	 * @return void
 	 */
 	public function render_test_button( Option $option ): void {
-		$test_url = $this->admin->get_url( [
+		$test_url = $this->settings->get_url( [
 			'test-hook' => $option->key,
 			'_wpnonce' => wp_create_nonce( "test-hook-{$option->key}" ),
 		] );
@@ -153,9 +156,9 @@ class Discord extends Module {
 	 */
 	public function send_test( string $hook_type ): void {
 		check_admin_referer( "test-hook-{$hook_type}" );
-		$hook = $this->admin->get_setting( $hook_type )?->get();
+		$hook = $this->settings->get_setting( $hook_type )?->get();
 		if ( ! $hook ) {
-			$this->admin->add_message( 'Hook not configured' );
+			$this->settings->add_message( 'Hook not configured' );
 			return;
 		}
 
@@ -165,7 +168,34 @@ class Discord extends Module {
 			site_url(),
 			'This is a message to check things are working!'
 		);
-		$this->admin->add_message( 'Sent test message', 'success' );
+		$this->settings->add_message( 'Sent test message', 'success' );
+	}
+
+	/**
+	 * Sends logging error message
+	 *
+	 * @param string $message The stringified error message
+	 * @param LoggerLevels $severity Error severity
+	 * @param mixed $error Raw message object
+	 * @return void
+	 */
+	public function send_logging_message( string $message, LoggerLevels $severity, mixed $error ) {
+		$this->send_discord_message(
+			$this->hook_url( DiscordHooks::Logging ),
+			$severity->value,
+			null,
+			$message
+		);
+	}
+
+	/**
+	 * Gets a hook URL
+	 *
+	 * @param DiscordHooks $name The hook URL if set
+	 * @return string|null
+	 */
+	protected function hook_url( DiscordHooks $name ): ?string {
+		return $this->settings->get_setting( $name->hook() )?->get();
 	}
 
 	/**
@@ -201,4 +231,14 @@ class Discord extends Module {
 		wp_remote_post( $webhook, $args );
 	}
 
+}
+
+enum DiscordHooks: string {
+	case Application = 'app';
+	case Logging = 'log';
+	case WooCommerce = 'woo';
+
+	public function hook(): string {
+		return "{$this->value}_discord_hook";
+	}
 }
