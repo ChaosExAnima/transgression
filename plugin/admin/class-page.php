@@ -264,9 +264,7 @@ class Page {
 
 		// For options pages, this is run automatically
 		$screen = get_current_screen();
-		if ( $screen->parent_file !== 'options-general.php' ) {
-			settings_errors();
-		}
+		settings_errors( "{$this->setting_group}_messages" );
 
 		printf(
 			'<div class="wrap"><h1>%s</h1><form action="options.php" method="post">',
