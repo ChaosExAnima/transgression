@@ -28,7 +28,6 @@ class MailPoet extends Email {
 	 */
 	public function __construct(
 		protected Emailer $emailer,
-		protected Logger $logger,
 		public ?string $email = null,
 		public ?string $subject = null
 	) {
@@ -36,7 +35,7 @@ class MailPoet extends Email {
 			throw new Error( 'MailPoet is not loaded' );
 		}
 		$this->mailpoet_container = \MailPoet\DI\ContainerWrapper::getInstance();
-		parent::__construct( $emailer, $logger, $email, $subject );
+		parent::__construct( $emailer, $email, $subject );
 	}
 
 	protected function attempt_send(): bool {

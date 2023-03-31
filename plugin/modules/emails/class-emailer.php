@@ -11,7 +11,7 @@ class Emailer {
 
 	public Page $admin;
 
-	public function __construct( protected Logger $logger ) {
+	public function __construct() {
 		$admin = new Page( 'emails' );
 		$this->admin = $admin;
 
@@ -33,12 +33,12 @@ class Emailer {
 		$email_class = $this->get_email_class();
 		try {
 			if ( $email_class === MailPoet::class ) {
-				return new MailPoet( $this, $this->logger, $to, $subject );
+				return new MailPoet( $this, $to, $subject );
 			}
 		} catch ( \Error $error ) {
-			$this->logger->error( $error );
+			Logger::error( $error );
 		}
-		return new WPMail( $this, $this->logger, $to, $subject );
+		return new WPMail( $this, $to, $subject );
 	}
 
 	/**
@@ -119,7 +119,7 @@ class Emailer {
 		} catch ( \Error $error ) {
 			$result = 'error';
 			$extra = [ 'error' => base64_encode( $error->getMessage() ) ];
-			$this->logger->error( $error );
+			Logger::error( $error );
 		}
 
 		if ( ! $result ) {

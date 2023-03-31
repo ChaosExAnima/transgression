@@ -9,18 +9,20 @@ enum LoggerLevels: string {
 }
 
 class Logger {
-	public const ACTION_NAME = PLUGIN_SLUG . '_log';
+	protected const ACTION_NAME = PLUGIN_SLUG . '_log';
 
 	public function __construct() {
-		add_action( self::ACTION_NAME, [ $this, 'php_log' ], 10, 2 );
+		$this->register_destination( [ $this, 'php_log' ] );
 	}
 
-	public function log( mixed $message ) {
-		do_action( self::ACTION_NAME, $this->to_string( $message ), LoggerLevels::INFO, $message );
-	}
-
-	public function error( mixed $error ) {
-		do_action( self::ACTION_NAME, $this->to_string( $error ), LoggerLevels::ERROR, $error );
+	/**
+	 * Registers a logging destination
+	 *
+	 * @param callable $destination
+	 * @return void
+	 */
+	public function register_destination( callable $destination ) {
+		add_action( self::ACTION_NAME, $destination, 10, 3 );
 	}
 
 	public function php_log( string $message, LoggerLevels $severity ) {
@@ -30,7 +32,15 @@ class Logger {
 		error_log( $message );
 	}
 
-	protected function to_string( mixed $message ): string {
+	public static function info( mixed $message ) {
+		do_action( self::ACTION_NAME, self::to_string( $message ), LoggerLevels::INFO, $message );
+	}
+
+	public static function error( mixed $error ) {
+		do_action( self::ACTION_NAME, self::to_string( $error ), LoggerLevels::ERROR, $error );
+	}
+
+	protected static function to_string( mixed $message ): string {
 		if ( $message instanceof \Throwable ) {
 			return $message->__toString();
 		} else if ( $message instanceof \WP_Error ) {

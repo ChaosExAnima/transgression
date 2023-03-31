@@ -8,17 +8,17 @@ use Transgression\Modules\{Applications, Attendance, Auth0, Discord, People, Ema
 class Main {
 	public function init() {
 		$logger = new Logger();
-		$emailer = new Emailer( $logger );
+		$emailer = new Emailer();
 
 		$settings = new Page( 'transgression_settings' );
 		$settings->as_subpage( 'options-general.php', 'ticketing', 'Ticketing Settings', 'Ticketing' );
 
 		$jetforms = new JetForms( $emailer );
-		new Applications( $jetforms, $emailer, $logger );
-		new Attendance( $logger );
-		$people = new People( $emailer, $logger );
-		new Auth0( $people, $settings, $logger );
+		new Applications( $jetforms, $emailer );
+		new Attendance();
+		$people = new People( $emailer );
+		new Auth0( $people, $settings );
 		new Discord( $settings, $logger );
-		new WooCommerce( $logger, $settings );
+		new WooCommerce( $settings );
 	}
 }

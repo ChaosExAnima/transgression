@@ -41,8 +41,7 @@ class Applications extends Module {
 
 	public function __construct(
 		protected JetForms $jetForms,
-		protected Emailer $emailer,
-		protected Logger $logger
+		protected Emailer $emailer
 	) {
 		// Actions
 		add_action( 'init', [ $this, 'init' ] );
@@ -394,7 +393,7 @@ class Applications extends Module {
 		] );
 
 		if ( is_wp_error( $user_id ) ) {
-			$this->logger->error( $user_id );
+			Logger::error( $user_id );
 			return 103;
 		}
 		$post->post_status = self::STATUS_APPROVED;
@@ -432,7 +431,7 @@ class Applications extends Module {
 			}
 			$email->send();
 		} catch ( \Throwable $err ) {
-			$this->logger->error( $err );
+			Logger::error( $err );
 		}
 	}
 

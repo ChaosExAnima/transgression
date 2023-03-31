@@ -9,7 +9,7 @@ use WP_Post;
 class Discord extends Module {
 	protected const ACTION_RESULT = 'hook-result';
 
-	public function __construct( protected Page $settings, protected Logger $logger ) {
+	public function __construct( protected Page $settings, Logger $logger ) {
 		$settings->add_section( 'discord', 'Discord' );
 		$settings->add_action( 'test-hook', [ $this, 'send_test' ] );
 		$settings->add_action( self::ACTION_RESULT, [ $this, 'test_message' ] );
@@ -33,7 +33,7 @@ class Discord extends Module {
 			->render_after( [ $this, 'render_test_button' ] )
 			->on_page( $settings );
 		if ( $logging_hook->get() ) {
-			add_action( Logger::ACTION_NAME, [ $this, 'send_logging_message' ], 10, 3 );
+			$logger->register_destination( [ $this, 'send_logging_message' ] );
 		}
 	}
 
@@ -154,7 +154,7 @@ class Discord extends Module {
 			$webhook = DiscordHooks::from_hook( $hook_type );
 			$url = $this->settings->value( $webhook->hook() );
 		} catch ( \ValueError $error ) {
-			$this->logger->error( $error );
+			Logger::error( $error );
 		}
 		if ( ! $url ) {
 			$this->settings->action_redirect( self::ACTION_RESULT, 'not-conf' );

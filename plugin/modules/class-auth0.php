@@ -12,7 +12,7 @@ use function Transgression\{get_current_url, strip_query};
 class Auth0 extends Module {
 	public const PROVIDERS = [ 'discord', 'google-oauth2' ];
 
-	public function __construct( protected People $people, protected Page $settings, protected Logger $logger ) {
+	public function __construct( protected People $people, protected Page $settings ) {
 		$this->settings->add_section( 'auth0', 'Auth0' );
 		$this->settings->add_settings( 'auth0',
 			( new Option( 'auth0_baseurl', 'Base URL' ) )->of_type( 'url' ),
@@ -84,7 +84,7 @@ class Auth0 extends Module {
 		if ( isset( $_GET['social-login'] ) ) {
 			$provider = $_GET['social-login'];
 			if ( ! in_array( $provider, self::PROVIDERS, true ) ) {
-				$this->logger->log( "Invalid social login: {$_GET['social-login']}" );
+				Logger::info( "Invalid social login: {$_GET['social-login']}" );
 				wc_add_notice( 'Invalid login type', 'error' );
 				wp_safe_redirect( $current_url );
 				exit;
@@ -104,7 +104,7 @@ class Auth0 extends Module {
 			! is_array( $state ) ||
 			count( $state ) !== 3
 		) {
-			$this->logger->log( 'Got invalid social login state' );
+			Logger::info( 'Got invalid social login state' );
 			wc_add_notice( 'There was a problem with your login', 'error' );
 			wp_safe_redirect( wc_get_page_permalink( 'shop' ) );
 			exit;
@@ -113,7 +113,7 @@ class Auth0 extends Module {
 		// Validate nonce
 		$current_url = $state[1];
 		if ( 1 !== wp_verify_nonce( $state[2], $this->get_nonce_action( $state[0], $state[1] ) ) ) {
-			$this->logger->log( 'Nonce validation failed for social login' );
+			Logger::info( 'Nonce validation failed for social login' );
 			wc_add_notice( 'There was a problem with your login', 'error' );
 			wp_safe_redirect( $current_url );
 			exit;
@@ -130,7 +130,7 @@ class Auth0 extends Module {
 		// Validates the user exists
 		$user_id = email_exists( $email );
 		if ( ! $user_id ) {
-			$this->logger->error( "Failed social login attempt by email {$email}" );
+			Logger::error( "Failed social login attempt by email {$email}" );
 			wc_add_notice( "There is no account associated with the email {$email}. Is this this correct one?", 'error' );
 			wp_safe_redirect( $current_url );
 			exit;
@@ -203,7 +203,7 @@ class Auth0 extends Module {
 	 */
 	private function get_email( string $code ): ?string {
 		if ( ! $code ) {
-			$this->logger->error( 'Trying to get profile with empty token' );
+			Logger::error( 'Trying to get profile with empty token' );
 			return null;
 		}
 
@@ -221,7 +221,7 @@ class Auth0 extends Module {
 		$json = $this->parse_response( $response );
 
 		if ( empty( $json['access_token'] ) ) {
-			$this->logger->error( 'Did not get access token from Auth0' );
+			Logger::error( 'Did not get access token from Auth0' );
 			return null;
 		}
 
@@ -232,7 +232,7 @@ class Auth0 extends Module {
 		$json = $this->parse_response( $response );
 
 		if ( empty( $json['email'] ) ) {
-			$this->logger->error( 'User info from Auth0 did not contain email' );
+			Logger::error( 'User info from Auth0 did not contain email' );
 			return null;
 		}
 
@@ -272,13 +272,13 @@ class Auth0 extends Module {
 	 */
 	private function parse_response( array|\WP_Error $response ): mixed {
 		if ( is_wp_error( $response ) ) {
-			$this->logger->error( $response );
+			Logger::error( $response );
 			return null;
 		}
 
 		$body = wp_remote_retrieve_body( $response );
 		if ( wp_remote_retrieve_response_code( $response ) !== 200 ) {
-			$this->logger->error( sprintf(
+			Logger::error( sprintf(
 				'Got bad status from Auth0: %d %s',
 				wp_remote_retrieve_response_code( $response ),
 				$body
@@ -287,7 +287,7 @@ class Auth0 extends Module {
 		}
 		$json = json_decode( $body, true );
 		if ( $json === null ) {
-			$this->logger->error( 'Could not decode Auth0 body: ' . $body );
+			Logger::error( 'Could not decode Auth0 body: ' . $body );
 			return null;
 		}
 

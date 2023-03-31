@@ -21,7 +21,6 @@ abstract class Email {
 	 */
 	public function __construct(
 		protected Emailer $emailer,
-		protected Logger $logger,
 		public ?string $email = null,
 		public ?string $subject = null
 	) {}
@@ -35,7 +34,7 @@ abstract class Email {
 	public function to_user( int $user_id ): self {
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			$this->logger->error( "Could not find user with ID {$user_id}" );
+			Logger::error( "Could not find user with ID {$user_id}" );
 		}
 
 		$this->user = $user;
@@ -55,7 +54,7 @@ abstract class Email {
 
 	public function with_template( string $template ): self {
 		if ( ! $this->emailer->is_template( $template ) ) {
-			$this->logger->error( new Error( "Could not find template of {$template}" ) );
+			Logger::error( new Error( "Could not find template of {$template}" ) );
 		}
 		$this->template = $template;
 		return $this;
@@ -73,7 +72,7 @@ abstract class Email {
 				throw new Error( 'Could not send email' );
 			}
 		} catch ( Error $error ) {
-			$this->logger->error( $error );
+			Logger::error( $error );
 		}
 	}
 

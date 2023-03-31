@@ -12,7 +12,7 @@ namespace Transgression;
 function load_view( string $view, array $params = [] ) {
 	$path = PLUGIN_ROOT . "/views/{$view}.php";
 	if ( ! file_exists( $path ) ) {
-		throw new \Error( "Could not find view with path {$path}" );
+		Logger::error( new \Error( "Could not find view with path {$path}" ) );
 		return;
 	}
 
