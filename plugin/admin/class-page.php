@@ -192,6 +192,24 @@ class Page {
 	}
 
 	/**
+	 * Redirects to action with given key
+	 *
+	 * @param string $key
+	 * @param string $value
+	 * @param array $params Additional parameters to add
+	 * @return void
+	 */
+	public function action_redirect( string $key, string $value, array $params = [] ) {
+		if ( ! in_array( $key, $this->actions, true ) ) {
+			return;
+		}
+		$params[$key] = $value;
+		$url = $this->get_url( $params );
+		wp_safe_redirect( $url );
+		exit;
+	}
+
+	/**
 	 * Adds an action on on page load
 	 *
 	 * @param string $key Action key to check in request object
