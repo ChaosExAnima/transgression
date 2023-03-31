@@ -7,24 +7,24 @@ use Transgression\{Logger, LoggerLevels};
 use WP_Post;
 
 class Discord extends Module {
-	public function __construct( protected Page $settings ) {
+	public function __construct( protected Page $settings, protected Logger $logger ) {
 		$settings->add_section( 'discord', 'Discord' );
 		$settings->add_action( 'test-hook', [ $this, 'send_test' ] );
 		$settings->add_settings( 'discord',
-			( new Option( 'app_discord_hook', 'Application Webhook' ) )
+			( new Option( DiscordHooks::Application->hook(), 'Application Webhook' ) )
 				->of_type( 'url' )
 				->render_after( [ $this, 'render_test_button' ] )
 		);
 		if ( WooCommerce::check_plugins() ) {
 			$settings->add_setting(
-				( new Option( 'woo_discord_hook', 'Purchase Webhook' ) )
+				( new Option( DiscordHooks::WooCommerce->hook(), 'Purchase Webhook' ) )
 					->in_section( 'discord' )
 					->of_type( 'url' )
 					->render_after( [ $this, 'render_test_button' ] )
 			);
 		}
 
-		$logging_hook = ( new Option( 'logging_discord_hook', 'Logging Webhook' ) )
+		$logging_hook = ( new Option( DiscordHooks::Logging->hook(), 'Logging Webhook' ) )
 			->in_section( 'discord' )
 			->of_type( 'url' )
 			->render_after( [ $this, 'render_test_button' ] )
@@ -52,18 +52,13 @@ class Discord extends Module {
 			return; // Only for first insert
 		}
 
-		$hook = $this->settings->get_setting( 'app_discord_hook' )?->get();
-		if ( ! $hook ) {
-			return;
-		}
-
 		$description = sprintf(
 			'There are %d open applications',
 			absint( Applications::get_unreviewed_count() )
 		);
 
 		$this->send_discord_message(
-			$hook,
+			DiscordHooks::Application,
 			"New application from {$post->post_title}",
 			admin_url( "post.php?post={$post_id}&action=edit" ),
 			$description
@@ -77,11 +72,6 @@ class Discord extends Module {
 	 * @return void
 	 */
 	public function send_woo_message( int $order_id ): void {
-		$hook = $this->settings->get_setting( 'woo_discord_hook' )?->get();
-		if ( ! $hook ) {
-			return;
-		}
-
 		$order = wc_get_order( $order_id );
 
 		/** @var \WC_Order_Item_Product[] */
@@ -122,7 +112,7 @@ class Discord extends Module {
 		$customer_id = $order->get_customer_id();
 		$customer = get_userdata( $customer_id );
 		$this->send_discord_message(
-			$hook,
+			DiscordHooks::WooCommerce,
 			"New {$product->get_title()} ticket for {$customer->display_name}",
 			admin_url( "post.php?post={$order_id}&action=edit" ),
 			null,
@@ -156,14 +146,20 @@ class Discord extends Module {
 	 */
 	public function send_test( string $hook_type ): void {
 		check_admin_referer( "test-hook-{$hook_type}" );
-		$hook = $this->settings->get_setting( $hook_type )?->get();
-		if ( ! $hook ) {
+		$url = null;
+		try {
+			$webhook = DiscordHooks::from_hook( $hook_type );
+			$url = $this->settings->value( $webhook->hook() );
+		} catch ( \ValueError $error ) {
+			$this->logger->error( $error );
+		}
+		if ( ! $url ) {
 			$this->settings->add_message( 'Hook not configured' );
 			return;
 		}
 
 		$this->send_discord_message(
-			$hook,
+			$webhook,
 			'Test message',
 			site_url(),
 			'This is a message to check things are working!'
@@ -179,29 +175,14 @@ class Discord extends Module {
 	 * @param mixed $error Raw message object
 	 * @return void
 	 */
-	public function send_logging_message( string $message, LoggerLevels $severity, mixed $error ) {
-		$this->send_discord_message(
-			$this->hook_url( DiscordHooks::Logging ),
-			$severity->value,
-			null,
-			$message
-		);
-	}
-
-	/**
-	 * Gets a hook URL
-	 *
-	 * @param DiscordHooks $name The hook URL if set
-	 * @return string|null
-	 */
-	protected function hook_url( DiscordHooks $name ): ?string {
-		return $this->settings->get_setting( $name->hook() )?->get();
+	public function send_logging_message( string $message, LoggerLevels $severity ) {
+		$this->send_discord_message( DiscordHooks::Application, $severity->value, null, $message );
 	}
 
 	/**
 	 * Sends a message to Discord
 	 *
-	 * @param string $webhook
+	 * @param DiscordHooks $webhook
 	 * @param string $title
 	 * @param string|null $url
 	 * @param string|null $body The description
@@ -209,12 +190,16 @@ class Discord extends Module {
 	 * @return void
 	 */
 	protected function send_discord_message(
-		string $webhook,
+		DiscordHooks $webhook,
 		string $title,
 		?string $url = null,
 		?string $body = null,
 		array $extra_fields = []
 	): void {
+		$url = $this->settings->value( $webhook->hook() );
+		if ( ! $url ) {
+			return;
+		}
 		$embed = array_merge( $extra_fields, [
 			'title' => esc_html( $title ),
 			'type' => 'rich',
@@ -228,7 +213,7 @@ class Discord extends Module {
 			'blocking' => false,
 		];
 
-		wp_remote_post( $webhook, $args );
+		wp_remote_post( $url, $args );
 	}
 
 }
@@ -240,5 +225,9 @@ enum DiscordHooks: string {
 
 	public function hook(): string {
 		return "{$this->value}_discord_hook";
+	}
+
+	public static function from_hook( string $hook ): self {
+		return DiscordHooks::from( substr( $hook, 0, 3 ) );
 	}
 }

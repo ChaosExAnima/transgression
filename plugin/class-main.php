@@ -18,7 +18,7 @@ class Main {
 		new Attendance( $logger );
 		$people = new People( $emailer, $logger );
 		new Auth0( $people, $settings, $logger );
-		new Discord( $settings );
+		new Discord( $settings, $logger );
 		new WooCommerce( $logger, $settings );
 	}
 }
