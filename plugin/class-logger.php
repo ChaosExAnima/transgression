@@ -11,8 +11,10 @@ enum LoggerLevels: string {
 class Logger {
 	protected const ACTION_NAME = PLUGIN_SLUG . '_log';
 
-	public function __construct() {
-		$this->register_destination( [ $this, 'php_log' ] );
+	public function __construct( bool $default_destination = true ) {
+		if ( $default_destination ) {
+			$this->register_destination( [ $this, 'php_log' ] );
+		}
 	}
 
 	/**
