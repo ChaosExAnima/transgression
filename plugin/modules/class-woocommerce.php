@@ -23,7 +23,6 @@ class WooCommerce extends Module {
 
 		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' );
 		add_filter( 'woocommerce_navigation_wp_toolbar_disabled', '__return_false' );
-		add_filter( 'woocommerce_customer_meta_fields', '__return_empty_array' );
 
 		$this->register_settings(); // Adds settings
 
@@ -55,12 +54,6 @@ class WooCommerce extends Module {
 			->describe( 'Removes product categories and tags from being shown to people on the site' );
 		if ( $hide_category->get() ) {
 			add_filter( 'get_the_terms', [ $this, 'hide_product_tags' ], 10, 3 );
-		}
-
-		$settings[] = $disable_address = ( new Option_Checkbox( 'disable_addresses', 'Disable address fields', 0 ) )
-			->describe( 'Disable storing address information for people when checking out' );
-		if ( $disable_address->get() ) {
-			add_filter( 'woocommerce_customer_meta_fields', '__return_empty_array' );
 		}
 
 		// Adds all these settings.

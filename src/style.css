@@ -279,13 +279,14 @@ span.social-login {
 }
 
 /** CHECKOUT PAGE */
-#customer_details > .col-1 {
-	display: none;
-}
-
+#customer_details > .col-1,
 #customer_details > .col-2 {
 	float: none;
 	width: auto;
+}
+
+.select2-container--default .select2-selection--single {
+	background-color: transparent;
 }
 
 .woocommerce #respond input#submit,
@@ -309,6 +310,13 @@ span.social-login {
 	max-width: none;
 	font-size: var(--wp--custom--font-size--normal);
 	color: var(--wp--custom--color--foreground);
+}
+
+.woocommerce-checkout #payment div.payment_box {
+	background-color: transparent;
+}
+.woocommerce-checkout #payment div.payment_box::before {
+	display: none;
 }
 
 #add_payment_method #payment,
