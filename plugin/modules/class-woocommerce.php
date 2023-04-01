@@ -16,9 +16,17 @@ class WooCommerce extends Module {
 			return;
 		}
 
+		// Redirects people to checkout if they try to access the cart
 		add_action( 'template_redirect', [ $this, 'skip_cart' ] );
-		add_action( 'template_redirect', [ $this, 'clear_cart' ] );
+		// Prevents dupes on adding to the cart
 		add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'prevent_variation_dupes' ], 10, 2 );
+		// Redirects to checkout when adding an item
+		add_filter( 'woocommerce_add_to_cart_redirect', 'wc_get_checkout_url' );
+		// Shows an error if people try to check out with a ticket for the same event
+		add_action( 'woocommerce_checkout_process', [ $this, 'prevent_checkout_dupes' ] );
+		// Clears the cart and redirects to the shop
+		add_action( 'template_redirect', [ $this, 'clear_cart' ] );
+		// Automatically skip the processing step
 		add_action( 'woocommerce_checkout_order_processed', [ $this, 'skip_processing' ] );
 
 		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' ); // Never require shipping
@@ -27,9 +35,11 @@ class WooCommerce extends Module {
 
 		$this->register_settings(); // Adds settings
 
+		// Removes add to cart button and instead shows login for variation pages
 		remove_action( 'woocommerce_single_variation', 'woocommerce_single_variation_add_to_cart_button', 20 );
 		add_action( 'woocommerce_single_variation', [ $this, 'add_login_button' ], 20 );
 
+		// Tweaks admin UI
 		add_filter( 'manage_edit-shop_order_columns', [ $this, 'filter_admin_order_columns' ], 20 );
 		add_action( 'manage_shop_order_posts_custom_column', [ $this, 'admin_order_custom_columns' ] );
 	}
@@ -71,7 +81,7 @@ class WooCommerce extends Module {
 	 * Skips the cart page
 	 */
 	public function skip_cart() {
-		if ( !is_cart() ) {
+		if ( ! is_cart() ) {
 			return;
 		}
 		$target = WC()->cart->is_empty()
@@ -145,6 +155,23 @@ class WooCommerce extends Module {
 	}
 
 	/**
+	 * Prevents people from buying a ticket to the same event during the checkout process.
+	 *
+	 * @return void
+	 */
+	public function prevent_checkout_dupes() {
+		$cart_contents = WC()->cart->get_cart_contents();
+		foreach ( $cart_contents as $cart_product ) {
+			if (
+				isset( $cart_product['product_id'] ) &&
+				wc_customer_bought_product( '', get_current_user_id(), absint( $cart_product['product_id'] ) )
+			) {
+				wc_add_notice( 'You have already purchased a ticket to this event.', 'error' );
+			}
+		}
+	}
+
+	/**
 	 * Settings
 	 */
 	public function show_shop_page_title( string $page_title, string $post_type ): string {
@@ -156,6 +183,14 @@ class WooCommerce extends Module {
 		return get_the_title( $page_id );
 	}
 
+	/**
+	 * Hides Woo taxonomy on the frontend
+	 *
+	 * @param mixed $terms
+	 * @param int $post_id
+	 * @param string $taxonomy
+	 * @return array
+	 */
 	public function hide_product_tags( mixed $terms, int $post_id, string $taxonomy ): array {
 		if ( is_admin() || ( $taxonomy !== 'product_cat' && $taxonomy !== 'product_cat' ) ) {
 			return $terms;
@@ -163,6 +198,11 @@ class WooCommerce extends Module {
 		return [];
 	}
 
+	/**
+	 * Shows the login button if people aren't logged in
+	 *
+	 * @return void
+	 */
 	public function add_login_button(): void {
 		if ( is_user_logged_in() ) {
 			woocommerce_single_variation_add_to_cart_button();
