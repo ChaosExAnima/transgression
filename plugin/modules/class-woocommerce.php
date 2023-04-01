@@ -28,6 +28,9 @@ class WooCommerce extends Module {
 
 		remove_action( 'woocommerce_single_variation', 'woocommerce_single_variation_add_to_cart_button', 20 );
 		add_action( 'woocommerce_single_variation', [ $this, 'add_login_button' ], 20 );
+
+		add_filter( 'manage_edit-shop_order_columns', [ $this, 'filter_admin_order_columns' ], 20 );
+		add_action( 'manage_shop_order_posts_custom_column', [ $this, 'admin_order_custom_columns' ] );
 	}
 
 	protected function register_settings() {
@@ -164,6 +167,48 @@ class WooCommerce extends Module {
 			woocommerce_single_variation_add_to_cart_button();
 		} else {
 			load_view( 'login-form' );
+		}
+	}
+
+	/**
+	 * Adds new columns in order admin screen
+	 *
+	 * @param array $columns Original columns
+	 * @return array
+	 */
+	public function filter_admin_order_columns( array $columns ): array {
+		$new_columns = [];
+		foreach ( $columns as $column_name => $column_info ) {
+			$new_columns[ $column_name ] = $column_info;
+			if ( $column_name === 'order_date' ) {
+				$new_columns['order_product'] = __( 'Product Name', 'transgression' );
+			} elseif ( $column_name === 'order_total' ) {
+				$new_columns['order_method'] = __( 'Payment Method', 'transgression' );
+			}
+		}
+		return $new_columns;
+	}
+
+	/**
+	 * Prints rows in order admin screen
+	 *
+	 * @param string $column
+	 * @return void
+	 */
+	public function admin_order_custom_columns( string $column ) {
+		$order = wc_get_order( get_the_ID() );
+		if ( $column === 'order_product' ) {
+			foreach ( $order->get_items() as $item ) {
+				if ( $item instanceof \WC_Order_Item_Product ) {
+					printf(
+						'<a href="%2$s">%1$s</a>',
+						esc_html( $item->get_name() ),
+						esc_url( get_edit_post_link( $item->get_product_id() ) )
+					);
+				}
+			}
+		} elseif ( $column === 'order_method' ) {
+			echo esc_html( $order->get_payment_method() );
 		}
 	}
 
