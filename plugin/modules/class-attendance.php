@@ -4,7 +4,9 @@ namespace Transgression\Modules;
 
 use Transgression\Logger;
 
-use function Transgression\load_view;
+use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
+
+use function Transgression\{get_asset_url, load_view};
 
 class Attendance extends Module {
 	/** @inheritDoc */
@@ -60,7 +62,9 @@ class Attendance extends Module {
 		if ( $product_id ) {
 			global $wpdb;
 			$query = $wpdb->prepare(
-				"SELECT order_id FROM {$wpdb->prefix}wc_order_product_lookup WHERE product_id = %d LIMIT 200",
+				"SELECT order_id FROM {$wpdb->prefix}wc_order_product_lookup
+				WHERE product_id = %d AND product_qty > 0
+				LIMIT 200",
 				$product_id
 			);
 			/** @var string[] */
@@ -107,6 +111,8 @@ class Attendance extends Module {
 			}
 		}
 		$orders = wp_list_sort( $orders, 'name' );
+
+		wp_enqueue_style( PLUGIN_SLUG . '_attendance',  get_asset_url( 'attendance.css' ), [], PLUGIN_VERSION );
 
 		load_view( 'attendance/table', compact( 'products', 'product_id', 'orders' ) );
 	}

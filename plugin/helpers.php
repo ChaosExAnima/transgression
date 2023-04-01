@@ -3,6 +3,16 @@
 namespace Transgression;
 
 /**
+ * Gets a URL to a file in the assets folder
+ *
+ * @param string $file
+ * @return string
+ */
+function get_asset_url( string $file ): string {
+	return plugin_dir_url( __FILE__ ) . 'assets/' . untrailingslashit( $file );
+}
+
+/**
  * Loads a view
  *
  * @param string $view
