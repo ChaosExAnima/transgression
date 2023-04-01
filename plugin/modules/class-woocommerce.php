@@ -208,7 +208,24 @@ class WooCommerce extends Module {
 				}
 			}
 		} elseif ( $column === 'order_method' ) {
-			echo esc_html( $order->get_payment_method() );
+			$payment_gateways = WC()->payment_gateways() ? WC()->payment_gateways->payment_gateways() : [];
+			$payment_method = $order->get_payment_method();
+			$payment_text = $order->get_payment_method_title() ?: __( 'Manual', 'transgression' );
+			$url = isset( $payment_gateways[ $payment_method ] ) ? $payment_gateways[ $payment_method ]->get_transaction_url( $order ) : false;
+			if ( $url ) {
+				printf(
+					'<a href="%3$s" title="%2$s">%1$s</a>',
+					esc_html( $payment_text ),
+					esc_attr( $payment_method ),
+					esc_url( $url )
+				);
+			} else {
+				printf(
+					'<span title="%2$s">%1$s</span>',
+					esc_html( $payment_text ),
+					esc_attr( $payment_method )
+				);
+			}
 		}
 	}
 
