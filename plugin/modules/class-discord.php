@@ -212,8 +212,8 @@ class Discord extends Module {
 		array $extra_fields = [],
 		bool $simple = false
 	): void {
-		$url = $this->settings->value( $webhook->hook() );
-		if ( ! $url ) {
+		$hook_url = $this->settings->value( $webhook->hook() );
+		if ( ! $hook_url ) {
 			return;
 		}
 		$body = [];
@@ -236,7 +236,7 @@ class Discord extends Module {
 			'blocking' => false,
 		];
 
-		wp_remote_post( $url, $args );
+		wp_remote_post( $hook_url, $args );
 	}
 
 }

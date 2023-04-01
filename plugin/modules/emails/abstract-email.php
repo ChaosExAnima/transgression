@@ -67,9 +67,12 @@ abstract class Email {
 	 */
 	public function send() {
 		try {
+			if ( ! $this->email ) {
+				throw new Error( 'Email is not set' );
+			}
 			$success = $this->attempt_send();
 			if ( ! $success ) {
-				throw new Error( 'Could not send email' );
+				throw new Error( "Could not send email to {$this->email}" );
 			}
 		} catch ( Error $error ) {
 			Logger::error( $error );
