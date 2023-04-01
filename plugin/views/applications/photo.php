@@ -30,7 +30,7 @@ $mime_types = $params['mime_types'];
 <p>
 	<label>
 		<?php echo esc_html( $input_label ); ?>:
-		<input type="file" name="social_image" accept="<?php echo esc_attr( $mime_types ); ?>" />
+		<input type="file" name="social_image" class="app-upload" accept="<?php echo esc_attr( $mime_types ); ?>" />
 	</label>
 </p>
 <?php submit_button( 'Save image' ); ?>

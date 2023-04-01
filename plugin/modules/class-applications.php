@@ -6,7 +6,9 @@ use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
 
-use function Transgression\{insert_in_array, load_view};
+use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
+
+use function Transgression\{get_asset_url, insert_in_array, load_view};
 
 class Applications extends Module {
 	const POST_TYPE = 'application';
@@ -171,7 +173,7 @@ class Applications extends Module {
 	public function scripts() {
 		$screen = get_current_screen();
 		if ( is_object( $screen ) && $screen->post_type === self::POST_TYPE ) {
-			wp_enqueue_style( 'application-styles', get_theme_file_uri( 'assets/apps-admin.css' ) );
+			wp_enqueue_style( PLUGIN_SLUG . 'application', get_asset_url( 'applications.css' ), [], PLUGIN_VERSION );
 		}
 	}
 
