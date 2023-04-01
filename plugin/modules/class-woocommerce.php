@@ -21,8 +21,9 @@ class WooCommerce extends Module {
 		add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'prevent_variation_dupes' ], 10, 2 );
 		add_action( 'woocommerce_checkout_order_processed', [ $this, 'skip_processing' ] );
 
-		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' );
-		add_filter( 'woocommerce_navigation_wp_toolbar_disabled', '__return_false' );
+		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' ); // Never require shipping
+		add_filter( 'woocommerce_navigation_wp_toolbar_disabled', '__return_false' ); // Enables WP toolbar
+		add_filter( 'woocommerce_checkout_update_customer_data', '__return_false' ); // Prevents checkout from updating user data
 
 		$this->register_settings(); // Adds settings
 
