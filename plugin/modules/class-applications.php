@@ -24,9 +24,9 @@ class Applications extends Module {
 		'post_title' => 'Name',
 		'pronouns' => 'Pronouns',
 		'email' => 'Email',
-		'identify' => 'How they identify',
+		'identity' => 'How they identify',
 		'accessibility' => 'Accessibility concerns',
-		'source' => 'How they know us',
+		'referrer' => 'How they know us',
 		'associates' => 'Who they know',
 		'conflicts' => 'Potential conflicts',
 		'extra' => 'Additional comments',
@@ -242,6 +242,7 @@ class Applications extends Module {
 
 	public function render_metabox_fields( WP_Post $post ) {
 		$fields = self::FIELDS;
+
 		load_view( 'applications/fields', compact( 'post', 'fields' ) );
 	}
 
