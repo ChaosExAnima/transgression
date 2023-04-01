@@ -312,13 +312,6 @@ span.social-login {
 	color: var(--wp--custom--color--foreground);
 }
 
-.woocommerce-checkout #payment div.payment_box {
-	background-color: transparent;
-}
-.woocommerce-checkout #payment div.payment_box::before {
-	display: none;
-}
-
 #add_payment_method #payment,
 .woocommerce-cart #payment,
 .woocommerce-checkout #payment {
