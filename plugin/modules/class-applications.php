@@ -5,6 +5,7 @@ namespace Transgression\Modules;
 use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
+use WP_Query;
 
 use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
 
@@ -357,6 +358,24 @@ class Applications extends Module {
 	}
 
 	/**
+	 * Gets applications for an existing email
+	 *
+	 * @param string $email
+	 * @return WP_Query
+	 */
+	public static function query_by_email( string $email ): WP_Query {
+		return new WP_Query( [
+			'post_type' => self::POST_TYPE,
+			'meta_key' => 'email',
+			'meta_value' => $email,
+			'fields' => 'ids',
+			'post_status' => 'pending',
+			'posts_per_page' => 1,
+			'update_post_term_cache' => false,
+		] );
+	}
+
+	/**
 	 * Finalizes the application- either rejects or creates a new user, sending emails.
 	 *
 	 * @param WP_Post $post
@@ -400,6 +419,12 @@ class Applications extends Module {
 		return null;
 	}
 
+	/**
+	 * Emails the results of the application
+	 *
+	 * @param WP_Post $post
+	 * @return void
+	 */
 	private function email_result( WP_Post $post ): void {
 		$status = $post->post_status;
 		$template = null;
@@ -432,6 +457,12 @@ class Applications extends Module {
 		}
 	}
 
+	/**
+	 * Gets the most recent verdicts for a given application ID
+	 *
+	 * @param int $post_id
+	 * @return array
+	 */
 	private function get_unique_verdicts( int $post_id ): array {
 		$verdict_meta = get_post_meta( $post_id, 'verdict' );
 		$verdicts = [];
