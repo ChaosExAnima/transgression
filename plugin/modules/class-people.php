@@ -242,14 +242,13 @@ class People extends Module {
 		// Generate a random value.
 		$key = $this->get_login_key( $user->user_email );
 		$token = wp_generate_password( 20, false );
-		set_transient( $key, $token, MINUTE_IN_SECONDS * 5 );
+		set_transient( $key, $token, HOUR_IN_SECONDS );
 
 		// Build a URL.
 		$args = [
 			'login' => 'purchase',
 			'email' => rawurlencode( $user->user_email ),
 			'token' => $token,
-			'nonce' => wp_create_nonce( $key ),
 		];
 		$url = add_query_arg( $args, get_current_url() );
 		$hash = wp_hash( $url );
@@ -272,13 +271,13 @@ class People extends Module {
 	 * @return boolean
 	 */
 	private function check_login( string $url ): bool {
+		// phpcs:disable WordPress.Security.NonceVerification
 		// First, is this even valid?
 		if (
 			empty( $_GET['login'] ) ||
 			$_GET['login'] !== 'purchase' ||
 			empty( $_GET['email'] ) ||
-			empty( $_GET['token'] ) ||
-			empty( $_GET['nonce'] )
+			empty( $_GET['token'] )
 		) {
 			return false;
 		}
@@ -291,14 +290,6 @@ class People extends Module {
 			return false;
 		}
 
-		// Check the nonce.
-		$key = "user_login_{$email}";
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-		if ( wp_verify_nonce( wp_unslash( $_GET['nonce'] ), $key ) !== 1 ) {
-			Logger::info( "Login nonce check failed for {$email}" );
-			return false;
-		}
-
 		// Does this user exist?
 		$user_id = email_exists( $email );
 		if ( ! $user_id ) {
@@ -307,12 +298,15 @@ class People extends Module {
 		}
 
 		// Check the token.
+		$key = "user_login_{$email}";
 		$token = get_transient( $key );
 		if ( false === $token || ! hash_equals( $token, wp_unslash( $_GET['token'] ) ) ) {
+			Logger::info( "Login token check failed for {$email}" );
 			return false;
 		}
 
 		return true;
+		// phpcs:enable
 	}
 
 	/**
