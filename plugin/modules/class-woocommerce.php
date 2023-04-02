@@ -286,8 +286,9 @@ class WooCommerce extends Module {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$value = $wpdb->get_var( $wpdb->prepare(
 			"SELECT SUM(product_gross_revenue)
-			FROM {$wpdb->prefix}wc_order_product_lookup
-			WHERE product_id = %d",
+			FROM {$wpdb->prefix}wc_order_product_lookup op
+			INNER JOIN {$wpdb->prefix}wc_order_stats os ON op.order_id = os.order_id
+			WHERE op.product_id = %d AND os.status = 'wc-completed'",
 			$product_id
 		) );
 		return floatval( $value );
