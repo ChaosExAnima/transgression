@@ -394,18 +394,25 @@ class Applications extends Module {
 		}
 
 		$email = sanitize_email( $post->email );
-		$image_url = $post->photo_img ?: $post->photo_url;
+		$name = trim( $post->post_title );
+		$name_parts = explode( ' ', $name );
+		$user_meta = [
+			'nickname' => $name,
+			'first_name' => $name_parts[0] ?? $name,
+			'pronouns' => $post->pronouns,
+			'application' => $post->ID,
+			'image_url' => $post->photo_img ?: $post->photo_url,
+		];
+		if ( count( $name_parts ) === 2 ) {
+			$user_meta['last_name'] = $name_parts[1];
+		}
 		$user_id = wp_insert_user( [
-			'user_login' => $email,
-			'user_pass' => wp_generate_password( 100 ),
-			'user_email' => $email,
-			'display_name' => $post->post_title,
 			'role' => 'customer',
-			'meta_input' => [
-				'pronouns' => $post->pronouns,
-				'application' => $post->ID,
-				'image_url' => $image_url,
-			],
+			'user_pass' => wp_generate_password( 100 ),
+			'user_login' => $email,
+			'user_email' => $email,
+			'display_name' => $name,
+			'meta_input' => $user_meta,
 		] );
 
 		if ( is_wp_error( $user_id ) ) {
