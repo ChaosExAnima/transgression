@@ -9,7 +9,7 @@ use function Transgression\load_view;
 
 class WooCommerce extends Module {
 	/** @inheritDoc */
-	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
+	const REQUIRED_PLUGINS = [ 'woocommerce/woocommerce.php' ];
 
 	public function __construct( protected Page $settings_page ) {
 		if ( ! self::check_plugins() ) {
@@ -45,26 +45,23 @@ class WooCommerce extends Module {
 	}
 
 	protected function register_settings() {
-		/** @var \Transgression\Admin\Option[] */
-		$settings = [];
-
-		$settings[] = $shop_title = ( new Option_Checkbox( 'shop_title', 'Show shop page title', 1 ) )
+		$shop_title = ( new Option_Checkbox( 'shop_title', 'Show shop page title', 1 ) )
 			->describe( 'Changes the page title to use your page title instead of Products' );
 		if ( $shop_title->get() ) {
 			add_filter( 'post_type_archive_title', [ $this, 'show_shop_page_title' ], 10, 2 );
 		}
 
-		$settings[] = $breadcrumbs = new Option_Checkbox( 'remove_breadcrumbs', 'Remove breadcrumbs', 0 );
+		$breadcrumbs = new Option_Checkbox( 'remove_breadcrumbs', 'Remove breadcrumbs', 0 );
 		if ( $breadcrumbs->get() ) {
 			remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
 		}
 
-		$settings[] = $sku = new Option_Checkbox( 'remove_sku', 'Disable SKU stuff', 1 );
+		$sku = new Option_Checkbox( 'remove_sku', 'Disable SKU stuff', 1 );
 		if ( $sku->get() ) {
 			add_filter( 'wc_product_sku_enabled', '__return_false' );
 		}
 
-		$settings[] = $hide_category = ( new Option_Checkbox( 'hide_category', 'Hide product categories and tags', 1 ) )
+		$hide_category = ( new Option_Checkbox( 'hide_category', 'Hide product categories and tags', 1 ) )
 			->describe( 'Removes product categories and tags from being shown to people on the site' );
 		if ( $hide_category->get() ) {
 			add_filter( 'get_the_terms', [ $this, 'hide_product_tags' ], 10, 3 );
@@ -72,6 +69,13 @@ class WooCommerce extends Module {
 
 		// Adds all these settings.
 		$this->settings_page->add_section( 'woo', 'WooCommerce' );
+		/** @var \Transgression\Admin\Option[] */
+		$settings = [
+			$shop_title,
+			$breadcrumbs,
+			$sku,
+			$hide_category,
+		];
 		foreach ( $settings as $setting ) {
 			$this->settings_page->add_setting( $setting->in_section( 'woo' ) );
 		}
@@ -95,7 +99,8 @@ class WooCommerce extends Module {
 	 * Clears the when a query var `empty_cart=yes` is passed
 	 */
 	public function clear_cart() {
-		if ( !is_checkout() || empty( $_GET['empty_cart'] ) || $_GET['empty_cart'] !== 'yes' ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( ! is_checkout() || empty( $_GET['empty_cart'] ) || $_GET['empty_cart'] !== 'yes' ) {
 			return;
 		}
 
@@ -111,7 +116,7 @@ class WooCommerce extends Module {
 	 * @return void
 	 */
 	public function skip_processing( int $order_id ) {
-		if ( !$order_id ) {
+		if ( ! $order_id ) {
 			return;
 		}
 		$order = wc_get_order( $order_id );
@@ -126,7 +131,7 @@ class WooCommerce extends Module {
 	 * @return bool
 	 */
 	public function prevent_variation_dupes( bool $is_valid, int $product_id ): bool {
-		if ( !$is_valid ) {
+		if ( ! $is_valid ) {
 			return $is_valid;
 		}
 
@@ -278,14 +283,13 @@ class WooCommerce extends Module {
 	 */
 	public static function get_gross_sales( int $product_id ): float {
 		global $wpdb;
-
-		$query = $wpdb->prepare(
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$value = $wpdb->get_var( $wpdb->prepare(
 			"SELECT SUM(product_gross_revenue)
 			FROM {$wpdb->prefix}wc_order_product_lookup
 			WHERE product_id = %d",
 			$product_id
-		);
-		$value = $wpdb->get_var( $query );
+		) );
 		return floatval( $value );
 	}
 }

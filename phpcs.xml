@@ -20,6 +20,7 @@
 	<arg name="extensions" value="php" />
 	<arg name="parallel" value="8" /><!-- Enables parallel processing when available for faster
 	results. -->
+	<arg name="tab-width" value="4" />
 
 	<!-- Rules: Check PHP version compatibility -->
 	<!--
@@ -33,6 +34,32 @@
 	<!--
 	https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/wiki/Customizable-sniff-properties -->
 	<config name="minimum_supported_wp_version" value="6.1" />
+	<rule ref="WordPress">
+		<!-- Conflicts with Neutron standard -->
+		<exclude name="Generic.Arrays.DisallowShortArraySyntax" />
+		<exclude name="Generic.Formatting.MultipleStatementAlignment.NotSameWarning" />
+		<exclude name="Generic.PHP.DiscourageGoto.Found" />
+		<exclude name="Generic.PHP.Syntax.PHPSyntax" />
+		<exclude name="Generic.WhiteSpace.ScopeIndent" />
+		<exclude name="PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket" />
+		<exclude name="PEAR.Functions.FunctionCallSignature.CloseBracketLine" />
+		<exclude name="PEAR.Functions.FunctionCallSignature.MultipleArguments" />
+		<exclude name="Squiz.PHP.EmbeddedPhp.ContentAfterOpen" />
+		<exclude name="WordPress.Arrays.MultipleStatementAlignment" />
+		<exclude name="WordPress.CodeAnalysis.AssignmentInCondition.NonVariableAssignmentFound" />
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName" />
+		<exclude name="WordPress.PHP.YodaConditions" />
+		<exclude name="WordPress.PHP.DisallowShortTernary" />
+		<exclude name="WordPress.PHP.DiscouragedPHPFunctions" />
+	</rule>
+	<rule ref="WordPress.Security">
+		<type>warning</type>
+		<properties>
+			<property name="customSanitizingFunctions" type="array">
+				<element value="base64_decode" />
+			</property>
+		</properties>
+	</rule>
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<!-- Value: replace the function, class, and variable prefixes used. Separate multiple
@@ -58,5 +85,10 @@
 	</rule>
 	<rule ref="Generic.Commenting">
 		<severity>0</severity>
+	</rule>
+	<rule ref="WordPress.WP.GlobalVariablesOverride">
+		<properties>
+			<property name="treat_files_as_scoped" value="true" />
+		</properties>
 	</rule>
 </ruleset>

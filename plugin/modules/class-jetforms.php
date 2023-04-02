@@ -9,7 +9,7 @@ use Jet_Form_Builder\Blocks\Block_Helper;
 
 class JetForms extends Module {
 	/** @inheritDoc */
-	const REQUIRED_PLUGINS = ['jetformbuilder/jet-form-builder.php'];
+	const REQUIRED_PLUGINS = [ 'jetformbuilder/jet-form-builder.php' ];
 
 	public function __construct( protected Emailer $emailer ) {
 		if ( ! self::check_plugins() ) {
@@ -28,8 +28,9 @@ class JetForms extends Module {
 	 * @return bool
 	 */
 	public function before_insert( bool $return ): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification
 		if ( isset( $_REQUEST['email'] ) ) {
-			$email = trim( (string) $_REQUEST['email'] );
+			$email = sanitize_email( wp_unslash( $_REQUEST['email'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
 			$user_id = email_exists( $email );
 			if ( $user_id ) {
 				$email = $this->emailer->create();

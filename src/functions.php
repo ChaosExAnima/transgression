@@ -4,8 +4,8 @@ namespace TransgressionTheme;
 
 use WC_Product;
 
-function cb( string $func ): Callable {
-    return __NAMESPACE__ . '\\' . $func;
+function cb( string $func ): callable {
+	return __NAMESPACE__ . '\\' . $func;
 }
 
 function init() {
@@ -13,7 +13,7 @@ function init() {
 	add_editor_style( 'editor.css' );
 
 	add_theme_support( 'woocommerce' );
-	remove_theme_support(  'wc-product-gallery-slider' );
+	remove_theme_support( 'wc-product-gallery-slider' );
 	remove_theme_support( 'wc-product-gallery-zoom' );
 	remove_theme_support( 'wc-product-gallery-lightbox' );
 
@@ -30,15 +30,17 @@ function init() {
 add_action( 'init', cb( 'init' ) );
 
 function styles() {
-	wp_enqueue_style( 'transgression-styles', get_theme_file_uri( 'style.css' ) , [], null, 'screen' );
+	$theme = wp_get_theme();
+	$version = $theme->exists() ? $theme->get( 'Version' ) : 'unknown';
+	wp_enqueue_style( 'transgression-styles', get_theme_file_uri( 'style.css' ), [], $version, 'screen' );
 }
 add_action( 'wp_enqueue_scripts', cb( 'styles' ) );
 
 function redirect() {
-    if ( is_author() ) {
-        wp_redirect( home_url(), 301 );
-        exit;
-    }
+	if ( is_author() ) {
+		wp_safe_redirect( home_url(), 301 );
+		exit;
+	}
 }
 add_action( 'template_redirect', cb( 'redirect' ) );
 

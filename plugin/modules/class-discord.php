@@ -176,7 +176,7 @@ class Discord extends Module {
 	public function test_message( string $result ): void {
 		if ( $result === 'not-conf' ) {
 			$this->settings->add_message( 'Hook not configured' );
-		} else if ( $result === 'success' ) {
+		} elseif ( $result === 'success' ) {
 			$this->settings->add_message( 'Sent test message', 'success' );
 		}
 	}

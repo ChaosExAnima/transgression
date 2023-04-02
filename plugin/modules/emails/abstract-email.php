@@ -128,7 +128,7 @@ abstract class Email {
 		$body = do_shortcode( $body );
 
 		remove_all_shortcodes();
-		$shortcode_tags = $old_tags;
+		$shortcode_tags = $old_tags; // phpcs:ignore WordPress.WP.GlobalVariablesOverride
 
 		return $body;
 	}

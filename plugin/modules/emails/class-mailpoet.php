@@ -17,7 +17,6 @@ use MailPoet\WP\Functions;
 use MailPoetVendor\CSS;
 use Transgression\Admin\Option;
 use Transgression\Admin\Option_Select;
-use Transgression\Logger;
 
 class MailPoet extends Email {
 	/** @var ?\MailPoet\DI\ContainerWrapper; */

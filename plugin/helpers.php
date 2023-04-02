@@ -82,7 +82,8 @@ function render_time( int|string $date, bool $relative = false ) {
  * @return string
  */
 function get_current_url(): string {
-	return esc_url_raw( home_url( $_SERVER['REQUEST_URI'] ) );
+	// phpcs:ignore WordPress.Security
+	return esc_url_raw( home_url( $_SERVER['REQUEST_URI'] ?? '' ) );
 }
 
 /**
@@ -119,5 +120,5 @@ function strip_query( string $url ): string {
 function insert_in_array( array $source, array $insert, int $offset = 0 ): array {
 	return array_slice( $source, 0, $offset, true ) +
 		$insert +
-		array_slice( $source, $offset , null, true );
+		array_slice( $source, $offset, null, true );
 }

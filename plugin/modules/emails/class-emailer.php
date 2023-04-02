@@ -137,11 +137,12 @@ class Emailer {
 		check_admin_referer( "email-result-{$email_result}" );
 		if ( $email_result === 'invalid' ) {
 			$this->admin->add_message( 'Could not find template' );
-		} else if ( $email_result === 'success' ) {
+		} elseif ( $email_result === 'success' ) {
 			$user = get_userdata( get_current_user_id() );
 			$this->admin->add_message( "Email sent to {$user->user_email}!", 'success' );
-		} else if ( $email_result === 'error' && ! empty( $_GET['error'] ) ) {
-			$error_msg = base64_decode( $_GET['error'] );
+		} elseif ( $email_result === 'error' && ! empty( $_GET['error'] ) ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+			$error_msg = base64_decode( wp_unslash( $_GET['error'] ) );
 			$this->admin->add_message( "Error sending email: {$error_msg}" );
 		}
 	}
