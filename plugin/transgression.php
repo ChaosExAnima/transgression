@@ -3,14 +3,14 @@
  * Plugin Name: Transgression Ticketing System
  * Plugin URI: https://transgression.party
  * Description: Vetting system and event ticketing manager.
- * Version: 0.1.0
+ * Version: 1.0.0
  * Requires PHP: 8.1
  */
 
 namespace Transgression;
 
 const PLUGIN_ROOT = __DIR__;
-const PLUGIN_VERSION = '0.1.0';
+const PLUGIN_VERSION = '1.0.0';
 const PLUGIN_SLUG = 'transgression';
 
 require_once PLUGIN_ROOT . '/helpers.php';

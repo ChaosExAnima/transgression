@@ -105,10 +105,12 @@ input[type="radio"]:checked {
 }
 
 .jet-form-builder__desc {
-	font-size: var(--wp--preset--font-size--medium);
-	line-height: 1.4;
 	margin-bottom: 0.5em;
-	font-style: oblique;
+	line-height: 1.4;
+}
+
+.jet-form-builder__desc > small {
+	font-size: 1.2rem;
 }
 
 .jet-form-builder__required {
