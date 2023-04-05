@@ -67,6 +67,13 @@ class WooCommerce extends Module {
 			add_filter( 'get_the_terms', [ $this, 'hide_product_tags' ], 10, 3 );
 		}
 
+		$use_user_names = ( new Option_Checkbox( 'use_user_names', 'Use usernames for billing', 1 ) )
+			->describe( 'Replaces any billing details with info from user accounts' );
+		if ( $use_user_names->get() ) {
+			add_filter( 'woocommerce_before_customer_object_save', [ $this, 'prevent_customer_name_change' ] );
+			add_filter( 'woocommerce_before_order_object_save', [ $this, 'prevent_order_name_change' ] );
+		}
+
 		// Adds all these settings.
 		$this->settings_page->add_section( 'woo', 'WooCommerce' );
 		/** @var \Transgression\Admin\Option[] */
@@ -75,6 +82,7 @@ class WooCommerce extends Module {
 			$breadcrumbs,
 			$sku,
 			$hide_category,
+			$use_user_names,
 		];
 		foreach ( $settings as $setting ) {
 			$this->settings_page->add_setting( $setting->in_section( 'woo' ) );
@@ -201,6 +209,48 @@ class WooCommerce extends Module {
 			return $terms;
 		}
 		return [];
+	}
+
+	/**
+	 * Filters the customer's name to not deadname people
+	 *
+	 * @param \WC_Customer $customer
+	 */
+	public function prevent_customer_name_change( \WC_Customer $customer ) {
+		$user = get_user_by( 'id', $customer->get_id() );
+		if ( ! $user ) {
+			return;
+		}
+
+		$customer->set_first_name( $user->first_name );
+		$customer->set_billing_first_name( $user->first_name );
+		$customer->set_shipping_first_name( $user->first_name );
+		$customer->set_last_name( $user->last_name );
+		$customer->set_billing_last_name( $user->last_name );
+		$customer->set_shipping_last_name( $user->last_name );
+	}
+
+	/**
+	 * Prevents changing the name from the user's on orders
+	 *
+	 * @param \WC_Order $order
+	 * @return void
+	 */
+	public function prevent_order_name_change( \WC_Order $order ) {
+		$user_id = absint( $order->get_customer_id() );
+		if ( ! $user_id ) {
+			return;
+		}
+
+		$user = get_user_by( 'id', $user_id );
+		if ( ! $user ) {
+			return;
+		}
+
+		$order->set_billing_first_name( $user->first_name );
+		$order->set_shipping_first_name( $user->first_name );
+		$order->set_billing_last_name( $user->last_name );
+		$order->set_shipping_last_name( $user->last_name );
 	}
 
 	/**
