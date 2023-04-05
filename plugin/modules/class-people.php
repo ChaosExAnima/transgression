@@ -301,7 +301,8 @@ class People extends Module {
 		$key = "user_login_{$email}";
 		$token = get_transient( $key );
 		if ( false === $token || ! hash_equals( $token, wp_unslash( $_GET['token'] ) ) ) {
-			Logger::info( "Login token check failed for {$email}" );
+			$reason = $token === false ? 'expired' : 'mismatch';
+			Logger::info( "Login token check {$reason} for {$email}" );
 			return false;
 		}
 
