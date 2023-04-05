@@ -2,6 +2,7 @@
 
 namespace TransgressionTheme;
 
+use WC_Order;
 use WC_Product;
 
 function cb( string $func ): callable {
@@ -60,4 +61,17 @@ function render_wc_clear_cart() {
 
 function add_wc_title_prefix( WC_Product $product ): bool {
 	return strpos( $product->get_name(), 'Transgression:' ) === 0;
+}
+
+function order_greeting( WC_Order $order ) {
+	$user_id = $order->get_customer_id();
+	$user = get_user_by( 'id', $user_id );
+	if ( ! $user_id || ! $user ) {
+		esc_html_e( 'Hi there,', 'transgression' );
+	}
+	printf(
+		/* translators: %s: Customer first name */
+		esc_html__( 'Hi %s,', 'transgression' ),
+		esc_html( $user->first_name )
+	);
 }
