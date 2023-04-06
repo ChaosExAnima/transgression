@@ -298,11 +298,15 @@ class People extends Module {
 		}
 
 		// Check the token.
-		$key = "user_login_{$email}";
+		$key = $this->get_login_key( $email );
 		$token = get_transient( $key );
-		if ( false === $token || ! hash_equals( $token, wp_unslash( $_GET['token'] ) ) ) {
-			$reason = $token === false ? 'expired' : 'mismatch';
-			Logger::info( "Login token check {$reason} for {$email}" );
+		$provided_token = sanitize_text_field( wp_unslash( $_GET['token'] ) );
+		if ( false === $token || ! hash_equals( $token, $provided_token ) ) {
+			if ( $token ) {
+				Logger::info( "Login token check mismatch for {$email}: {$token} vs {$provided_token}" );
+			} else {
+				Logger::info( "Login token check expired for {$email}" );
+			}
 			return false;
 		}
 
