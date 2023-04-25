@@ -31,7 +31,9 @@ $orders = $params['orders'];
 				<th class="pic">Photo</th>
 				<th>Name</th>
 				<th>Email</th>
-				<th>Volunteering</th>
+				<th>Volunteer</th>
+				<th>Vaccinated</th>
+				<th>Test Checked</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -55,7 +57,9 @@ $orders = $params['orders'];
 						</a>
 					</td>
 					<td class="email"><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
-					<td class="volunteer"><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
+					<td class="volunteer check"><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
+					<td class="vaccine check"><?php echo $order['vaccine'] ? '✔️' : ''; ?></td>
+					<td class="test check"></td>
 				</tr>
 			<?php endforeach; ?>
 		</tbody>

@@ -107,6 +107,7 @@ class Attendance extends Module {
 					'email' => $user->user_email,
 					'user_id' => $user->ID,
 					'volunteer' => $is_volunteer,
+					'vaccine' => wc_get_customer_order_count( $user->ID ) > 1,
 				];
 			}
 		}
