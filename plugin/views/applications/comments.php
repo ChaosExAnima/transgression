@@ -9,7 +9,7 @@ $comments = $params['comments'];
 <?php foreach ( $comments as $comment ) : ?>
 	<li>
 		<q><?php echo esc_html( $comment->comment_author ); ?></q> -
-		<?php echo esc_html( $comment->comment_author ); ?>,
+		<?php echo wp_kses_post( $comment->comment_content ); ?>,
 		<?php render_time( $comment->comment_date_gmt, true ); ?>
 	</li>
 <?php endforeach; ?>

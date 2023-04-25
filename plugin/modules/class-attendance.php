@@ -4,11 +4,13 @@ namespace Transgression\Modules;
 
 use Transgression\Logger;
 
-use function Transgression\load_view;
+use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
+
+use function Transgression\{get_asset_url, load_view};
 
 class Attendance extends Module {
 	/** @inheritDoc */
-	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
+	const REQUIRED_PLUGINS = [ 'woocommerce/woocommerce.php' ];
 
 	const ICON = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OC4zNjkiIGhlaWdodD0iNzguMzY' .
 	'5IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3OC4zNjkgNzguMzY5IiB4bWw6c3BhY2U9InByZXNlcnZlIj' .
@@ -60,11 +62,13 @@ class Attendance extends Module {
 		if ( $product_id ) {
 			global $wpdb;
 			$query = $wpdb->prepare(
-				"SELECT order_id FROM {$wpdb->prefix}wc_order_product_lookup WHERE product_id = %d LIMIT 200",
+				"SELECT order_id FROM {$wpdb->prefix}wc_order_product_lookup
+				WHERE product_id = %d AND product_qty > 0
+				LIMIT 200",
 				$product_id
 			);
 			/** @var string[] */
-			$order_ids = array_unique( $wpdb->get_col( $query ), SORT_NUMERIC );
+			$order_ids = array_unique( $wpdb->get_col( $query ), SORT_NUMERIC ); // phpcs:ignore WordPress.DB
 		}
 
 		$orders = [];
@@ -79,7 +83,7 @@ class Attendance extends Module {
 				$avatar_url = '';
 				if ( $user->image_url ) {
 					$avatar_url = $user->image_url;
-				} else if ( $user->application ) {
+				} elseif ( $user->application ) {
 					$app = get_post( $user->application );
 					$avatar_url = $app->photo_img ?: $app->photo_url;
 				}
@@ -103,10 +107,13 @@ class Attendance extends Module {
 					'email' => $user->user_email,
 					'user_id' => $user->ID,
 					'volunteer' => $is_volunteer,
+					'vaccine' => wc_get_customer_order_count( $user->ID ) > 1,
 				];
 			}
 		}
 		$orders = wp_list_sort( $orders, 'name' );
+
+		wp_enqueue_style( PLUGIN_SLUG . '_attendance', get_asset_url( 'attendance.css' ), [], PLUGIN_VERSION );
 
 		load_view( 'attendance/table', compact( 'products', 'product_id', 'orders' ) );
 	}

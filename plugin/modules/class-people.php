@@ -10,7 +10,7 @@ use function Transgression\{get_current_url, strip_query};
 
 class People extends Module {
 	/** @inheritDoc */
-	const REQUIRED_PLUGINS = ['woocommerce/woocommerce.php'];
+	const REQUIRED_PLUGINS = [ 'woocommerce/woocommerce.php' ];
 
 	public function __construct( protected Emailer $emailer ) {
 		if ( ! self::check_plugins() ) {
@@ -45,6 +45,7 @@ class People extends Module {
 	 * @return void
 	 */
 	public function handle_login() {
+		// phpcs:disable WordPress.Security.NonceVerification
 		// Skip for logged in users.
 		if ( is_user_logged_in() ) {
 			return;
@@ -54,7 +55,8 @@ class People extends Module {
 
 		// Try logging in?
 		if ( $this->check_login( get_current_url() ) ) {
-			$user_id = email_exists( $_GET['email'] );
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+			$user_id = email_exists( sanitize_email( wp_unslash( $_GET['email'] ) ) );
 			$user = get_userdata( $user_id );
 			$this->redirect_to_login_if_not_customer( $user );
 
@@ -77,7 +79,7 @@ class People extends Module {
 			WC()->session->set_customer_session_cookie( true );
 		}
 
-		$email = sanitize_email( $_POST['login-email'] );
+		$email = sanitize_email( wp_unslash( $_POST['login-email'] ) );
 		$user_id = email_exists( $email );
 		$message = 'Uh-oh, something happened. Try again or %2$s.';
 		$type = 'notice';
@@ -108,6 +110,7 @@ class People extends Module {
 		), $type );
 		wp_safe_redirect( $current_url );
 		exit;
+		// phpcs:enable
 	}
 
 	public function redirect_to_profile() {
@@ -130,6 +133,7 @@ class People extends Module {
 	 * @return string
 	 */
 	public function filter_login_message( string $message ): string {
+		// phpcs:ignore WordPress.Security.NonceVerification
 		if ( isset( $_GET['action'] ) && $_GET['action'] === 'purchase' ) {
 			$message .= '<p class="message">You need to log in to buy tickets</p>';
 		}
@@ -155,7 +159,8 @@ class People extends Module {
 	 * @return void
 	 */
 	public function save_pronouns( int $user_id ) {
-		$new_pronouns = trim( sanitize_text_field( $_POST['account_pronouns'] ) );
+		// phpcs:ignore WordPress.Security.NonceVerification
+		$new_pronouns = sanitize_text_field( wp_unslash( $_POST['account_pronouns'] ?? '' ) );
 		if ( $new_pronouns === '' ) {
 			delete_user_meta( $user_id, 'pronouns' );
 		} else {
@@ -178,7 +183,7 @@ class People extends Module {
 			return;
 		}
 		$edit_link = get_edit_post_link( $app_id, 'url' );
-		if ( !$edit_link ) {
+		if ( ! $edit_link ) {
 			return;
 		}
 
@@ -227,7 +232,7 @@ class People extends Module {
 	 */
 	private function send_login_email( int $user_id ) {
 		$user = get_user_by( 'id', $user_id );
-		if ( !$user ) {
+		if ( ! $user ) {
 			Logger::error( "Tried to log in with user ID of {$user_id}" );
 			return;
 		}
@@ -237,14 +242,13 @@ class People extends Module {
 		// Generate a random value.
 		$key = $this->get_login_key( $user->user_email );
 		$token = wp_generate_password( 20, false );
-		set_transient( $key, $token, MINUTE_IN_SECONDS * 5 );
+		set_transient( $key, $token, HOUR_IN_SECONDS );
 
 		// Build a URL.
 		$args = [
 			'login' => 'purchase',
 			'email' => rawurlencode( $user->user_email ),
 			'token' => $token,
-			'nonce' => wp_create_nonce( $key ),
 		];
 		$url = add_query_arg( $args, get_current_url() );
 		$hash = wp_hash( $url );
@@ -267,6 +271,7 @@ class People extends Module {
 	 * @return boolean
 	 */
 	private function check_login( string $url ): bool {
+		// phpcs:disable WordPress.Security.NonceVerification
 		// First, is this even valid?
 		if (
 			empty( $_GET['login'] ) ||
@@ -278,17 +283,10 @@ class People extends Module {
 		}
 
 		// Verify the hash so we know it wasn't tampered with.
-		$email = sanitize_email( $_GET['email'] );
+		$email = sanitize_email( wp_unslash( $_GET['email'] ) );
 		$hash = wp_hash( remove_query_arg( 'hash', $url ) );
-		if ( empty( $_GET['hash'] ) || ! hash_equals( $hash, $_GET['hash'] ) ) {
+		if ( empty( $_GET['hash'] ) || ! hash_equals( $hash, wp_unslash( $_GET['hash'] ) ) ) {
 			Logger::info( "Login hash check failed for {$email}" );
-			return false;
-		}
-
-		// Check the nonce.
-		$key = "user_login_{$email}";
-		if ( wp_verify_nonce( $_GET['nonce'], $key ) !== 1 ) {
-			Logger::info( "Login nonce check failed for {$email}" );
 			return false;
 		}
 
@@ -300,12 +298,20 @@ class People extends Module {
 		}
 
 		// Check the token.
+		$key = $this->get_login_key( $email );
 		$token = get_transient( $key );
-		if ( false === $token || ! hash_equals( $token, $_GET['token'] ) ) {
+		$provided_token = sanitize_text_field( wp_unslash( $_GET['token'] ) );
+		if ( false === $token || ! hash_equals( $token, $provided_token ) ) {
+			if ( $token ) {
+				Logger::info( "Login token check mismatch for {$email}: {$token} vs {$provided_token}" );
+			} else {
+				Logger::info( "Login token check expired for {$email}" );
+			}
 			return false;
 		}
 
 		return true;
+		// phpcs:enable
 	}
 
 	/**

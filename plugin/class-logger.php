@@ -31,7 +31,7 @@ class Logger {
 		if ( $severity !== LoggerLevels::INFO ) {
 			$message = "{$severity->value}: {$message}";
 		}
-		error_log( $message );
+		error_log( $message ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions
 	}
 
 	public static function info( mixed $message ) {
@@ -45,7 +45,7 @@ class Logger {
 	protected static function to_string( mixed $message ): string {
 		if ( $message instanceof \Throwable ) {
 			return $message->__toString();
-		} else if ( $message instanceof \WP_Error ) {
+		} elseif ( $message instanceof \WP_Error ) {
 			$messages = [];
 			foreach ( $message->get_error_codes() as $error_code ) {
 				$messages[] = "{$error_code}: {$message->get_error_message( $error_code )}";

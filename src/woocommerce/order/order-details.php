@@ -30,14 +30,14 @@ $show_purchase_note = $order->has_status( apply_filters( 'woocommerce_purchase_n
 <section class="woocommerce-order-details">
 	<?php do_action( 'woocommerce_order_details_before_order_table', $order ); ?>
 
-	<h2 class="woocommerce-order-details__title"><?php esc_html_e( 'Order details', 'woocommerce' ); ?></h2>
+	<h2 class="woocommerce-order-details__title"><?php esc_html_e( 'Order details', 'transgression' ); ?></h2>
 
 	<table class="woocommerce-table woocommerce-table--order-details shop_table order_details">
 
 		<thead>
 			<tr>
-				<th class="woocommerce-table__product-name product-name"><?php esc_html_e( 'Product', 'woocommerce' ); ?></th>
-				<th class="woocommerce-table__product-table product-total"><?php esc_html_e( 'Total', 'woocommerce' ); ?></th>
+				<th class="woocommerce-table__product-name product-name"><?php esc_html_e( 'Product', 'transgression' ); ?></th>
+				<th class="woocommerce-table__product-table product-total"><?php esc_html_e( 'Total', 'transgression' ); ?></th>
 			</tr>
 		</thead>
 
@@ -78,7 +78,7 @@ $show_purchase_note = $order->has_status( apply_filters( 'woocommerce_purchase_n
 			?>
 			<?php if ( $order->get_customer_note() ) : ?>
 				<tr>
-					<th><?php esc_html_e( 'Note:', 'woocommerce' ); ?></th>
+					<th><?php esc_html_e( 'Note:', 'transgression' ); ?></th>
 					<td><?php echo wp_kses_post( nl2br( wptexturize( $order->get_customer_note() ) ) ); ?></td>
 				</tr>
 			<?php endif; ?>

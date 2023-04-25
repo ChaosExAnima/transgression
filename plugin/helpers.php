@@ -3,6 +3,16 @@
 namespace Transgression;
 
 /**
+ * Gets a URL to a file in the assets folder
+ *
+ * @param string $file
+ * @return string
+ */
+function get_asset_url( string $file ): string {
+	return plugin_dir_url( __FILE__ ) . 'assets/' . untrailingslashit( $file );
+}
+
+/**
  * Loads a view
  *
  * @param string $view
@@ -72,7 +82,8 @@ function render_time( int|string $date, bool $relative = false ) {
  * @return string
  */
 function get_current_url(): string {
-	return esc_url_raw( home_url( $_SERVER['REQUEST_URI'] ) );
+	// phpcs:ignore WordPress.Security
+	return esc_url_raw( home_url( $_SERVER['REQUEST_URI'] ?? '' ) );
 }
 
 /**
@@ -109,5 +120,5 @@ function strip_query( string $url ): string {
 function insert_in_array( array $source, array $insert, int $offset = 0 ): array {
 	return array_slice( $source, 0, $offset, true ) +
 		$insert +
-		array_slice( $source, $offset , null, true );
+		array_slice( $source, $offset, null, true );
 }

@@ -67,9 +67,12 @@ abstract class Email {
 	 */
 	public function send() {
 		try {
+			if ( ! $this->email ) {
+				throw new Error( 'Email is not set' );
+			}
 			$success = $this->attempt_send();
 			if ( ! $success ) {
-				throw new Error( 'Could not send email' );
+				throw new Error( "Could not send email to {$this->email}" );
 			}
 		} catch ( Error $error ) {
 			Logger::error( $error );
@@ -94,11 +97,14 @@ abstract class Email {
 		}
 
 		if ( is_string( $callback ) ) {
-			return sprintf(
-				'<a href="%1$s">%2$s</a>',
-				esc_url( $callback ),
-				do_shortcode( $content ) ?? esc_url( $callback )
-			);
+			if ( $content ) {
+				return sprintf(
+					'<a href="%1$s">%2$s</a>',
+					esc_url( $callback ),
+					do_shortcode( $content ) ?? esc_url( $callback )
+				);
+			}
+			return esc_url( $callback );
 		}
 		return '';
 	}
@@ -122,7 +128,7 @@ abstract class Email {
 		$body = do_shortcode( $body );
 
 		remove_all_shortcodes();
-		$shortcode_tags = $old_tags;
+		$shortcode_tags = $old_tags; // phpcs:ignore WordPress.WP.GlobalVariablesOverride
 
 		return $body;
 	}

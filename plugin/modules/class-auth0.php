@@ -90,9 +90,9 @@ class Auth0 extends Module {
 
 		// Do provider login via Auth0 redirect
 		if ( isset( $_GET['social-login'] ) ) {
-			$provider = $_GET['social-login'];
+			$provider = sanitize_text_field( wp_unslash( $_GET['social-login'] ) );
 			if ( ! in_array( $provider, self::PROVIDERS, true ) ) {
-				Logger::info( "Invalid social login: {$_GET['social-login']}" );
+				Logger::info( "Invalid social login: {$provider}" );
 				wc_add_notice( 'Invalid login type', 'error' );
 				wp_safe_redirect( $current_url );
 				exit;
@@ -106,7 +106,7 @@ class Auth0 extends Module {
 		}
 
 		// Check if state is okay
-		$state = json_decode( base64_decode( $_GET['state'] ) );
+		$state = json_decode( base64_decode( wp_unslash( $_GET['state'] ) ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		if (
 			! $state ||
 			! is_array( $state ) ||
@@ -128,7 +128,7 @@ class Auth0 extends Module {
 		}
 
 		// Gets the email from the code
-		$email = $this->get_email( $_GET['code'] );
+		$email = $this->get_email( sanitize_text_field( wp_unslash( $_GET['code'] ) ) );
 		if ( ! $email ) {
 			wc_add_notice( 'There was a problem with your login', 'error' );
 			wp_safe_redirect( $current_url );
@@ -179,7 +179,7 @@ class Auth0 extends Module {
 	 * @return void
 	 */
 	private function social_redirect( string $provider, ?string $destination = null ): void {
-		$client_id =  $this->settings->value( 'auth0_client' );
+		$client_id = $this->settings->value( 'auth0_client' );
 		$base_url = $this->baseurl( 'authorize' );
 		if ( ! $base_url || ! $client_id ) {
 			return;
@@ -197,9 +197,9 @@ class Auth0 extends Module {
 			'client_id' => $client_id,
 			'connection' => $provider,
 			'redirect_uri' => home_url(),
-			'state' => base64_encode( json_encode( $state ) ),
+			'state' => base64_encode( wp_json_encode( $state ) ),
 		], $base_url );
-		wp_redirect( $url );
+		wp_redirect( $url ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect
 		exit;
 	}
 

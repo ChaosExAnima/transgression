@@ -29,7 +29,7 @@ $button_text = is_user_logged_in()
 do_action( 'woocommerce_before_single_product' );
 
 if ( post_password_required() ) {
-	echo get_the_password_form(); // WPCS: XSS ok.
+	echo get_the_password_form(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	return;
 }
 ?>
@@ -81,12 +81,12 @@ the_title(
 								<?php checked( $default_variation, $variation_name ); ?>
 							/>
 							<?php echo esc_html( $variation_name ); ?>
-							<?php echo $variation['price_html']; ?>
+							<?php echo $variation['price_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</label>
 				<?php endforeach; ?>
 			</fieldset>
 		<?php endif; ?>
-		<?php echo wc_get_stock_html( $product ); ?>
+		<?php echo wc_get_stock_html( $product ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
 		<?php if ( is_user_logged_in() ) : ?>
 			<input type="hidden" name="add-to-cart" value="<?php the_ID(); ?>" />
@@ -97,7 +97,7 @@ the_title(
 					name="login-email"
 					placeholder="Email"
 					required
-					<?php disabled( ! $product->is_in_stock() ) ?>
+					<?php disabled( ! $product->is_in_stock() ); ?>
 				/>
 			</p>
 			<?php if ( apply_filters( 'transgression_social_configured', false ) ) : ?>
@@ -109,7 +109,7 @@ the_title(
 		<button
 			type="submit"
 			class="trans__product__submit"
-			<?php disabled( ! $product->is_in_stock() ) ?>
+			<?php disabled( ! $product->is_in_stock() ); ?>
 		>
 			<?php echo esc_html( $button_text ); ?>
 		</button>

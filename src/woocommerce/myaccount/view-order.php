@@ -25,21 +25,21 @@ $notes = $order->get_customer_order_notes();
 <?php
 printf(
 	/* translators: 1: order number 2: order date 3: order status */
-	esc_html__( 'Order #%1$s was placed on %2$s.', 'woocommerce' ),
-	$order->get_order_number(),
-	wc_format_datetime( $order->get_date_created() ),
+	esc_html__( 'Order #%1$s was placed on %2$s.', 'transgression' ),
+	esc_html( $order->get_order_number() ),
+	esc_html( wc_format_datetime( $order->get_date_created() ) ),
 );
 ?>
 </p>
 
 <?php if ( $notes ) : ?>
-	<h3><?php esc_html_e( 'Order updates', 'woocommerce' ); ?></h3>
+	<h3><?php esc_html_e( 'Order updates', 'transgression' ); ?></h3>
 	<ol class="woocommerce-OrderUpdates commentlist notes">
 		<?php foreach ( $notes as $note ) : ?>
 		<li class="woocommerce-OrderUpdate comment note">
 			<div class="woocommerce-OrderUpdate-inner comment_container">
 				<div class="woocommerce-OrderUpdate-text comment-text">
-					<p class="woocommerce-OrderUpdate-meta meta"><?php echo date_i18n( esc_html__( 'l jS \o\f F Y, h:ia', 'woocommerce' ), strtotime( $note->comment_date ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
+					<p class="woocommerce-OrderUpdate-meta meta"><?php echo date_i18n( esc_html__( 'l jS \o\f F Y, h:ia', 'transgression' ), strtotime( $note->comment_date ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
 					<div class="woocommerce-OrderUpdate-description description">
 						<?php echo wpautop( wptexturize( $note->comment_content ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					</div>

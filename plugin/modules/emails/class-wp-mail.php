@@ -34,7 +34,7 @@ class WPMail extends Email {
 	 */
 	public static function init( Emailer $emailer ): void {
 		$emailer->admin->with_description( 'Template replacements: <code>[name]</code> the name of ' .
-			'the person, <code>[events]text[/events]</code> for the events link' );
+		'the person, <code>[events]text[/events]</code> for the events link' );
 	}
 
 	/**
