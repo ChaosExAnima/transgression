@@ -75,3 +75,5 @@ function order_greeting( WC_Order $order ) {
 		esc_html( $user->first_name )
 	);
 }
+
+add_filter( 'jetpack_blaze_enabled', '__return_false' );
