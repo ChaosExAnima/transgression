@@ -24,10 +24,10 @@ class JetForms extends Module {
 	 * Stops the form entry and sends an email to the user if they already are registered
 	 *
 	 * @see \Jet_Form_Builder\Actions\Methods\Post_Modification\Base_Post_Action::pre_check()
-	 * @param bool $return
+	 * @param bool $return_value
 	 * @return bool
 	 */
-	public function before_insert( bool $return ): bool {
+	public function before_insert( bool $return_value ): bool {
 		// phpcs:ignore WordPress.Security.NonceVerification
 		if ( isset( $_REQUEST['email'] ) ) {
 			$email = sanitize_email( wp_unslash( $_REQUEST['email'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
@@ -38,7 +38,7 @@ class JetForms extends Module {
 				return false;
 			}
 		}
-		return $return;
+		return $return_value;
 	}
 
 	/**

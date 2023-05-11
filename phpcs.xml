@@ -36,11 +36,13 @@
 	<config name="minimum_supported_wp_version" value="6.1" />
 	<rule ref="WordPress">
 		<!-- Conflicts with Neutron standard -->
-		<exclude name="Generic.Arrays.DisallowShortArraySyntax" />
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax" />
+		<exclude name="Universal.Operators.DisallowShortTernary.Found" />
 		<exclude name="Generic.Formatting.MultipleStatementAlignment.NotSameWarning" />
 		<exclude name="Generic.PHP.DiscourageGoto.Found" />
 		<exclude name="Generic.PHP.Syntax.PHPSyntax" />
 		<exclude name="Generic.WhiteSpace.ScopeIndent" />
+		<exclude name="Generic.Files.OneObjectStructurePerFile" />
 		<exclude name="PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket" />
 		<exclude name="PEAR.Functions.FunctionCallSignature.CloseBracketLine" />
 		<exclude name="PEAR.Functions.FunctionCallSignature.MultipleArguments" />
@@ -49,7 +51,6 @@
 		<exclude name="WordPress.CodeAnalysis.AssignmentInCondition.NonVariableAssignmentFound" />
 		<exclude name="WordPress.Files.FileName.InvalidClassFileName" />
 		<exclude name="WordPress.PHP.YodaConditions" />
-		<exclude name="WordPress.PHP.DisallowShortTernary" />
 		<exclude name="WordPress.PHP.DiscouragedPHPFunctions" />
 	</rule>
 	<rule ref="WordPress.Security">
@@ -89,6 +90,11 @@
 	<rule ref="WordPress.WP.GlobalVariablesOverride">
 		<properties>
 			<property name="treat_files_as_scoped" value="true" />
+		</properties>
+	</rule>
+	<rule ref="WordPress.WP.Capabilities">
+		<properties>
+			<property name="custom_capabilities" type="array" value="edit_products" />
 		</properties>
 	</rule>
 </ruleset>

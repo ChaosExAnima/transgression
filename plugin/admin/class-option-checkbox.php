@@ -8,16 +8,16 @@ class Option_Checkbox extends Option {
 	 *
 	 * @param string $key The option key
 	 * @param string $label The label
-	 * @param mixed $default Default value.
+	 * @param mixed $default_value Default value.
 	 */
 	public function __construct(
 		public string $key,
 		public string $label,
-		public mixed $default = null
+		public mixed $default_value = null
 	) {
 		$this->sanitize_cb = 'intval';
 		$this->render_cb = [ $this, 'render_checkbox' ];
-		parent::__construct( $key, $label, $default );
+		parent::__construct( $key, $label, $default_value );
 	}
 
 	public function get(): mixed {

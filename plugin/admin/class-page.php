@@ -63,15 +63,15 @@ class Page {
 	}
 
 	public function as_subpage(
-		string $parent,
+		string $parent_page,
 		string $page,
 		string $label,
 		?string $menu_label = null
 	): Page {
 		$this->page_slug = self::SETTING_PREFIX . $page;
-		$callback = function () use ( $parent, $page, $label, $menu_label ) {
+		$callback = function () use ( $parent_page, $page, $label, $menu_label ) {
 			$admin_page = add_submenu_page(
-				$parent,
+				$parent_page,
 				$label,
 				$menu_label ?? $label,
 				$this->permission,
@@ -203,7 +203,7 @@ class Page {
 		if ( ! in_array( $key, $this->actions, true ) ) {
 			return;
 		}
-		$params[$key] = $value;
+		$params[ $key ] = $value;
 		$url = $this->get_url( $params );
 		wp_safe_redirect( $url );
 		exit;
@@ -271,10 +271,12 @@ class Page {
 		}
 
 		foreach ( $this->actions as $key ) {
+			// phpcs:ignore WordPress.Security.NonceVerification
 			if ( isset( $_REQUEST[ $key ] ) ) {
 				do_action(
 					self::SETTING_PREFIX . "admin_{$this->setting_group}_action_{$key}",
-					sanitize_text_field( $_REQUEST[ $key ] ),
+					// phpcs:ignore WordPress.Security.NonceVerification
+					sanitize_text_field( wp_unslash( $_REQUEST[ $key ] ) ),
 					$this
 				);
 			}
