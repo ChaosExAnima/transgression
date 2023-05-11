@@ -1,34 +1,5 @@
 version: "3.7"
 services:
-  wordpress:
-    image: docker.io/bitnami/wordpress-nginx
-    ports:
-      - 8888:8080
-    environment:
-      BITNAMI_DEBUG: true
-      WORDPRESS_DATABASE_HOST: database
-      WORDPRESS_DATABASE_USER: root
-      WORDPRESS_DATABASE_PASSWORD: password
-      WORDPRESS_DATABASE_NAME: wordpress
-      MYSQL_CLIENT_DATABASE_HOST: database
-      MYSQL_CLIENT_DATABASE_ROOT_PASSWORD: password
-      PHP_POST_MAX_SIZE: 40M
-      PHP_UPLOAD_MAX_FILESIZE: 40M
-      PHP_ENABLE_OPCACHE: no
-      WORDPRESS_SMTP_HOST: mail
-      WORDPRESS_SMTP_PORT_NUMBER: 1025
-      WORDPRESS_SKIP_BOOTSTRAP: true
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - "${PWD}/fast_cgi.conf:/opt/bitnami/nginx/conf/server_blocks/fast_cgi.conf:ro"
-      - "${PWD}/wp_content:/bitnami/wordpress/wp-content"
-      - "${PWD}/src:/bitnami/wordpress/wp-content/themes/transgression"
-      - "${PWD}/plugin:/bitnami/wordpress/wp-content/plugins/transgression"
-      - "${PWD}/wp-config.php:/bitnami/wordpress/wp-config.php"
-      - wp_core:/bitnami/wordpress
-
   database:
     image: mariadb
     ports:
@@ -59,5 +30,4 @@ services:
 
 volumes:
   wp_db:
-  wp_core:
   wp_redis:
