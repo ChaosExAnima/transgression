@@ -122,17 +122,3 @@ function insert_in_array( array $source, array $insert, int $offset = 0 ): array
 		$insert +
 		array_slice( $source, $offset, null, true );
 }
-
-namespace {
-if ( ! function_exists( 'jetpack_photon_url' ) ) {
-		/**
-		 * Stub for jetpack URL. Mostly for the IDE to stop complaining.
-		 *
-		 * @param string $url The URL to use.
-		 * @return string
-		 */
-		function jetpack_photon_url( string $url ): string {
-			return $url;
-		}
-	}
-}
