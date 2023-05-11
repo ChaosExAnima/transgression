@@ -19,7 +19,7 @@ function get_asset_url( string $file ): string {
  * @param array $params
  * @return void
  */
-function load_view( string $view, array $params = [] ) {
+function load_view( string $view, array $params = [] ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
 	$path = PLUGIN_ROOT . "/views/{$view}.php";
 	if ( ! file_exists( $path ) ) {
 		Logger::error( new \Error( "Could not find view with path {$path}" ) );

@@ -26,12 +26,12 @@ class Option {
 	 *
 	 * @param string $key The option key
 	 * @param string $label The label
-	 * @param mixed $default Default value.
+	 * @param mixed $default_value Default value.
 	 */
 	public function __construct(
 		public string $key,
 		public string $label,
-		public mixed $default = null
+		public mixed $default_value = null
 	) {}
 
 	public function __toString(): string {
@@ -58,8 +58,10 @@ class Option {
 				break;
 			case 'num':
 				$this->sanitize_cb = 'floatval';
+				// no break
 			case 'absint':
 				$this->sanitize_cb = 'absint';
+				// no break
 			case 'int':
 				if ( ! isset( $this->sanitize_cb ) ) {
 					$this->sanitize_cb = 'intval';
@@ -92,7 +94,7 @@ class Option {
 	}
 
 	public function get(): mixed {
-		return get_option( $this->key, $this->default );
+		return get_option( $this->key, $this->default_value );
 	}
 
 	public function set( mixed $value ): bool {
@@ -137,7 +139,10 @@ class Option {
 			[ $this, 'render' ],
 			$page,
 			$section,
-			[ 'label_for' => $this->key, 'option' => $this ]
+			[
+				'label_for' => $this->key,
+				'option' => $this,
+			]
 		);
 		do_action( PLUGIN_SLUG . "_option_{$this->key}_after_register", $this, $page, $group, $section );
 	}

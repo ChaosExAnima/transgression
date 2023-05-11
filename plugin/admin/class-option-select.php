@@ -12,16 +12,16 @@ class Option_Select extends Option {
 	 *
 	 * @param string $key The option key
 	 * @param string $label The label
-	 * @param mixed $default Default value.
+	 * @param mixed $default_value Default value.
 	 */
 	public function __construct(
 		public string $key,
 		public string $label,
-		public mixed $default = null
+		public mixed $default_value = null
 	) {
 		$this->sanitize_cb = [ $this, 'sanitize_option' ];
 		$this->render_cb = [ $this, 'render_select' ];
-		parent::__construct( $key, $label, $default );
+		parent::__construct( $key, $label, $default_value );
 	}
 
 	public function of_type( ?string $type = null ): self {
@@ -42,7 +42,7 @@ class Option_Select extends Option {
 		if ( isset( $this->options[ $input ] ) ) {
 			return $input;
 		}
-		return $this->default;
+		return $this->default_value;
 	}
 
 	protected function render_select(): void {

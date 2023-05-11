@@ -22,16 +22,16 @@
 // ** Database settings - You can get this info from your web host ** //
 
 /** The name of the database for WordPress */
-define( 'DB_NAME', 'wordpress' );
+define( 'DB_NAME', 'transgression' );
 
 /** Database username */
 define( 'DB_USER', 'root' );
 
 /** Database password */
-define( 'DB_PASSWORD', 'password' );
+define( 'DB_PASSWORD', '' );
 
 /** Database hostname */
-define( 'DB_HOST', 'database:3306' );
+define( 'DB_HOST', '127.0.0.1:3306' );
 
 /** Database charset to use in creating database tables. */
 define( 'DB_CHARSET', 'utf8' );
@@ -67,7 +67,7 @@ define( 'NONCE_SALT',       'bIJsJE}:o8I;DSo(Rje-?*rbb9,j]9YY.-OXXr%nmTihz#-NtT@
  * You can have multiple installations in one database if you give each
  * a unique prefix. Only numbers, letters, and underscores please!
  */
-$table_prefix = 'wp_';
+$table_prefix = 'wp_27ppk3_';
 
 /**
  * For developers: WordPress debugging mode.
@@ -100,8 +100,9 @@ if ( defined( 'WP_CLI' ) ) {
 define( 'WP_HOME', 'http://' . $_SERVER['HTTP_HOST'] . '/' );
 define( 'WP_SITEURL', 'http://' . $_SERVER['HTTP_HOST'] . '/' );
 define( 'WP_AUTO_UPDATE_CORE', false );
-define( 'MAILPOET_CRON_SITE_URL', 'http://nginx' );
-define( 'WP_REDIS_HOST', 'redis' );
+define( 'WP_REDIS_HOST', '127.0.0.1' );
+define( 'WP_REDIS_PORT', 6379 );
+define( 'WP_REDIS_PREFIX', 'transgression' );
 
 /* That's all, stop editing! Happy publishing. */
 
