@@ -16,7 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/** @var \WC_Product $product */
 global $product;
+
+$title_parts = explode( ':', $product->get_name(), 2 );
+$the_title = trim( count( $title_parts ) > 1 ? $title_parts[1] : $title_parts[0] );
 
 $form_url = apply_filters(
 	'woocommerce_add_to_cart_form_action',
@@ -43,15 +47,14 @@ if ( post_password_required() ) {
  * @hooked woocommerce_show_product_images - 20
  */
 do_action( 'woocommerce_before_single_product_summary' );
-
-if ( add_wc_title_prefix( $product ) ) {
-	echo '<h2 class="trans__product__subtitle">Transgression:</h2>';
-}
-the_title(
-	'<h1 class="product_title trans__product__title">',
-	'</h1>'
-);
 ?>
+
+<?php if ( count( $title_parts ) > 1 ) : ?>
+	<h2 class="trans__product__subtitle"><?php echo esc_html( trim( $title_parts[0] ) ); ?>:</h2>
+<?php endif; ?>
+<h1 class="product_title trans__product__title">
+	<?php echo esc_html( $the_title ); ?>
+</h1>
 <div class="trans__product__wrapper">
 	<div class="trans__product__description">
 		<?php the_content(); ?>
@@ -63,7 +66,7 @@ the_title(
 		enctype="multipart/form-data"
 	>
 		<?php do_action( 'woocommerce_before_add_to_cart_form' ); ?>
-		<?php if ( $product->is_type( 'variable' ) ) : ?>
+		<?php if ( $product instanceof \WC_Product_Variable ) : ?>
 			<?php $default_variation = $product->get_variation_default_attribute( 'tier' ); ?>
 			<fieldset>
 				<legend class="trans__product__cart__title">

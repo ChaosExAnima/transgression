@@ -3,7 +3,6 @@
 namespace TransgressionTheme;
 
 use WC_Order;
-use WC_Product;
 
 function cb( string $func ): callable {
 	return __NAMESPACE__ . '\\' . $func;
@@ -20,7 +19,6 @@ function init() {
 
 	// Woo
 	if ( defined( 'WC_PLUGIN_FILE' ) ) {
-		add_filter( 'the_title', cb( 'filter_wc_title' ), 10, 2 );
 		add_action( 'woocommerce_checkout_order_review', cb( 'render_wc_clear_cart' ), 15 );
 
 		remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
@@ -45,22 +43,11 @@ function redirect() {
 }
 add_action( 'template_redirect', cb( 'redirect' ) );
 
-function filter_wc_title( string $title, int $post_id ): string {
-	if ( get_post_type( $post_id ) === 'product' ) {
-		return ltrim( str_replace( 'Transgression:', '', $title ) );
-	}
-	return $title;
-}
-
 function render_wc_clear_cart() {
 	printf(
 		'<p><a href="%s" class="clear-cart">Clear Cart</a></p>',
 		esc_url( add_query_arg( 'empty_cart', 'yes' ) )
 	);
-}
-
-function add_wc_title_prefix( WC_Product $product ): bool {
-	return strpos( $product->get_name(), 'Transgression:' ) === 0;
 }
 
 function order_greeting( WC_Order $order ) {
