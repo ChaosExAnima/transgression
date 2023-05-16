@@ -3,7 +3,7 @@ services:
   database:
     image: mariadb
     ports:
-      - 8890:3306
+      - 3306:3306
     volumes:
       - "${PWD}/sql:/docker-entrypoint-initdb.d"
       - wp_db:/var/lib/mysql
@@ -14,19 +14,15 @@ services:
   redis:
     image: redis:alpine
     ports:
-      - 8891:6379
+      - 6379:6379
     volumes:
       - wp_redis:/data
 
   mail:
-    image: mailhog/mailhog:v1.0.0
+    image: axllent/mailpit
     ports:
-      - 8889:8025
-    environment:
-      MH_STORAGE: maildir
-      MH_MAILDIR_PATH: /output
-    volumes:
-      - "${PWD}/wp_content/mail:/output"
+      - 1025:1025
+      - 8888:8025
 
 volumes:
   wp_db:

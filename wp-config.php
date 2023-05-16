@@ -22,13 +22,13 @@
 // ** Database settings - You can get this info from your web host ** //
 
 /** The name of the database for WordPress */
-define( 'DB_NAME', 'transgression' );
+define( 'DB_NAME', 'wordpress' );
 
 /** Database username */
 define( 'DB_USER', 'root' );
 
 /** Database password */
-define( 'DB_PASSWORD', '' );
+define( 'DB_PASSWORD', 'password' );
 
 /** Database hostname */
 define( 'DB_HOST', '127.0.0.1:3306' );
@@ -102,7 +102,7 @@ define( 'WP_SITEURL', 'http://' . $_SERVER['HTTP_HOST'] . '/' );
 define( 'WP_AUTO_UPDATE_CORE', false );
 define( 'WP_REDIS_HOST', '127.0.0.1' );
 define( 'WP_REDIS_PORT', 6379 );
-define( 'WP_REDIS_PREFIX', 'transgression' );
+define( 'WP_REDIS_PREFIX', 'wordpress' );
 
 /* That's all, stop editing! Happy publishing. */
 
