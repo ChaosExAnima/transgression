@@ -323,6 +323,10 @@ span.social-login {
 	background-color: transparent;
 }
 
+.woocommerce-page table.shop_table {
+	width: 100%;
+}
+
 .woocommerce #respond input#submit,
 .woocommerce a.button,
 .woocommerce button.button,
@@ -380,6 +384,12 @@ span.social-login {
 	margin: 0;
 	padding: 0;
 	border: none;
+}
+
+#add_payment_method #payment div.form-row,
+.woocommerce-cart #payment div.form-row,
+.woocommerce-checkout #payment div.form-row {
+	padding: 0;
 }
 
 /** ACCOUNT PAGE */
