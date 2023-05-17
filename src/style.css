@@ -180,14 +180,6 @@ input[type="radio"]:checked {
 	color: var(--wp--preset--color--primary);
 }
 
-.woocommerce-loop-product__link {
-	display: block;
-}
-
-.woocommerce-loop-product__link > img {
-	margin: 0 !important;
-}
-
 .woocommerce :is(.summary, .images) {
 	float: none !important;
 	width: inherit !important;
@@ -205,6 +197,58 @@ input[type="radio"]:checked {
 
 .woocommerce div.product .stock {
 	color: var(--wp--preset--color--foreground);
+}
+
+/** EVENTS PAGE */
+.woocommerce .products {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 1em;
+}
+@media screen and (max-width: 600px) {
+	.woocommerce .products {
+		grid-template-columns: 1fr;
+	}
+}
+.woocommerce .products.products::before,
+.woocommerce .products.products::after {
+	display: none;
+}
+.woocommerce .products .product:first-child,
+.no-current-event,
+.past-events {
+	grid-column: 1/-1;
+}
+.no-current-event {
+	color: var(--wp--custom--color--primary);
+	font-size: clamp(2rem, 10vw, 3rem);
+	margin: 0;
+}
+.past-events {
+	font-size: var(--wp--custom--font-sizes--huge);
+	margin-top: 0;
+}
+.woocommerce .products.products .woocommerce-loop-product__link > img {
+	margin: 0 0 1rem;
+}
+.woocommerce
+	.products.products
+	.woocommerce-loop-product__link
+	> .woocommerce-loop-product__title {
+	font-size: 2.5rem;
+	padding: 0;
+	text-align: center;
+}
+.woocommerce
+	.products
+	.product:first-child
+	> .woocommerce-loop-product__link
+	> .woocommerce-loop-product__title {
+	font-size: 3rem;
+}
+.woocommerce .products > .product .product__categories {
+	font-size: 1.5rem;
+	padding: 0;
 }
 
 /** PRODUCT PAGE */
@@ -291,6 +335,10 @@ span.social-login {
 	background-color: transparent;
 }
 
+.woocommerce-page table.shop_table {
+	width: 100%;
+}
+
 .woocommerce #respond input#submit,
 .woocommerce a.button,
 .woocommerce button.button,
@@ -348,6 +396,12 @@ span.social-login {
 	margin: 0;
 	padding: 0;
 	border: none;
+}
+
+#add_payment_method #payment div.form-row,
+.woocommerce-cart #payment div.form-row,
+.woocommerce-checkout #payment div.form-row {
+	padding: 0;
 }
 
 /** ACCOUNT PAGE */
