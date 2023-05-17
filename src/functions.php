@@ -103,13 +103,13 @@ function wc_add_product_category() {
 	global $wp_query;
 	if ( 0 === $wp_query->current_post ) {
 		printf(
-			'<h2 class="no-current-event">%s</h2>',
+			'<h3 class="no-current-event">%s</h3>',
 			esc_html__( 'There are no available events right now', 'transgression' )
 		);
 	}
 
 	printf(
-		'<h3 class="past-events">%s</h3>',
+		'<h2 class="past-events">%s</h2>',
 		esc_html__( 'Past events', 'transgression' )
 	);
 	$shown_header = true;

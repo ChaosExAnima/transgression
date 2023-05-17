@@ -221,8 +221,12 @@ input[type="radio"]:checked {
 }
 .no-current-event {
 	color: var(--wp--custom--color--primary);
-	font-size: 5rem;
+	font-size: clamp(2rem, 10vw, 3rem);
 	margin: 0;
+}
+.past-events {
+	font-size: var(--wp--custom--font-sizes--huge);
+	margin-top: 0;
 }
 .woocommerce .products.products .woocommerce-loop-product__link > img {
 	margin: 0 0 1rem;
@@ -233,6 +237,14 @@ input[type="radio"]:checked {
 	> .woocommerce-loop-product__title {
 	font-size: 2.5rem;
 	padding: 0;
+	text-align: center;
+}
+.woocommerce
+	.products
+	.product:first-child
+	> .woocommerce-loop-product__link
+	> .woocommerce-loop-product__title {
+	font-size: 3rem;
 }
 .woocommerce .products > .product .product__categories {
 	font-size: 1.5rem;
