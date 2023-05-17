@@ -3,7 +3,6 @@
 namespace TransgressionTheme;
 
 use WC_Order;
-use WP_Term;
 
 function cb( string $func ): callable {
 	return __NAMESPACE__ . '\\' . $func;
