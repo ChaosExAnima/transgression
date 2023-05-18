@@ -436,6 +436,9 @@ class Applications extends Module {
 		if ( count( $name_parts ) === 2 ) {
 			$user_meta['last_name'] = $name_parts[1];
 		}
+		if ( $post->user_extra ) {
+			$user_meta['app_extra'] = $post->user_extra;
+		}
 		$user_id = wp_insert_user( [
 			'role' => 'customer',
 			'user_pass' => wp_generate_password( 100 ),
