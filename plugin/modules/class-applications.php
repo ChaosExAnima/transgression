@@ -471,7 +471,7 @@ class Applications extends Module {
 			$template = 'app_denied';
 		}
 
-		if ( ! $template ) {
+		if ( ! $template || ! $this->emailer->is_template( $template ) ) {
 			return;
 		}
 

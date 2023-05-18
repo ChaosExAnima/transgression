@@ -7,6 +7,7 @@ use Transgression\Logger;
 use Transgression\Modules\Applications;
 
 class Emailer {
+	/** @var Option[] */
 	protected array $templates = [];
 
 	public Page $admin;
@@ -76,7 +77,8 @@ class Emailer {
 	 * @return boolean
 	 */
 	public function is_template( string $key ): bool {
-		return isset( $this->templates[ $key ] );
+		// phpcs:ignore WordPress.WhiteSpace.OperatorSpacing
+		return isset( $this->templates[ $key ] ) && !! $this->templates[ $key ]->get();
 	}
 
 	/**
