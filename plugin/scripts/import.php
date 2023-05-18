@@ -24,12 +24,19 @@ if ( ! is_readable( $path ) ) {
 	WP_CLI::error( 'File is not readable' );
 }
 
+WP_CLI::line( 'Do wet run? [y/N]' );
+$answer = strtolower( trim( fgets( STDIN ) ) );
+$wet_run = $answer === 'y';
+if ( $wet_run ) {
+	WP_CLI::warning( 'Doing wet run!' );
+}
+
 // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 $file = file_get_contents( $path );
 $lines = explode( "\n", $file );
-WP_CLI::debug( 'Got ' . count( $lines ) . ' lines' );
 
 $found = 0;
+$errors = 0;
 $created = 0;
 
 foreach ( array_slice( $lines, 1 ) as $row ) {
@@ -44,4 +51,11 @@ foreach ( array_slice( $lines, 1 ) as $row ) {
 	}
 }
 
-WP_CLI::success( "Users imported! Created {$created} and found {$found}" );
+WP_CLI\Utils\report_batch_operation_results(
+	'user',
+	'imported',
+	count( $lines ) - 1,
+	$created,
+	$errors,
+	$found
+);
