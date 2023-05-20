@@ -53,6 +53,7 @@ foreach ( array_slice( $lines, 1 ) as $row ) {
 				'first_name' => $name,
 				'pronouns' => $pronouns,
 				'app_extra' => 'rabbit hole',
+				'_imported' => time(),
 			];
 			$user_id = wp_insert_user( [
 				'role' => 'customer',
