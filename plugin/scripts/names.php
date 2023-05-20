@@ -70,7 +70,6 @@ foreach ( $users as $user ) {
 		'last_name' => $last_name,
 		'nickname' => $name,
 		'pronouns' => strtolower( $pronouns ),
-		'user_login' => $user->user_email,
 	];
 	$changed = [];
 	foreach ( $fields as $field_name => $field_value ) {
