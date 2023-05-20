@@ -46,8 +46,31 @@ foreach ( array_slice( $lines, 1 ) as $row ) {
 		WP_CLI::line( "Found {$email} as user {$user_id}" );
 		++$found;
 	} else {
-		WP_CLI::line( "Creating {$name} ({$pronouns}) at {$email}" );
-		++$created;
+		$user_id = null;
+		if ( $wet_run ) {
+			$user_meta = [
+				'nickname' => $name,
+				'first_name' => $name,
+				'pronouns' => $pronouns,
+				'app_extra' => 'rabbit hole',
+			];
+			$user_id = wp_insert_user( [
+				'role' => 'customer',
+				'user_pass' => wp_generate_password( 100 ),
+				'user_login' => $email,
+				'user_email' => $email,
+				'display_name' => $name,
+				'meta_input' => $user_meta,
+			] );
+		}
+
+		if ( is_wp_error( $user_id ) ) {
+			WP_CLI::warning( "Error creating user for user {$email}: {$user_id->get_error_message()}" );
+			++$errors;
+		} else {
+			WP_CLI::line( "Created {$name} ({$pronouns}) at {$email}" );
+			++$created;
+		}
 	}
 }
 
