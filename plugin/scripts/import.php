@@ -1,8 +1,8 @@
 <?php // phpcs:ignore NeutronStandard.StrictTypes.RequireStrictTypes
 
-if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
-	exit( 'Script files only' );
-}
+use function Transgression\Scripts\check_wet_run;
+
+require_once __DIR__ . '/helper.php';
 
 if ( empty( $args ) || count( $args ) !== 1 ) {
 	WP_CLI::error( 'Need path to CSV file' );
@@ -20,12 +20,7 @@ if ( ! is_readable( $path ) ) {
 	WP_CLI::error( 'File is not readable' );
 }
 
-WP_CLI::line( 'Do wet run? [y/N]' );
-$answer = strtolower( trim( fgets( STDIN ) ) );
-$wet_run = $answer === 'y';
-if ( $wet_run ) {
-	WP_CLI::warning( 'Doing wet run!' );
-}
+$wet_run = check_wet_run();
 
 // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 $file = file_get_contents( $path );
