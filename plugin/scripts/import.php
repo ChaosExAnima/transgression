@@ -1,8 +1,4 @@
-<?php declare( strict_types = 1 );
-
-namespace Transgression\Scripts;
-
-use WP_CLI;
+<?php // phpcs:ignore NeutronStandard.StrictTypes.RequireStrictTypes
 
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 	exit( 'Script files only' );
