@@ -41,12 +41,22 @@ $created = 0;
 
 foreach ( array_slice( $lines, 1 ) as $row ) {
 	[$email, $skip, $name, $pronouns] = array_map( 'trim', str_getcsv( $row ) );
+	if ( ! $email || ! is_email( $email ) ) {
+		WP_CLI::warning( "Error creating user: '{$email}' is invalid" );
+		++$errors;
+		continue;
+	} elseif ( ! $name ) {
+		WP_CLI::warning( 'Error creating user: name is empty' );
+		++$errors;
+		continue;
+	}
+
 	$user_id = email_exists( $email );
 	if ( $user_id ) {
 		WP_CLI::line( "Found {$email} as user {$user_id}" );
 		++$found;
 	} else {
-		$user_id = null;
+		$user_id = -1;
 		if ( $wet_run ) {
 			$user_meta = [
 				'nickname' => $name,
@@ -66,10 +76,10 @@ foreach ( array_slice( $lines, 1 ) as $row ) {
 		}
 
 		if ( is_wp_error( $user_id ) ) {
-			WP_CLI::warning( "Error creating user for user {$email}: {$user_id->get_error_message()}" );
+			WP_CLI::warning( "Error creating user {$email}: {$user_id->get_error_message()}" );
 			++$errors;
 		} else {
-			WP_CLI::line( "Created {$name} ({$pronouns}) at {$email}" );
+			WP_CLI::line( "Created {$name} ({$pronouns}) at {$email} with user ID {$user_id}" );
 			++$created;
 		}
 	}
