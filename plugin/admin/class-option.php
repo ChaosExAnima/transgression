@@ -83,7 +83,7 @@ class Option {
 		return $this;
 	}
 
-	public function on_page( Page $page ): self {
+	public function on_page( Page_Options $page ): self {
 		$page->add_setting( $this );
 		return $this;
 	}

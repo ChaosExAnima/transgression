@@ -7,8 +7,6 @@ use WP_Screen;
 use const Transgression\PLUGIN_SLUG;
 
 class Page {
-	protected const SETTING_PREFIX = PLUGIN_SLUG . '_';
-
 	protected string $page_slug = '';
 
 	/** @var string[] */
@@ -16,41 +14,41 @@ class Page {
 
 	protected string $page_hook = '';
 
-	/** @var string[] */
-	protected array $sections = [];
-
-	protected mixed $render_cb = null;
-
 	protected string $description = '';
+
+	protected string $menu_label;
 
 	/**
 	 * Creates admin page
 	 *
-	 * @param string $setting_group Main group name
-	 * @param Option[] $page_options Array of admin options
+	 * @param string $slug The page slug
+	 * @param string $label Page title
+	 * @param string|null $menu_label Menu label
 	 * @param string $permission Access permission
 	 */
 	public function __construct(
-		public string $setting_group,
-		public array $page_options = [],
-		protected string $permission = 'manage_options'
+		string $slug,
+		protected string $label,
+		?string $menu_label = null,
+		protected string $permission = 'manage_options',
 	) {
-		add_action( 'admin_init', [ $this, 'action_admin_init' ] );
+		$this->page_slug = PLUGIN_SLUG . "_{$slug}";
+		$this->menu_label = $menu_label ?? $label;
 	}
 
-	public function as_page(
-		string $page,
-		string $label,
-		string $icon,
-		?string $menu_label = null
-	): Page {
-		$this->page_slug = self::SETTING_PREFIX . $page;
-		$callback = function () use ( $page, $label, $menu_label, $icon ) {
+	/**
+	 * Makes the admin page a top-level page
+	 *
+	 * @param string $icon Icon
+	 * @return self
+	 */
+	public function as_page( string $icon ): self {
+		$callback = function () use ( $icon ) {
 			$admin_page = add_menu_page(
-				$label,
-				$menu_label ?? $label,
+				$this->label,
+				$this->menu_label,
 				$this->permission,
-				self::SETTING_PREFIX . $page,
+				$this->page_slug,
 				[ $this, 'render_page' ],
 				$icon
 			);
@@ -62,20 +60,20 @@ class Page {
 		return $this;
 	}
 
-	public function as_subpage(
-		string $parent_page,
-		string $page,
-		string $label,
-		?string $menu_label = null
-	): Page {
-		$this->page_slug = self::SETTING_PREFIX . $page;
-		$callback = function () use ( $parent_page, $page, $label, $menu_label ) {
+	/**
+	 * Makes the admin page a subpage
+	 *
+	 * @param string $parent_page Parent page slug
+	 * @return self
+	 */
+	public function as_subpage( string $parent_page ): self {
+		$callback = function () use ( $parent_page ) {
 			$admin_page = add_submenu_page(
 				$parent_page,
-				$label,
-				$menu_label ?? $label,
+				$this->label,
+				$this->menu_label,
 				$this->permission,
-				self::SETTING_PREFIX . $page,
+				$this->page_slug,
 				[ $this, 'render_page' ]
 			);
 			if ( $admin_page ) {
@@ -86,20 +84,22 @@ class Page {
 		return $this;
 	}
 
-	public function as_post_subpage(
-		string $post_type,
-		string $page,
-		string $label,
-		?string $menu_label = null
-	): self {
-		return $this->as_subpage(
-			"edit.php?post_type={$post_type}",
-			$page,
-			$label,
-			$menu_label
-		);
+	/**
+	 * Makes the admin page a subpage of a post type
+	 *
+	 * @param string $post_type The post type slug
+	 * @return self
+	 */
+	public function as_post_subpage( string $post_type ): self {
+		return $this->as_subpage( "edit.php?post_type={$post_type}" );
 	}
 
+	/**
+	 * Sets the page description
+	 *
+	 * @param string $description
+	 * @return self
+	 */
 	public function with_description( string $description ): self {
 		$this->description = $description;
 		return $this;
@@ -108,74 +108,25 @@ class Page {
 	/**
 	 * Sets the render callback
 	 *
-	 * @param callable $render
+	 * @param callable $callback
+	 * @param int $priority
 	 * @return self
 	 */
-	public function set_render( callable $render ): self {
-		$this->render_cb = $render;
+	public function add_render_callback( callable $callback, int $priority = 10 ): self {
+		add_action( "{$this->page_slug}_render", $callback, $priority );
 		return $this;
 	}
 
 	/**
-	 * Adds a new setting
+	 * Adds an action on on page load
 	 *
-	 * @param Option $option
-	 * @return self
+	 * @param string $key Action key to check in request object
+	 * @param callable $callback Callback to run when set
+	 * @return Admin
 	 */
-	public function add_setting( Option $option ): self {
-		$this->page_options[ $option->key ] = $option;
-		return $this;
-	}
-
-	/**
-	 * Adds multiple settings
-	 *
-	 * @param Option|string $section_option
-	 * @param Option $options
-	 * @return self
-	 */
-	public function add_settings( Option|string $section_option, Option ...$options ): self {
-		if ( $section_option instanceof Option ) {
-			$options[] = $section_option;
-		}
-		foreach ( $options as $option ) {
-			if ( is_string( $section_option ) ) {
-				$option->in_section( $section_option );
-			}
-			$this->add_setting( $option );
-		}
-		return $this;
-	}
-
-	/**
-	 * Gets a setting
-	 *
-	 * @param string $key
-	 * @return Option|null
-	 */
-	public function get_setting( string $key ): ?Option {
-		return $this->page_options[ $key ] ?? null;
-	}
-
-	/**
-	 * Gets a setting's value
-	 *
-	 * @param string $key
-	 * @return mixed|null
-	 */
-	public function value( string $key ): mixed {
-		return ( $this->page_options[ $key ] )->get() ?? null;
-	}
-
-	/**
-	 * Adds a section
-	 *
-	 * @param string $key
-	 * @param string $name
-	 * @return self
-	 */
-	public function add_section( string $key, string $name ): self {
-		$this->sections[ $key ] = $name;
+	public function add_action( string $key, callable $callback ): self {
+		$this->actions[] = $key;
+		add_action( "{$this->page_slug}_action_{$key}", $callback, 10, 2 );
 		return $this;
 	}
 
@@ -210,19 +161,6 @@ class Page {
 	}
 
 	/**
-	 * Adds an action on on page load
-	 *
-	 * @param string $key Action key to check in request object
-	 * @param callable $callback Callback to run when set
-	 * @return Admin
-	 */
-	public function add_action( string $key, callable $callback ): self {
-		$this->actions[] = $key;
-		add_action( self::SETTING_PREFIX . "admin_{$this->setting_group}_action_{$key}", $callback, 10, 2 );
-		return $this;
-	}
-
-	/**
 	 * Adds a message
 	 *
 	 * @param string $message The message html
@@ -231,7 +169,7 @@ class Page {
 	 */
 	public function add_message( string $message, string $type = 'error' ) {
 		add_settings_error(
-			"{$this->setting_group}_messages",
+			"{$this->page_slug}_messages",
 			sanitize_title( substr( $message, 0, 10 ) ),
 			$message,
 			$type
@@ -239,32 +177,10 @@ class Page {
 	}
 
 	/**
-	 * Initializes on admin load
+	 * Renders the page
 	 *
 	 * @return void
 	 */
-	public function action_admin_init() {
-		if ( ! $this->page_hook ) {
-			return;
-		}
-
-		$section = "{$this->setting_group}_section";
-		if ( count( $this->sections ) === 0 ) {
-			add_settings_section( $section, '', '', $this->page_hook );
-		} else {
-			foreach ( $this->sections as $section_key => $section_name ) {
-				add_settings_section( $section_key, $section_name, '', $this->page_hook );
-			}
-		}
-		foreach ( $this->page_options as $admin_option ) {
-			$admin_option->register(
-				$this->page_hook,
-				$this->setting_group,
-				$section
-			);
-		}
-	}
-
 	public function render_page() {
 		if ( ! current_user_can( $this->permission ) ) {
 			wp_die();
@@ -274,7 +190,7 @@ class Page {
 			// phpcs:ignore WordPress.Security.NonceVerification
 			if ( isset( $_REQUEST[ $key ] ) ) {
 				do_action(
-					self::SETTING_PREFIX . "admin_{$this->setting_group}_action_{$key}",
+					"{$this->page_slug}_action_{$key}",
 					// phpcs:ignore WordPress.Security.NonceVerification
 					sanitize_text_field( wp_unslash( $_REQUEST[ $key ] ) ),
 					$this
@@ -282,10 +198,10 @@ class Page {
 			}
 		}
 
-		settings_errors( "{$this->setting_group}_messages" );
+		settings_errors( "{$this->page_slug}_messages" );
 
 		printf(
-			'<div class="wrap"><h1>%s</h1><form action="options.php" method="post">',
+			'<div class="wrap"><h1>%s</h1>',
 			esc_html( get_admin_page_title() )
 		);
 		if ( $this->description ) {
@@ -294,12 +210,7 @@ class Page {
 				wp_kses_post( $this->description )
 			);
 		}
-		settings_fields( $this->setting_group );
-		do_settings_sections( $this->page_hook );
-		if ( is_callable( $this->render_cb ) ) {
-			call_user_func( $this->render_cb, $this );
-		}
-		submit_button( 'Save Settings' );
-		echo '</form></div>';
+		do_action( "{$this->page_slug}_render", $this );
+		echo '</div>';
 	}
 }

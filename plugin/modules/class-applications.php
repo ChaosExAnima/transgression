@@ -2,7 +2,7 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\Page;
+use Transgression\Admin\Page_Options;
 use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
@@ -43,7 +43,7 @@ class Applications extends Module {
 		'webp' => 'image/webp',
 	];
 
-	protected Page $conflicts;
+	protected Page_Options $conflicts;
 
 	public function __construct(
 		protected JetForms $jet_forms,

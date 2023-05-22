@@ -2,14 +2,14 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\{Page, Option};
+use Transgression\Admin\{Page_Options, Option};
 use Transgression\{Logger, LoggerLevels};
 use WP_Post;
 
 class Discord extends Module {
 	protected const ACTION_RESULT = 'hook-result';
 
-	public function __construct( protected Page $settings, Logger $logger ) {
+	public function __construct( protected Page_Options $settings, Logger $logger ) {
 		$settings->add_section( 'discord', 'Discord' );
 		$settings->add_action( 'test-hook', [ $this, 'send_test' ] );
 		$settings->add_action( self::ACTION_RESULT, [ $this, 'test_message' ] );

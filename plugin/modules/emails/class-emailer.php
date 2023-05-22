@@ -2,7 +2,7 @@
 
 namespace Transgression\Modules\Email;
 
-use Transgression\Admin\{Option, Page};
+use Transgression\Admin\{Option, Page_Options};
 use Transgression\Logger;
 use Transgression\Modules\Applications;
 
@@ -10,15 +10,15 @@ class Emailer {
 	/** @var Option[] */
 	protected array $templates = [];
 
-	public Page $admin;
+	public Page_Options $admin;
 
 	public function __construct() {
-		$admin = new Page( 'emails' );
-		$this->admin = $admin;
-
-		$admin->as_post_subpage( Applications::POST_TYPE, 'emails', 'Emails' );
+		$admin = new Page_Options( 'emails', 'Emails' );
+		$admin->as_post_subpage( Applications::POST_TYPE );
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
 		$admin->add_action( 'email-result', [ $this, 'handle_email_result' ] );
+
+		$this->admin = $admin;
 
 		call_user_func( [ $this->get_email_class(), 'init' ], $this );
 	}

@@ -2,7 +2,7 @@
 
 namespace Transgression;
 
-use Transgression\Admin\Page;
+use Transgression\Admin\Page_Options;
 use Transgression\Modules\{Applications, Attendance, Auth0, Discord, People, Email\Emailer, JetForms, WooCommerce};
 
 class Main {
@@ -10,8 +10,8 @@ class Main {
 		$logger = new Logger();
 		$emailer = new Emailer();
 
-		$settings = new Page( 'transgression_settings' );
-		$settings->as_subpage( 'options-general.php', 'ticketing', 'Ticketing Settings', 'Ticketing' );
+		$settings = new Page_Options( 'settings', 'Ticketing Settings', 'Ticketing' );
+		$settings->as_subpage( 'options-general.php' );
 
 		$jetforms = new JetForms( $emailer );
 		new Applications( $jetforms, $emailer );
