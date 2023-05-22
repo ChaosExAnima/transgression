@@ -40,17 +40,19 @@ class Page {
 	 * Makes the admin page a top-level page
 	 *
 	 * @param string $icon Icon
+	 * @param int|null $position Page position
 	 * @return self
 	 */
-	public function as_page( string $icon ): self {
-		$callback = function () use ( $icon ) {
+	public function as_page( string $icon, ?int $position = null ): self {
+		$callback = function () use ( $icon, $position ) {
 			$admin_page = add_menu_page(
 				$this->label,
 				$this->menu_label,
 				$this->permission,
 				$this->page_slug,
 				[ $this, 'render_page' ],
-				$icon
+				$icon,
+				$position
 			);
 			if ( $admin_page ) {
 				$this->page_hook = $admin_page;
@@ -64,17 +66,19 @@ class Page {
 	 * Makes the admin page a subpage
 	 *
 	 * @param string $parent_page Parent page slug
+	 * @param int|null $position Page position
 	 * @return self
 	 */
-	public function as_subpage( string $parent_page ): self {
-		$callback = function () use ( $parent_page ) {
+	public function as_subpage( string $parent_page, ?int $position = null ): self {
+		$callback = function () use ( $parent_page, $position ) {
 			$admin_page = add_submenu_page(
 				$parent_page,
 				$this->label,
 				$this->menu_label,
 				$this->permission,
 				$this->page_slug,
-				[ $this, 'render_page' ]
+				[ $this, 'render_page' ],
+				$position
 			);
 			if ( $admin_page ) {
 				$this->page_hook = $admin_page;
