@@ -181,6 +181,38 @@ class Page {
 	}
 
 	/**
+	 * Registers a message to appear
+	 *
+	 * @param string $key The message key
+	 * @param string $message Message text
+	 * @param string $type Type of message- success, notice, or error
+	 * @return self
+	 */
+	public function register_message( string $key, string $message, string $type = 'error' ): self {
+		$callback = function ( string $action ) use ( $key, $message, $type ) {
+			if ( $action === $key ) {
+				$this->add_message( $message, $type );
+			}
+		};
+		add_action( "{$this->page_slug}_action_messages", $callback, 10, 2 );
+		if ( ! in_array( 'messages', $this->actions, true ) ) {
+			$this->actions[] = 'messages';
+		}
+		return $this;
+	}
+
+	/**
+	 * Redirects to show a message
+	 *
+	 * @param string $key
+	 * @param array $params
+	 * @return void
+	 */
+	public function redirect_message( string $key, array $params = [] ): void {
+		$this->action_redirect( 'messages', $key, $params );
+	}
+
+	/**
 	 * Renders the page
 	 *
 	 * @return void

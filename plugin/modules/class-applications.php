@@ -2,7 +2,7 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\Page_Options;
+use Transgression\Admin\Page;
 use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
@@ -43,7 +43,7 @@ class Applications extends Module {
 		'webp' => 'image/webp',
 	];
 
-	protected Page_Options $conflicts;
+	protected Page $conflicts;
 
 	public function __construct(
 		protected JetForms $jet_forms,
@@ -51,7 +51,6 @@ class Applications extends Module {
 	) {
 		// Actions
 		add_action( 'init', [ $this, 'init' ] );
-		add_action( 'admin_menu', [ $this, 'admin_menu' ] );
 		add_action( 'save_post_' . self::POST_TYPE, [ $this, 'save' ] );
 		add_action( 'post_action_verdict', [ $this, 'action_verdict' ] );
 
@@ -79,6 +78,13 @@ class Applications extends Module {
 			'Application Duplicate',
 			'When someone submits an application but their email is already approved'
 		);
+
+		$conflicts = new Page( 'conflicts', 'Conflicts', null, 'edit_posts' );
+		$conflicts->as_post_subpage( self::POST_TYPE );
+		$conflicts->add_render_callback( [ $this, 'render_conflicts' ] );
+		$conflicts->add_action( 'resolve', [ $this, 'resolve_conflict' ] );
+		$conflicts->register_message( 'resolve_error', 'Could not hide conflict' );
+		$conflicts->register_message( 'resolve_success', 'Hid conflict', 'success' );
 	}
 
 	/**
@@ -125,17 +131,6 @@ class Applications extends Module {
 				'transgression'
 			),
 		] );
-	}
-
-	public function admin_menu() {
-		add_submenu_page(
-			'edit.php?post_type=' . self::POST_TYPE,
-			'Conflicts',
-			'Conflicts',
-			'manage_options',
-			PLUGIN_SLUG . '_conflicts',
-			[ $this, 'render_conflicts' ]
-		);
 	}
 
 	/**
@@ -416,6 +411,24 @@ class Applications extends Module {
 		], admin_url( 'edit.php' ) );
 
 		load_view( 'applications/conflicts', compact( 'current_url', 'query' ) );
+	}
+
+	/**
+	 * Resolves a given conflict for an application
+	 *
+	 * @param string $application_id
+	 * @param Page $page
+	 * @return void
+	 */
+	public function resolve_conflict( string $application_id, Page $page ) {
+		check_admin_referer( "conflict-{$application_id}" );
+
+		$app = get_post( absint( $application_id ) );
+		if ( ! $app ) {
+			$page->redirect_message( 'resolve_error' );
+		}
+		update_post_meta( $app->ID, 'hide_conflict', true );
+		$page->redirect_message( 'resolve_success' );
 	}
 
 	/**
