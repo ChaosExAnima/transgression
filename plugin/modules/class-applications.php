@@ -2,6 +2,7 @@
 
 namespace Transgression\Modules;
 
+use Transgression\Admin\Page;
 use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
@@ -42,12 +43,15 @@ class Applications extends Module {
 		'webp' => 'image/webp',
 	];
 
+	protected Page $conflicts;
+
 	public function __construct(
 		protected JetForms $jet_forms,
 		protected Emailer $emailer
 	) {
 		// Actions
 		add_action( 'init', [ $this, 'init' ] );
+		add_action( 'admin_menu', [ $this, 'admin_menu' ] );
 		add_action( 'save_post_' . self::POST_TYPE, [ $this, 'save' ] );
 		add_action( 'post_action_verdict', [ $this, 'action_verdict' ] );
 
@@ -121,6 +125,17 @@ class Applications extends Module {
 				'transgression'
 			),
 		] );
+	}
+
+	public function admin_menu() {
+		add_submenu_page(
+			'edit.php?post_type=' . self::POST_TYPE,
+			'Conflicts',
+			'Conflicts',
+			'manage_options',
+			PLUGIN_SLUG . '_conflicts',
+			[ $this, 'render_conflicts' ]
+		);
 	}
 
 	/**
@@ -375,6 +390,16 @@ class Applications extends Module {
 			104 => 'Emailed application results',
 		];
 		return $messages;
+	}
+
+	public function render_conflicts(): void {
+		$query = new WP_Query( [
+			'post_type' => self::POST_TYPE,
+			'post_status' => self::STATUS_APPROVED,
+			'posts_per_page' => -1,
+			// 'meta_key' => 'conflicts',
+		] );
+		load_view( 'applications/conflicts', compact( 'query' ) );
 	}
 
 	/**
