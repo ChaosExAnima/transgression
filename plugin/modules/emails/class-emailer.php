@@ -19,7 +19,9 @@ class Emailer {
 
 		$admin->register_message( 'template_invalid', 'Could not find template' );
 		$user = get_userdata( get_current_user_id() );
-		$admin->register_message( 'test_sent', "Email sent to {$user->user_email}!", 'success' );
+		if ( $user ) {
+			$admin->register_message( 'test_sent', "Email sent to {$user->user_email}!", 'success' );
+		}
 		if ( isset( $_GET['error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			// phpcs:ignore WordPress.Security
 			$error_msg = base64_decode( wp_unslash( $_GET['error'] ) );
