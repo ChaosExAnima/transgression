@@ -14,6 +14,13 @@ class Emailer {
 
 	public function __construct() {
 		$admin = new Page_Options( 'emails', 'Emails' );
+		$this->admin = $admin;
+		call_user_func( [ $this->get_email_class(), 'init' ], $this );
+
+		if ( ! is_admin() ) {
+			return;
+		}
+
 		$admin->as_post_subpage( Applications::POST_TYPE );
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
 
@@ -27,10 +34,6 @@ class Emailer {
 			$error_msg = base64_decode( wp_unslash( $_GET['error'] ) );
 			$admin->register_message( 'test_error', "Error sending email: {$error_msg}" );
 		}
-
-		$this->admin = $admin;
-
-		call_user_func( [ $this->get_email_class(), 'init' ], $this );
 	}
 
 	/**
