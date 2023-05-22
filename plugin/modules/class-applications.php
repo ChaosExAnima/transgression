@@ -393,13 +393,29 @@ class Applications extends Module {
 	}
 
 	public function render_conflicts(): void {
+		$post_ids = wp_cache_get( 'app_conflict_ids' );
+		if ( $post_ids === false ) {
+			global $wpdb;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$post_ids = $wpdb->get_col(
+				"SELECT post_id FROM {$wpdb->postmeta}
+				WHERE meta_key = 'warnings' AND CHAR_LENGTH(meta_value) > 4"
+			);
+			wp_cache_set( 'app_conflict_ids', $post_ids );
+		}
+
 		$query = new WP_Query( [
 			'post_type' => self::POST_TYPE,
 			'post_status' => self::STATUS_APPROVED,
 			'posts_per_page' => -1,
-			// 'meta_key' => 'conflicts',
+			'post__in' => $post_ids,
 		] );
-		load_view( 'applications/conflicts', compact( 'query' ) );
+		$current_url = add_query_arg( [
+			'post_type' => self::POST_TYPE,
+			'page' => PLUGIN_SLUG . '_conflicts',
+		], admin_url( 'edit.php' ) );
+
+		load_view( 'applications/conflicts', compact( 'current_url', 'query' ) );
 	}
 
 	/**
