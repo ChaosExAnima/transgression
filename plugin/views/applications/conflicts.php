@@ -56,4 +56,11 @@ $current_url = $params['current_url'];
 			</tr>
 		<?php endwhile; ?>
 	</tbody>
+	<tfoot>
+		<tr>
+			<th class="min"></th>
+			<th class="min">Name</th>
+			<th>Report</th>
+		</tr>
+	</tfoot>
 </table>

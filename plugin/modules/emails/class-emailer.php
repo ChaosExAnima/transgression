@@ -16,7 +16,15 @@ class Emailer {
 		$admin = new Page_Options( 'emails', 'Emails' );
 		$admin->as_post_subpage( Applications::POST_TYPE );
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
-		$admin->add_action( 'email-result', [ $this, 'handle_email_result' ] );
+
+		$admin->register_message( 'template_invalid', 'Could not find template' );
+		$user = get_userdata( get_current_user_id() );
+		$admin->register_message( 'test_sent', "Email sent to {$user->user_email}!", 'success' );
+		if ( isset( $_GET['error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			// phpcs:ignore WordPress.Security
+			$error_msg = base64_decode( wp_unslash( $_GET['error'] ) );
+			$admin->register_message( 'test_error', "Error sending email: {$error_msg}" );
+		}
 
 		$this->admin = $admin;
 
@@ -104,10 +112,8 @@ class Emailer {
 	 */
 	public function do_test_email( string $template_key ): void {
 		check_admin_referer( 'test-email-' . $template_key );
-		$result = null;
-		$extra = [];
 		if ( ! $this->is_template( $template_key ) ) {
-			$result = 'invalid';
+			$this->admin->redirect_message( 'template_invalid' );
 		}
 
 		try {
@@ -117,36 +123,13 @@ class Emailer {
 				->with_template( $template_key )
 				->set_url( 'login-url', wc_get_page_permalink( 'shop' ) )
 				->send();
-			$result = 'success';
+			$this->admin->redirect_message( 'test_sent' );
 		} catch ( \Error $error ) {
-			$result = 'error';
-			$extra = [ 'error' => base64_encode( $error->getMessage() ) ];
 			Logger::error( $error );
+			$this->admin->redirect_message( 'test_error', [ 'error' => base64_encode( $error->getMessage() ) ] );
 		}
 
-		if ( ! $result ) {
-			return;
-		}
-		$redirect_url = $this->admin->get_url( array_merge( [
-			'email-result' => $result,
-			'_wpnonce' => wp_create_nonce( "email-result-{$result}" ),
-		], $extra ) );
-		wp_safe_redirect( $redirect_url );
-		exit;
-	}
-
-	public function handle_email_result( string $email_result ): void {
-		check_admin_referer( "email-result-{$email_result}" );
-		if ( $email_result === 'invalid' ) {
-			$this->admin->add_message( 'Could not find template' );
-		} elseif ( $email_result === 'success' ) {
-			$user = get_userdata( get_current_user_id() );
-			$this->admin->add_message( "Email sent to {$user->user_email}!", 'success' );
-		} elseif ( $email_result === 'error' && ! empty( $_GET['error'] ) ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-			$error_msg = base64_decode( wp_unslash( $_GET['error'] ) );
-			$this->admin->add_message( "Error sending email: {$error_msg}" );
-		}
+		$this->admin->redirect_message( 'test_error', [ 'error' => base64_encode( 'Could not send test email' ) ] );
 	}
 
 	/**
