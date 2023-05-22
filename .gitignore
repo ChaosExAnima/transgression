@@ -6,7 +6,7 @@ node_modules
 /vendor
 *.zip
 .DS_Store
-index.php
+./index.php
 license.txt
 readme.html
 wp-activate.php
