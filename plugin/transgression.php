@@ -21,6 +21,10 @@ require_once PLUGIN_ROOT . '/modules/index.php';
 require_once PLUGIN_ROOT . '/class-logger.php';
 require_once PLUGIN_ROOT . '/class-main.php';
 
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	require_once PLUGIN_ROOT . '/scripts/index.php';
+}
+
 $transgression_application = new Main();
 
 add_action( 'plugins_loaded', [ $transgression_application, 'init' ] );
