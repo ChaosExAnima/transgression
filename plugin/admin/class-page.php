@@ -4,7 +4,10 @@ namespace Transgression\Admin;
 
 use WP_Screen;
 
+use function Transgression\get_asset_url;
+
 use const Transgression\PLUGIN_SLUG;
+use const Transgression\PLUGIN_VERSION;
 
 class Page {
 	protected string $page_slug = '';
@@ -17,6 +20,9 @@ class Page {
 	protected string $description = '';
 
 	protected string $menu_label;
+
+	/** @var string[] */
+	protected array $styles = [];
 
 	/**
 	 * Creates admin page
@@ -92,10 +98,11 @@ class Page {
 	 * Makes the admin page a subpage of a post type
 	 *
 	 * @param string $post_type The post type slug
+	 * @param int|null $position Page position
 	 * @return self
 	 */
-	public function as_post_subpage( string $post_type ): self {
-		return $this->as_subpage( "edit.php?post_type={$post_type}" );
+	public function as_post_subpage( string $post_type, ?int $position = null ): self {
+		return $this->as_subpage( "edit.php?post_type={$post_type}", $position );
 	}
 
 	/**
@@ -131,6 +138,20 @@ class Page {
 	public function add_action( string $key, callable $callback ): self {
 		$this->actions[] = $key;
 		add_action( "{$this->page_slug}_action_{$key}", $callback, 10, 2 );
+		return $this;
+	}
+
+	/**
+	 * Adds a stylesheet from the assets directory
+	 *
+	 * @param string $name The name of the file, with or without the extension
+	 * @return self
+	 */
+	public function add_style( string $name ): self {
+		if ( count( $this->styles ) === 0 ) {
+			add_action( 'admin_enqueue_scripts', [ $this, 'register_styles' ] );
+		}
+		$this->styles[] = $name;
 		return $this;
 	}
 
@@ -202,6 +223,30 @@ class Page {
 	}
 
 	/**
+	 * Registers the styles if the correct page is loaded
+	 *
+	 * @param string $hook The page hook
+	 * @return void
+	 */
+	public function register_styles( string $hook ): void {
+		// Check page hook
+		if ( $this->page_hook !== $hook ) {
+			return;
+		}
+		foreach ( $this->styles as $style ) {
+			if ( str_ends_with( $style, '.css' ) ) {
+				$style = substr( $style, -4 );
+			}
+			wp_register_style(
+				PLUGIN_SLUG . $style,
+				get_asset_url( "{$style}.css" ),
+				[],
+				PLUGIN_VERSION
+			);
+		}
+	}
+
+	/**
 	 * Redirects to show a message
 	 *
 	 * @param string $key
@@ -228,7 +273,7 @@ class Page {
 				do_action(
 					"{$this->page_slug}_action_{$key}",
 					// phpcs:ignore WordPress.Security.NonceVerification
-					sanitize_text_field( wp_unslash( $_REQUEST[ $key ] ) ),
+					sanitize_textarea_field( wp_unslash( $_REQUEST[ $key ] ) ),
 					$this
 				);
 			}

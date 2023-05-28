@@ -26,7 +26,8 @@ class Attendance extends Module {
 		}
 		$admin = new Page( 'attendance', 'Attendance Sheet', 'Attendance', 'edit_products' );
 		$admin->add_render_callback( [ $this, 'render' ] );
-		$admin->as_page( self::ICON, 56 );
+		$admin->as_page( 'data:image/svg+xml;base64,' . self::ICON, 56 );
+		$admin->add_style( 'attendance' );
 	}
 
 	/**
@@ -99,8 +100,6 @@ class Attendance extends Module {
 			}
 		}
 		$orders = wp_list_sort( $orders, 'name' );
-
-		wp_enqueue_style( PLUGIN_SLUG . '_attendance', get_asset_url( 'attendance.css' ), [], PLUGIN_VERSION );
 
 		load_view( 'attendance/table', compact( 'products', 'product_id', 'orders' ) );
 	}

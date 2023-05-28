@@ -1,0 +1,8 @@
+tr,
+td {
+	width: 100%;
+}
+.min {
+	white-space: nowrap;
+	width: min-content;
+}
