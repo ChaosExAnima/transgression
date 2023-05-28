@@ -63,7 +63,7 @@ $current_url = $params['current_url'];
 					<?php edit_post_link( get_the_title() ); ?>
 				</td>
 				<td>
-					<?php echo wp_kses( linkify( $app->warnings ), KSES_TAGS ); ?>
+					<?php echo wp_kses( linkify( $app->conflicts ), KSES_TAGS ); ?>
 				</td>
 			</tr>
 			<tr class="comments" id="comments-<?php echo absint( $app->ID ); ?>" hidden>

@@ -88,7 +88,7 @@ function linkify( string $text ): string {
 		$text
 	);
 	$text = preg_replace(
-		'/@ ?([a-z0-9]+)/i',
+		'/@ ?([a-z0-9\.-_]+)/i',
 		'<a href="https://instagram.com/$1" target="_blank" rel="noreferrer">@$1</a>',
 		$text
 	);

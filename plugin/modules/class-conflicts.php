@@ -47,7 +47,7 @@ class Conflicts extends Module {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			$post_ids = $wpdb->get_col(
 				"SELECT post_id FROM {$wpdb->postmeta}
-				WHERE meta_key = 'warnings' AND CHAR_LENGTH(meta_value) > 4"
+				WHERE meta_key = 'conflicts' AND CHAR_LENGTH(meta_value) > 4"
 			);
 			wp_cache_set( self::CACHE_KEY, $post_ids );
 		}
