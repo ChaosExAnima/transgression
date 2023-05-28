@@ -3,7 +3,8 @@
 	"require-dev": {
 		"automattic/phpcs-neutron-standard": "^1.7",
 		"phpcompatibility/phpcompatibility-wp": "*",
-		"wp-coding-standards/wpcs": "dev-develop"
+		"wp-coding-standards/wpcs": "dev-develop",
+		"wp-cli/wp-cli-bundle": "*"
 	},
 	"config": {
 		"allow-plugins": {
