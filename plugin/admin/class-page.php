@@ -237,8 +237,8 @@ class Page {
 			if ( str_ends_with( $style, '.css' ) ) {
 				$style = substr( $style, -4 );
 			}
-			wp_register_style(
-				PLUGIN_SLUG . $style,
+			wp_enqueue_style(
+				PLUGIN_SLUG . "_{$style}",
 				get_asset_url( "{$style}.css" ),
 				[],
 				PLUGIN_VERSION
