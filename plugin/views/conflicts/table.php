@@ -13,15 +13,6 @@ $query = $params['query'];
 $current_url = $params['current_url'];
 
 ?>
-<style>
-	tr, td {
-		width: 100%;
-	}
-	.min {
-		white-space: nowrap;
-		width: min-content;
-	}
-</style>
 
 <table class="wp-list-table widefat striped">
 	<thead>

@@ -13,18 +13,18 @@ use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
 use function Transgression\{get_asset_url, insert_in_array, load_view};
 
 class Applications extends Module {
-	const POST_TYPE = 'application';
-	const COMMENT_TYPE = 'review_comment';
-	const STATUS_APPROVED = 'approved';
-	const STATUS_DENIED = 'denied';
+	public const POST_TYPE = 'application';
+	public const COMMENT_TYPE = 'review_comment';
+	public const STATUS_APPROVED = 'approved';
+	public const STATUS_DENIED = 'denied';
 
-	const LABELS = [
+	protected const LABELS = [
 		'name' => 'Applications',
 		'singular_name' => 'Application',
 		'edit_item' => 'Review Application',
 	];
 
-	const FIELDS = [
+	protected const FIELDS = [
 		'post_title' => 'Name',
 		'pronouns' => 'Pronouns',
 		'email' => 'Email',
@@ -36,7 +36,7 @@ class Applications extends Module {
 		'extra' => 'Additional comments',
 	];
 
-	const MIME_TYPES = [
+	protected const MIME_TYPES = [
 		'jpg|jpeg|jpe' => 'image/jpeg',
 		'png' => 'image/png',
 		'tiff|tif' => 'image/tiff',
@@ -78,13 +78,6 @@ class Applications extends Module {
 			'Application Duplicate',
 			'When someone submits an application but their email is already approved'
 		);
-
-		$conflicts = new Page( 'conflicts', 'Conflicts', null, 'edit_posts' );
-		$conflicts->as_post_subpage( self::POST_TYPE );
-		$conflicts->add_render_callback( [ $this, 'render_conflicts' ] );
-		$conflicts->add_action( 'resolve', [ $this, 'resolve_conflict' ] );
-		$conflicts->register_message( 'resolve_error', 'Could not hide conflict' );
-		$conflicts->register_message( 'resolve_success', 'Hid conflict', 'success' );
 	}
 
 	/**
@@ -204,10 +197,19 @@ class Applications extends Module {
 		exit;
 	}
 
+	/**
+	 * Enqueues the relevant styles
+	 *
+	 * @return void
+	 */
 	public function scripts() {
 		$screen = get_current_screen();
-		if ( is_object( $screen ) && $screen->post_type === self::POST_TYPE ) {
-			wp_enqueue_style( PLUGIN_SLUG . 'application', get_asset_url( 'applications.css' ), [], PLUGIN_VERSION );
+		if (
+			is_object( $screen ) &&
+			$screen->post_type === self::POST_TYPE &&
+			in_array( $screen->base, [ 'edit', 'post' ], true )
+		) {
+			wp_enqueue_style( PLUGIN_SLUG . '_application', get_asset_url( 'applications.css' ), [], PLUGIN_VERSION );
 		}
 	}
 
@@ -385,50 +387,6 @@ class Applications extends Module {
 			104 => 'Emailed application results',
 		];
 		return $messages;
-	}
-
-	public function render_conflicts(): void {
-		$post_ids = wp_cache_get( 'app_conflict_ids' );
-		if ( $post_ids === false ) {
-			global $wpdb;
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-			$post_ids = $wpdb->get_col(
-				"SELECT post_id FROM {$wpdb->postmeta}
-				WHERE meta_key = 'warnings' AND CHAR_LENGTH(meta_value) > 4"
-			);
-			wp_cache_set( 'app_conflict_ids', $post_ids );
-		}
-
-		$query = new WP_Query( [
-			'post_type' => self::POST_TYPE,
-			'post_status' => self::STATUS_APPROVED,
-			'posts_per_page' => -1,
-			'post__in' => $post_ids,
-		] );
-		$current_url = add_query_arg( [
-			'post_type' => self::POST_TYPE,
-			'page' => PLUGIN_SLUG . '_conflicts',
-		], admin_url( 'edit.php' ) );
-
-		load_view( 'applications/conflicts', compact( 'current_url', 'query' ) );
-	}
-
-	/**
-	 * Resolves a given conflict for an application
-	 *
-	 * @param string $application_id
-	 * @param Page $page
-	 * @return void
-	 */
-	public function resolve_conflict( string $application_id, Page $page ) {
-		check_admin_referer( "conflict-{$application_id}" );
-
-		$app = get_post( absint( $application_id ) );
-		if ( ! $app ) {
-			$page->redirect_message( 'resolve_error' );
-		}
-		update_post_meta( $app->ID, 'hide_conflict', true );
-		$page->redirect_message( 'resolve_success' );
 	}
 
 	/**

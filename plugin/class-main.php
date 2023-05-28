@@ -3,7 +3,7 @@
 namespace Transgression;
 
 use Transgression\Admin\Page_Options;
-use Transgression\Modules\{Applications, Attendance, Auth0, Discord, People, Email\Emailer, JetForms, WooCommerce};
+use Transgression\Modules\{Applications, Attendance, Auth0, Conflicts, Discord, People, Email\Emailer, JetForms, WooCommerce};
 
 class Main {
 	public function init() {
@@ -18,6 +18,7 @@ class Main {
 		new Attendance();
 		$people = new People( $emailer );
 		new Auth0( $people, $settings );
+		new Conflicts();
 		new Discord( $settings, $logger );
 		new WooCommerce( $settings );
 	}
