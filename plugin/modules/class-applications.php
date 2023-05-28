@@ -291,7 +291,6 @@ class Applications extends Module {
 			'order' => 'ASC',
 			'type' => self::COMMENT_TYPE,
 		] );
-		wp_list_comments( [ 'post_id' => $post->ID ] );
 		load_view( 'applications/comments', compact( 'comments' ) );
 	}
 

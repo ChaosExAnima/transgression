@@ -11,7 +11,7 @@ use function Transgression\load_view;
 use const Transgression\PLUGIN_SLUG;
 
 class Conflicts extends Module {
-	public const COMMENT_TYPE = PLUGIN_SLUG . '_conflict';
+	public const COMMENT_TYPE = 'conflict_comment';
 	public const CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
 
 	protected Page $page;
@@ -22,15 +22,15 @@ class Conflicts extends Module {
 		$page = new Page( 'conflicts', 'Conflicts', null, 'edit_posts' );
 		$page->as_post_subpage( Applications::POST_TYPE );
 		$page->add_render_callback( [ $this, 'render_conflicts' ] );
+		$page->add_style( 'conflicts' );
 
 		$page->add_action( 'resolve', [ $this, 'resolve_conflict' ] );
 		$page->register_message( 'resolve_error', 'Could not hide conflict' );
 		$page->register_message( 'resolve_success', 'Hid conflict', 'success' );
 
 		$page->add_action( 'comment', [ $this, 'add_comment' ] );
-		$page->register_message( 'add_comment', 'Added comment' );
-
-		$page->add_style( 'conflicts' );
+		$page->register_message( 'comment_error', 'Could not add comment' );
+		$page->register_message( 'comment_success', 'Added comment', 'success' );
 
 		$this->page = $page;
 	}
@@ -102,5 +102,37 @@ class Conflicts extends Module {
 	 * @return void
 	 */
 	public function add_comment( string $comment ): void {
+		$app_id = absint( $_GET['app_id'] ?? null );
+		check_admin_referer( "comment-{$app_id}" );
+
+		if ( ! $comment || ! $app_id ) {
+			wp_safe_redirect( $this->page->get_url() );
+			exit;
+		}
+
+		$app = get_post( $app_id );
+		if (
+			! $app ||
+			Applications::POST_TYPE !== $app->post_type ||
+			Applications::STATUS_APPROVED !== $app->post_status
+		) {
+			wp_die( 'Application invalid' );
+		}
+
+		$user = wp_get_current_user();
+		if ( ! user_can( $user, 'edit_posts' ) ) {
+			wp_die( 'Cannot leave comments' );
+		}
+		$result = wp_insert_comment( [
+			'comment_author' => $user->display_name,
+			'comment_post_ID' => $app_id,
+			'comment_content' => $comment,
+			'comment_type' => self::COMMENT_TYPE,
+			'user_id' => $user->ID,
+		] );
+		if ( ! $result ) {
+			$this->page->redirect_message( 'comment_error' );
+		}
+		$this->page->redirect_message( 'comment_success' );
 	}
 }
