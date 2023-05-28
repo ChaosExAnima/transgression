@@ -21,7 +21,7 @@ class Emailer {
 			return;
 		}
 
-		$admin->as_post_subpage( Applications::POST_TYPE );
+		$admin->as_subpage( 'options-general.php' );
 		$admin->add_action( 'test-email', [ $this, 'do_test_email' ] );
 
 		$admin->register_message( 'template_invalid', 'Could not find template' );
