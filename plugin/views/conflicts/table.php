@@ -97,7 +97,7 @@ for (const button of actions) {
 function handleAction(event) {
 	event.preventDefault();
 	if (this.classList.contains('resolve-action')) {
-		if (this.dataset.url && confim('Resolve this conflict?')) {
+		if (this.dataset.url && confirm('Resolve this conflict?')) {
 			location.assign(this.dataset.url);
 		}
 	} else if (this.classList.contains('comment-action')) {
