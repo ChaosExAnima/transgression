@@ -71,7 +71,7 @@ function render_lines( string $text ): void {
 		if ( $index !== 0 ) {
 			echo '<br />';
 		}
-		echo esc_html( $line );
+		echo wp_kses( linkify( $line ), KSES_TAGS );
 	}
 }
 
