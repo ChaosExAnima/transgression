@@ -3,7 +3,7 @@
 namespace Transgression\Modules;
 
 use Transgression\Admin\Option_Checkbox;
-use Transgression\Admin\Page;
+use Transgression\Admin\Page_Options;
 
 use function Transgression\load_view;
 
@@ -11,7 +11,7 @@ class WooCommerce extends Module {
 	/** @inheritDoc */
 	const REQUIRED_PLUGINS = [ 'woocommerce/woocommerce.php' ];
 
-	public function __construct( protected Page $settings_page ) {
+	public function __construct( protected Page_Options $settings_page ) {
 		if ( ! self::check_plugins() ) {
 			return;
 		}

@@ -2,6 +2,7 @@
 
 namespace Transgression\Modules;
 
+use Transgression\Admin\Page;
 use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
@@ -12,18 +13,18 @@ use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
 use function Transgression\{get_asset_url, insert_in_array, load_view};
 
 class Applications extends Module {
-	const POST_TYPE = 'application';
-	const COMMENT_TYPE = 'review_comment';
-	const STATUS_APPROVED = 'approved';
-	const STATUS_DENIED = 'denied';
+	public const POST_TYPE = 'application';
+	public const COMMENT_TYPE = 'review_comment';
+	public const STATUS_APPROVED = 'approved';
+	public const STATUS_DENIED = 'denied';
 
-	const LABELS = [
+	protected const LABELS = [
 		'name' => 'Applications',
 		'singular_name' => 'Application',
 		'edit_item' => 'Review Application',
 	];
 
-	const FIELDS = [
+	protected const FIELDS = [
 		'post_title' => 'Name',
 		'pronouns' => 'Pronouns',
 		'email' => 'Email',
@@ -35,12 +36,14 @@ class Applications extends Module {
 		'extra' => 'Additional comments',
 	];
 
-	const MIME_TYPES = [
+	protected const MIME_TYPES = [
 		'jpg|jpeg|jpe' => 'image/jpeg',
 		'png' => 'image/png',
 		'tiff|tif' => 'image/tiff',
 		'webp' => 'image/webp',
 	];
+
+	protected Page $conflicts;
 
 	public function __construct(
 		protected JetForms $jet_forms,
@@ -194,10 +197,19 @@ class Applications extends Module {
 		exit;
 	}
 
+	/**
+	 * Enqueues the relevant styles
+	 *
+	 * @return void
+	 */
 	public function scripts() {
 		$screen = get_current_screen();
-		if ( is_object( $screen ) && $screen->post_type === self::POST_TYPE ) {
-			wp_enqueue_style( PLUGIN_SLUG . 'application', get_asset_url( 'applications.css' ), [], PLUGIN_VERSION );
+		if (
+			is_object( $screen ) &&
+			$screen->post_type === self::POST_TYPE &&
+			in_array( $screen->base, [ 'edit', 'post' ], true )
+		) {
+			wp_enqueue_style( PLUGIN_SLUG . '_application', get_asset_url( 'applications.css' ), [], PLUGIN_VERSION );
 		}
 	}
 
@@ -279,7 +291,6 @@ class Applications extends Module {
 			'order' => 'ASC',
 			'type' => self::COMMENT_TYPE,
 		] );
-		wp_list_comments( [ 'post_id' => $post->ID ] );
 		load_view( 'applications/comments', compact( 'comments' ) );
 	}
 

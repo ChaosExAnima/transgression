@@ -8,9 +8,9 @@ $comments = $params['comments'];
 <ul class="app-comments">
 <?php foreach ( $comments as $comment ) : ?>
 	<li>
-		<q><?php echo esc_html( $comment->comment_author ); ?></q> -
-		<?php echo wp_kses_post( $comment->comment_content ); ?>,
-		<?php render_time( $comment->comment_date_gmt, true ); ?>
+		<?php echo esc_html( $comment->comment_author ); ?>:
+		<q><?php render_lines( $comment->comment_content ); ?></q>,
+		<?php render_time( $comment->comment_date_gmt, 'app-details' ); ?>
 	</li>
 <?php endforeach; ?>
 </ul>

@@ -2,6 +2,16 @@
 
 namespace Transgression;
 
+const KSES_TAGS = [
+	'a' => [
+		'target' => [],
+		'href' => [],
+		'rel' => [],
+	],
+	'em' => [],
+	'strong' => [],
+];
+
 /**
  * Gets a URL to a file in the assets folder
  *
@@ -50,13 +60,50 @@ function formatted_date( int|string $date, bool $with_time = true ): string {
 }
 
 /**
+ * Renders text with line breaks as br tags
+ *
+ * @param string $text
+ * @return void
+ */
+function render_lines( string $text ): void {
+	$lines = array_map( 'trim', explode( "\n", trim( $text ) ) );
+	foreach ( $lines as $index => $line ) {
+		if ( $index !== 0 ) {
+			echo '<br />';
+		}
+		echo wp_kses( linkify( $line ), KSES_TAGS );
+	}
+}
+
+/**
+ * Links provided text
+ *
+ * @param string $text
+ * @return string
+ */
+function linkify( string $text ): string {
+	$text = preg_replace(
+		'/(https?:\/\/[^ \)\n]+)/i',
+		'<a href="$1" target="_blank" rel="noreferrer">$1</a>',
+		$text
+	);
+	$text = preg_replace(
+		'/@ ?([a-z0-9\.-_]+)/i',
+		'<a href="https://instagram.com/$1" target="_blank" rel="noreferrer">@$1</a>',
+		$text
+	);
+	return $text;
+}
+
+/**
  * Renders a date and time, optionally relatively.
  *
  * @param integer|string $date
+ * @param string|null $class_name
  * @param boolean $relative
  * @return void
  */
-function render_time( int|string $date, bool $relative = false ) {
+function render_time( int|string $date, ?string $class_name = null, bool $relative = true ) {
 	if ( is_int( $date ) ) {
 		$timestamp = $date;
 	} else {
@@ -69,10 +116,11 @@ function render_time( int|string $date, bool $relative = false ) {
 		$text = formatted_date( $timestamp );
 	}
 	printf(
-		'<time datetime="%3$s" title="%2$s" class="app-details">%1$s</time>',
+		'<time datetime="%3$s" title="%2$s" class="%4$s">%1$s</time>',
 		esc_html( $text ),
 		esc_attr( formatted_date( $timestamp ) ),
-		esc_attr( wp_date( 'c', $timestamp ) )
+		esc_attr( wp_date( 'c', $timestamp ) ),
+		esc_attr( $class_name ?? '' )
 	);
 }
 

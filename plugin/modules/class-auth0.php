@@ -2,7 +2,7 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\{Option, Page};
+use Transgression\Admin\{Option, Page_Options};
 use Transgression\Logger;
 
 use const Transgression\PLUGIN_ROOT;
@@ -12,7 +12,7 @@ use function Transgression\{get_current_url, strip_query};
 class Auth0 extends Module {
 	public const PROVIDERS = [ 'discord', 'google-oauth2' ];
 
-	public function __construct( protected People $people, protected Page $settings ) {
+	public function __construct( protected People $people, protected Page_Options $settings ) {
 		$this->settings->add_section( 'auth0', 'Auth0' );
 		$this->settings->add_settings( 'auth0',
 			( new Option( 'auth0_baseurl', 'Base URL' ) )->of_type( 'url' ),

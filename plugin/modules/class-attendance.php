@@ -2,6 +2,7 @@
 
 namespace Transgression\Modules;
 
+use Transgression\Admin\Page;
 use Transgression\Logger;
 
 use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
@@ -20,26 +21,13 @@ class Attendance extends Module {
 	'wOTQgMCAwIDEgMCAxLjU0OHoiLz48L3N2Zz4=';
 
 	public function __construct() {
-		if ( self::check_plugins() ) {
-			add_action( 'admin_menu', [ $this, 'attendance_menu' ] );
+		if ( ! self::check_plugins() ) {
+			return;
 		}
-	}
-
-	/**
-	 * Loads attendance menu
-	 *
-	 * @return void
-	 */
-	public function attendance_menu() {
-		add_menu_page(
-			'Attendance Sheet',
-			'Attendance',
-			'edit_products',
-			'transgression_attendance',
-			[ $this, 'attendance_render' ],
-			'data:image/svg+xml;base64,' . self::ICON,
-			'56'
-		);
+		$admin = new Page( 'attendance', 'Attendance Sheet', 'Attendance', 'edit_products' );
+		$admin->add_render_callback( [ $this, 'render' ] );
+		$admin->as_page( 'data:image/svg+xml;base64,' . self::ICON, 56 );
+		$admin->add_style( 'attendance' );
 	}
 
 	/**
@@ -47,7 +35,7 @@ class Attendance extends Module {
 	 *
 	 * @return void
 	 */
-	public function attendance_render() {
+	public function render() {
 		/** @var \WC_Product[] */
 		$products = wc_get_products( [
 			'limit' => 10,
@@ -112,8 +100,6 @@ class Attendance extends Module {
 			}
 		}
 		$orders = wp_list_sort( $orders, 'name' );
-
-		wp_enqueue_style( PLUGIN_SLUG . '_attendance', get_asset_url( 'attendance.css' ), [], PLUGIN_VERSION );
 
 		load_view( 'attendance/table', compact( 'products', 'product_id', 'orders' ) );
 	}

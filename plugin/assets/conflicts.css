@@ -1,0 +1,40 @@
+tr:nth-child(4n + 1),
+tr:nth-child(4n + 1) + tr {
+	background-color: #f6f7f7;
+}
+
+tr,
+td {
+	width: 100%;
+}
+.min {
+	white-space: nowrap;
+	width: min-content;
+}
+
+.actions > .button {
+	align-items: center;
+	display: inline-flex;
+	padding: 0 5px;
+}
+
+.actions > .resolve-action {
+	color: #d63638;
+	border-color: #d63638;
+}
+
+.comments q {
+	quotes: "‘" "’";
+}
+.comments q::before {
+	content: open-quote;
+}
+.comments q::after {
+	content: close-quote;
+}
+
+.comments time {
+	font-style: oblique;
+	color: #646970;
+	text-decoration: underline dotted;
+}
