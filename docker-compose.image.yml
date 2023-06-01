@@ -1,0 +1,19 @@
+version: "3.7"
+services:
+  phpfpm:
+    image: chaosexanima/transgression
+    user: 501:501
+    build: .
+    volumes:
+      - "${PWD}:/var/www/html"
+
+  nginx:
+    image: nginx
+    ports:
+      - 8080:80
+    environment:
+      DB_HOST: database:3306
+      REDIS_HOST: redis
+    volumes:
+      - "${PWD}:/var/www/html"
+      - "${PWD}/nginx.conf:/etc/nginx/conf.d/transgression.conf:ro"
