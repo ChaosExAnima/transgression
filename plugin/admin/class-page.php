@@ -292,6 +292,6 @@ class Page {
 			);
 		}
 		do_action( "{$this->page_slug}_render", $this );
-		echo '</div>';
+		echo '</div><div class="clear"></div>';
 	}
 }
