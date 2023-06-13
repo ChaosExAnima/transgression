@@ -8,18 +8,23 @@ on:
     workflow_dispatch:
 
 jobs:
+    save-commit:
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write
+      steps:
+          - uses: actions/checkout@v3
+          - name: Saves commit to file
+            run: |
+              echo "<?php define( 'TRANSGRESSION_COMMIT', '$(git rev-parse --short "$GITHUB_SHA")' );" > commit.php
+          - uses: stefanzweifel/git-auto-commit-action@v4
+            with:
+              commit_message: Version bump
     create-zip:
         runs-on: ubuntu-latest
-
+        needs: save-commit
         steps:
             - uses: actions/checkout@v3
-            - name: Saves commit and pushes commit
-              run: |
-                echo "<?php define( 'TRANSGRESSION_COMMIT', '$(git rev-parse --short "$GITHUB_SHA")' );" > commit.php
-                git config --global user.name '${{ env.CI_COMMIT_AUTHOR }}'
-                git config --global user.email 'username@users.noreply.github.com'
-                git commit -am "Version bump"
-                git push
             - uses: actions/upload-artifact@v1
               with:
                   name: transgression
