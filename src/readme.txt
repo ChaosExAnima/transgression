@@ -12,6 +12,9 @@ Theme for the Transgression event website
 
 == Changelog ==
 
+= 1.2.0 =
+Removes Blockbase as a parent.
+
 = 1.0.0 =
 Strips out logic for plugin component.
 
