@@ -8,7 +8,7 @@ on:
     workflow_dispatch:
 
 jobs:
-    save-commit:
+    save-commit-theme:
       runs-on: ubuntu-latest
       permissions:
         contents: write
@@ -17,15 +17,12 @@ jobs:
           - name: Saves commit to file
             run: |
               echo "<?php define( 'TRANSGRESSION_COMMIT', '$(git rev-parse --short "$GITHUB_SHA")' );" > commit.php
-          - uses: stefanzweifel/git-auto-commit-action@v4
+          - name: Commits new file
+            uses: stefanzweifel/git-auto-commit-action@v4
             with:
               commit_message: Version bump
-    create-zip:
-        runs-on: ubuntu-latest
-        needs: save-commit
-        steps:
-            - uses: actions/checkout@v3
-            - uses: actions/upload-artifact@v1
-              with:
-                  name: transgression
-                  path: ${{ github.workspace }}/src
+          - name: Save theme
+            uses: actions/upload-artifact@v1
+            with:
+                name: transgression
+                path: ${{ github.workspace }}/src
