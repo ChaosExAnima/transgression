@@ -13,6 +13,17 @@ const KSES_TAGS = [
 ];
 
 /**
+ * Prefixes a string with Trangression and an underscore.
+ *
+ * @param string $input
+ * @param string $sep
+ * @return string
+ */
+function prefix( string $input, string $sep = '_' ): string {
+	return PLUGIN_SLUG . "{$sep}{$input}";
+}
+
+/**
  * Gets a URL to a file in the assets folder
  *
  * @param string $file
@@ -169,4 +180,17 @@ function insert_in_array( array $source, array $insert, int $offset = 0 ): array
 	return array_slice( $source, 0, $offset, true ) +
 		$insert +
 		array_slice( $source, $offset, null, true );
+}
+
+/**
+ * Takes anything falsey and makes it null.
+ *
+ * @param mixed $input
+ * @return mixed|null
+ */
+function falsey_to_null( mixed $input ): mixed {
+	if ( ! $input ) {
+		return null;
+	}
+	return $input;
 }
