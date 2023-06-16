@@ -88,7 +88,7 @@ $current_url = $params['current_url'];
 	</tfoot>
 </table>
 
-<script>
+<script type="module">
 const actions = document.querySelectorAll('.actions > button');
 for (const button of actions) {
 	button.addEventListener('click', handleAction);

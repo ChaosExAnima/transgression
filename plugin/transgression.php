@@ -18,6 +18,7 @@ require_once PLUGIN_ROOT . '/helpers.php';
 require_once PLUGIN_ROOT . '/admin/index.php';
 require_once PLUGIN_ROOT . '/modules/index.php';
 
+require_once PLUGIN_ROOT . '/class-event-schema.php';
 require_once PLUGIN_ROOT . '/class-logger.php';
 require_once PLUGIN_ROOT . '/class-main.php';
 
