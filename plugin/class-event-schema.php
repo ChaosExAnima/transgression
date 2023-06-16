@@ -11,6 +11,9 @@ class Event_Schema {
 	 * @return void
 	 */
 	public static function init(): void {
+		if ( ! is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+			return;
+		}
 		add_filter( 'wpseo_schema_graph_pieces', function ( array $pieces, Meta_Tags_Context $context ): array {
 			$pieces[] = new self( $context );
 			return $pieces;
@@ -20,7 +23,7 @@ class Event_Schema {
 	public function __construct( public Meta_Tags_Context $context ) {}
 
 	public function is_needed(): bool {
-		return is_singular( 'product' );
+		return is_product() || is_shop();
 	}
 
 	/**
@@ -29,12 +32,32 @@ class Event_Schema {
 	 * @return array Event Schema markup.
 	 */
 	public function generate(): array {
-		$canonical = \YoastSEO()->meta->for_current_page()->canonical;
+		if ( is_product() ) {
+			return $this->get_event( $this->context->post->ID );
+		} elseif ( is_shop() ) {
+			global $posts;
+			return [
+				'@type' => 'ItemList',
+				'url' => $this->context->permalink,
+				'numberOfItems' => count( $posts ),
+				'itemListOrder' => 'https://schema.org/ItemListOrderDescending',
+				'itemListElement' => array_map( [ $this, 'get_event' ], wp_list_pluck( $posts, 'ID' ) ),
+			];
+		}
+		return [];
+	}
 
+	/**
+	 * Gets event JSON-LD data
+	 *
+	 * @param int $post_id
+	 * @return array
+	 */
+	protected function get_event( int $post_id ): array {
 		$data = [
 			// Info about the event
 			'@type' => 'Event',
-			'@id' => $canonical . '#/event/' . $this->context->id,
+			'@id' => \YoastSEO()->meta->for_post( $post_id )->canonical . '#/event/' . $post_id,
 			'name' => the_title_attribute( [ 'echo' => false ] ),
 			'organizer' => $this->context->site_url . Schema_IDs::ORGANIZATION_HASH,
 			'eventStatus' => 'http://schema.org/EventScheduled',
@@ -63,17 +86,17 @@ class Event_Schema {
 		];
 
 		// Add times
-		$start_date = get_post_meta( $this->context->id, 'start_time' );
+		$start_date = get_post_meta( $post_id, 'start_time' );
 		if ( $start_date ) {
 			$data['startDate'] = $start_date;
 		}
-		$end_date = get_post_meta( $this->context->id, 'end_time' );
+		$end_date = get_post_meta( $post_id, 'end_time' );
 		if ( $end_date ) {
 			$data['endDate'] = $end_date;
 		}
 
 		// Add price info
-		$product = wc_get_product( $this->context->id );
+		$product = wc_get_product( $post_id );
 		$offers = [];
 		if ( $product instanceof \WC_Product_Variable ) {
 			/** @var \WC_Product_Variation $variation */
