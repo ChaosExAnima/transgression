@@ -60,7 +60,9 @@ class Event_Schema {
 			'@id' => \YoastSEO()->meta->for_post( $post_id )->canonical . '#/event/' . $post_id,
 			'url' => get_permalink( $post_id ),
 			'name' => get_the_title( $post_id ),
-			'organizer' => $this->context->site_url . Schema_IDs::ORGANIZATION_HASH,
+			'organizer' => [
+				'@id' => $this->context->site_url . Schema_IDs::ORGANIZATION_HASH,
+			],
 			'eventStatus' => 'http://schema.org/EventScheduled',
 			'eventAttendanceMode' => 'http://schema.org/OfflineEventAttendanceMode',
 			// The genders!
