@@ -98,7 +98,7 @@ class Event_Schema {
 
 		// Add price info
 		$product = wc_get_product( $post_id );
-		$data['remainingAttendeeCapacity'] = $product->get_stock_quantity();
+		$data['remainingAttendeeCapacity'] = max( $product->get_stock_quantity(), 0 );
 		$offers = [];
 		if ( $product instanceof \WC_Product_Variable ) {
 			/** @var \WC_Product_Variation $variation */
