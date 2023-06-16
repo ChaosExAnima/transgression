@@ -21,5 +21,7 @@ class Main {
 		new Conflicts();
 		new Discord( $settings, $logger );
 		new WooCommerce( $settings );
+
+		Event_Schema::init();
 	}
 }
