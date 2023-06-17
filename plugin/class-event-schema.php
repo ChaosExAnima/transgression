@@ -89,11 +89,11 @@ class Event_Schema {
 		];
 
 		// Add times
-		$start_date = get_post_meta( $post_id, 'start_time' );
+		$start_date = get_post_meta( $post_id, 'start_time', true );
 		if ( $start_date ) {
 			$data['startDate'] = $start_date;
 		}
-		$end_date = get_post_meta( $post_id, 'end_time' );
+		$end_date = get_post_meta( $post_id, 'end_time', true );
 		if ( $end_date ) {
 			$data['endDate'] = $end_date;
 		}
