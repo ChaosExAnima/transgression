@@ -2,11 +2,11 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Logger;
+use Transgression\{Logger, Person};
 use Transgression\Modules\Email\Emailer;
 use WP_User;
 
-use function Transgression\{get_current_url, strip_query};
+use function Transgression\{get_current_url, load_view, prefix, strip_query};
 
 class People extends Module {
 	/** @inheritDoc */
@@ -27,6 +27,7 @@ class People extends Module {
 		add_action( 'woocommerce_save_account_details', [ $this, 'save_pronouns' ] );
 
 		// Admin
+		add_action( 'wp_dashboard_setup', [ $this, 'register_widgets' ] );
 		add_action( 'admin_notices', [ $this, 'show_application' ] );
 		add_filter( 'user_row_actions', [ $this, 'filter_admin_row' ], 10, 2 );
 		add_filter( 'user_contactmethods', [ $this, 'filter_contact_methods' ] );
@@ -124,6 +125,63 @@ class People extends Module {
 		}
 		wp_safe_redirect( get_edit_profile_url( $user_id ) );
 		exit;
+	}
+
+	/**
+	 * Registers search widget
+	 *
+	 * @return void
+	 */
+	public function register_widgets() {
+		if ( ! current_user_can( 'edit_apps' ) ) {
+			return;
+		}
+		wp_add_dashboard_widget(
+			prefix( 'search' ),
+			'Search People',
+			[ $this, 'render_search_widget' ]
+		);
+		add_action( 'admin_footer', [ $this, 'render_search_widget_data' ] );
+	}
+
+	/**
+	 * Renders the search dashboard widget
+	 *
+	 * @return void
+	 */
+	public function render_search_widget() {
+		if ( ! current_user_can( 'edit_apps' ) ) {
+			return;
+		}
+		$query = '';
+		$people = [];
+		if ( ! empty( $_GET['person_search'] ) && ! empty( $_GET['_wpnonce'] ) ) {
+			$nonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) );
+			$query = sanitize_text_field( wp_unslash( $_GET['person_search'] ) );
+			if ( $query && wp_verify_nonce( $nonce, prefix( 'person_search' ) ) ) {
+				$people = Person::search( $query );
+			}
+		}
+
+		load_view( 'person-widget', compact( 'query', 'people' ) );
+	}
+
+	/**
+	 * Renders datalist for search widget
+	 *
+	 * @return void
+	 */
+	public function render_search_widget_data() {
+		if ( ! current_user_can( 'edit_apps' ) ) {
+			return;
+		}
+		$user_query = new \WP_User_Query( [ 'fields' => 'user_email' ] );
+		echo '<datalist id="person-search-emails">';
+		/** @var \WP_User $user */
+		foreach ( $user_query->get_results() as $user_email ) {
+			printf( '<option value="%s">', esc_attr( $user_email ) );
+		}
+		echo '</datalist>';
 	}
 
 	/**

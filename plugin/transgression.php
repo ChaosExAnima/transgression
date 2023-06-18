@@ -13,6 +13,8 @@ const PLUGIN_ROOT = __DIR__;
 const PLUGIN_VERSION = '1.0.0';
 const PLUGIN_SLUG = 'transgression';
 
+require_once PLUGIN_ROOT . '/stubs.php';
+
 require_once PLUGIN_ROOT . '/helpers.php';
 
 require_once PLUGIN_ROOT . '/admin/index.php';
@@ -20,6 +22,7 @@ require_once PLUGIN_ROOT . '/modules/index.php';
 
 require_once PLUGIN_ROOT . '/class-event-schema.php';
 require_once PLUGIN_ROOT . '/class-logger.php';
+require_once PLUGIN_ROOT . '/class-person.php';
 require_once PLUGIN_ROOT . '/class-main.php';
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {

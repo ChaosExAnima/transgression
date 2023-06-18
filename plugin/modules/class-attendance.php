@@ -5,9 +5,7 @@ namespace Transgression\Modules;
 use Transgression\Admin\Page;
 use Transgression\Logger;
 
-use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
-
-use function Transgression\{get_asset_url, load_view};
+use function Transgression\{load_view};
 
 class Attendance extends Module {
 	/** @inheritDoc */
@@ -102,17 +100,5 @@ class Attendance extends Module {
 		$orders = wp_list_sort( $orders, 'name' );
 
 		load_view( 'attendance/table', compact( 'products', 'product_id', 'orders' ) );
-	}
-}
-
-if ( ! function_exists( 'jetpack_photon_url' ) ) {
-	/**
-	 * Stub for jetpack URL. Mostly for the IDE to stop complaining.
-	 *
-	 * @param string $url The URL to use.
-	 * @return string
-	 */
-	function jetpack_photon_url( string $url ): string { // phpcs:ignore Universal.Files.SeparateFunctionsFromOO
-		return $url;
 	}
 }

@@ -95,6 +95,7 @@ class Applications extends Module {
 			'supports' => [ 'title', 'comments' ],
 			'register_meta_box_cb' => [ $this, 'meta_boxes' ],
 			'delete_with_user' => true,
+			'capability_type' => [ 'app', 'apps' ],
 			'capabilities' => [
 				'create_posts' => 'do_not_allow',
 			],
@@ -396,24 +397,6 @@ class Applications extends Module {
 	public static function get_unreviewed_count(): int {
 		$counts = wp_count_posts( self::POST_TYPE );
 		return absint( $counts->pending ?? 0 );
-	}
-
-	/**
-	 * Gets applications for an existing email
-	 *
-	 * @param string $email
-	 * @return WP_Query
-	 */
-	public static function query_by_email( string $email ): WP_Query {
-		return new WP_Query( [
-			'meta_key' => 'email', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-			'post_type' => self::POST_TYPE,
-			'meta_value' => $email, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
-			'fields' => 'ids',
-			'post_status' => 'pending',
-			'posts_per_page' => 1,
-			'update_post_term_cache' => false,
-		] );
 	}
 
 	/**

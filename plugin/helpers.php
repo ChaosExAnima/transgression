@@ -196,3 +196,16 @@ function insert_in_array( array $source, array $insert, int $offset = 0 ): array
 		$insert +
 		array_slice( $source, $offset, null, true );
 }
+
+/**
+ * Takes anything falsey and makes it null.
+ *
+ * @param mixed $input
+ * @return mixed|null
+ */
+function falsey_to_null( mixed $input ): mixed {
+	if ( ! $input ) {
+		return null;
+	}
+	return $input;
+}
