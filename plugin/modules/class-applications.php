@@ -96,9 +96,9 @@ class Applications extends Module {
 			'register_meta_box_cb' => [ $this, 'meta_boxes' ],
 			'delete_with_user' => true,
 			'capability_type' => [ 'app', 'apps' ],
-			'capabilities' => [
-				'create_posts' => 'do_not_allow',
-			],
+			// 'capabilities' => [
+			//  'create_posts' => 'do_not_allow',
+			// ],
 			'map_meta_cap' => true,
 		] );
 
@@ -281,8 +281,9 @@ class Applications extends Module {
 
 	public function render_metabox_fields( WP_Post $post ) {
 		$fields = self::FIELDS;
+		$is_new = get_current_screen()->parent_base === 'post-new';
 
-		load_view( 'applications/fields', compact( 'post', 'fields' ) );
+		load_view( 'applications/fields', compact( 'post', 'fields', 'is_new' ) );
 	}
 
 	public function render_metabox_comments( WP_Post $post ) {
