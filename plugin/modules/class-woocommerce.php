@@ -2,10 +2,10 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\Option_Checkbox;
-use Transgression\Admin\Page_Options;
+use DateTimeImmutable;
+use Transgression\Admin\{Option_Checkbox, Page_Options};
 
-use function Transgression\load_view;
+use function Transgression\{get_safe_post, load_view, prefix};
 
 class WooCommerce extends Module {
 	/** @inheritDoc */
@@ -40,6 +40,8 @@ class WooCommerce extends Module {
 		add_action( 'woocommerce_single_variation', [ $this, 'add_login_button' ], 20 );
 
 		// Tweaks admin UI
+		add_action( 'save_post_product', [ $this, 'save_event_times' ], 20 );
+		add_action( 'add_meta_boxes', [ $this, 'meta_boxes' ] );
 		add_filter( 'manage_edit-shop_order_columns', [ $this, 'filter_admin_order_columns' ], 20 );
 		add_action( 'manage_shop_order_posts_custom_column', [ $this, 'admin_order_custom_columns' ] );
 	}
@@ -264,6 +266,54 @@ class WooCommerce extends Module {
 		} else {
 			load_view( 'login-form' );
 		}
+	}
+
+	/**
+	 * Saves the start and end time of an event
+	 *
+	 * @param int $post_id
+	 * @return void
+	 */
+	public function save_event_times( int $post_id ): void {
+		$start_time = get_safe_post( 'start_time' );
+		$end_time = get_safe_post( 'end_time' );
+		if ( ! $start_time || ! $end_time ) {
+			return;
+		}
+
+		check_admin_referer( "event-time-{$post_id}", '_trans_event_nonce' );
+		update_post_meta( $post_id, 'start_time', ( new DateTimeImmutable( $start_time, wp_timezone() ) )->format( DATE_W3C ) );
+		update_post_meta( $post_id, 'end_time', ( new DateTimeImmutable( $end_time, wp_timezone() ) )->format( DATE_W3C ) );
+	}
+
+	/**
+	 * Adds meta boxes
+	 *
+	 * @return void
+	 */
+	public function meta_boxes(): void {
+		add_meta_box(
+			prefix( 'woo_event_time' ),
+			'Event time',
+			[ $this, 'render_time_metabox' ],
+			'product',
+			'side'
+		);
+	}
+
+	/**
+	 * Renders metabox to indicate the times for the event
+	 *
+	 * @param \WP_Post $post
+	 * @return void
+	 */
+	public function render_time_metabox( \WP_Post $post ): void {
+		$params = [
+			'post_id' => $post->ID,
+			'start_time' => $post->start_time,
+			'end_time' => $post->end_time,
+		];
+		load_view( 'meta-event-time', $params );
 	}
 
 	/**

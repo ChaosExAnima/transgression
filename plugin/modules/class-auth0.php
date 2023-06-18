@@ -16,8 +16,8 @@ class Auth0 extends Module {
 		$this->settings->add_section( 'auth0', 'Auth0' );
 		$this->settings->add_settings( 'auth0',
 			( new Option( 'auth0_baseurl', 'Base URL' ) )->of_type( 'url' ),
+			new Option( 'auth0_client', 'Client ID' ),
 			( new Option( 'auth0_token', 'Access Token' ) )->of_type( 'password' ),
-			new Option( 'auth0_client', 'Client ID' )
 		);
 
 		if ( ! $this->is_configured() ) {
