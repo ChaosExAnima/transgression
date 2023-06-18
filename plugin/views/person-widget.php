@@ -19,43 +19,38 @@ $people = $params['people'];
 	<?php wp_nonce_field( prefix( 'person_search' ) ); ?>
 	<label for="person-search">Search for someone:</label>
 	<input value="<?php echo esc_attr( $query ); ?>" type="search" name="person_search" list="person-search-emails" />
-	<button type="submit">Search</button>
-	<?php if ( count( $people ) === 1 ) :
-		$person = $people[0];
-		?>
-		<div>
-			<a href="<?php echo esc_url( get_edit_user_link( $person->user->id ) ); ?>">
-				<?php if ( $person->image_url() ) : ?>
-					<img src="<?php echo esc_url( $person->image_url() ); ?>" width="100" />
-				<?php endif; ?>
-				<h3><?php echo esc_html( $person->name() ); ?></h3>
-			</a>
-			<?php if ( $person->application ) : ?>
-				<a href="<?php echo esc_url( get_edit_post_link( $person->application->ID ) ); ?>">
-					Application
-				</a>
-			<?php endif; ?>
-			<?php if ( $person->customer ) : ?>
-				<a href="<?php echo esc_url( $person->orders_link() ); ?>">
-					<?php
-					echo esc_html( sprintf(
-						'%s %s',
-						$person->customer->get_order_count(),
-						_n( 'order', 'orders', $person->customer->get_order_count(), 'transgression' )
-					) );
-					?>
-				</a>
-			<?php endif; ?>
-		</div>
-	<?php elseif ( count( $people ) > 1 ) : ?>
-		<ul>
-			<?php foreach ( $people as $person ) : ?>
-				<li>
-					<a href="<?php echo esc_url( wp_nonce_url( admin_url( "/?person_search={$person->email()}" ), prefix( 'person_search' ) ) ); ?>">
-						<?php echo esc_html( $person->name() ); ?> (<?php echo esc_html( $person->email() ); ?>)
+	<button type="submit" class="button">Search</button>
+	<ul>
+		<?php foreach ( $people as $person ) : ?>
+			<li>
+				<?php echo esc_html( $person->name() ); ?>
+				<?php if ( $person->application ) : ?>
+					&ndash;
+					<a href="<?php echo esc_url( get_edit_post_link( $person->application->ID ) ); ?>">
+						Application
+						<?php echo $person->approved() ? '✅' : '❌'; ?>
 					</a>
-				</li>
-			<?php endforeach; ?>
-		</ul>
-	<?php endif; ?>
+				<?php endif; ?>
+				<?php if ( $person->user ) : ?>
+					&ndash;
+					<a href="<?php echo esc_url( get_edit_user_link( $person->user->id ) ); ?>">
+						User
+					</a>
+				<?php endif; ?>
+				<?php if ( $person->customer && $person->customer->get_order_count() > 0 ) : ?>
+					&ndash;
+					<a href="<?php echo esc_url( $person->orders_link() ); ?>">
+						<?php
+						echo esc_html( sprintf(
+							'%s %s ($%s)',
+							$person->customer->get_order_count(),
+							_n( 'order', 'orders', $person->customer->get_order_count(), 'transgression' ),
+							wc_format_decimal( $person->customer->get_total_spent(), 0, true )
+						) );
+						?>
+					</a>
+				<?php endif; ?>
+			</li>
+		<?php endforeach; ?>
+	</ul>
 </form>

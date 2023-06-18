@@ -14,6 +14,8 @@ use WP_User;
 class Person {
 	public const CACHE_GROUP = PLUGIN_SLUG . '_person_search';
 
+	public string $id; // We use emails for person comparison
+
 	public function __construct(
 		public ?WP_User $user = null,
 		public ?WP_Post $application = null,
@@ -43,6 +45,8 @@ class Person {
 		if ( ! $this->user && ! $this->application ) {
 			throw new Error( 'Could not find person' );
 		}
+
+		$this->id = $this->email();
 	}
 
 	/**
@@ -79,6 +83,18 @@ class Person {
 			return $this->user->user_email;
 		}
 		return $this->application->email;
+	}
+
+	/**
+	 * Returns true for approved attendees
+	 *
+	 * @return bool
+	 */
+	public function approved(): bool {
+		if ( $this->application ) {
+			return $this->application->post_status === Applications::STATUS_APPROVED;
+		}
+		return true;
 	}
 
 	/**
@@ -135,8 +151,42 @@ class Person {
 			return $cached;
 		}
 
+		/** @var string[] */
 		$meta_keys = [];
 		$user_id = null;
+
+		$query_flags = [
+			'access' => false,
+			'conf' => false,
+			'email' => false,
+			'extra' => false,
+			'ig' => false,
+			'status*' => false,
+		];
+		foreach ( array_keys( $query_flags ) as $query_key ) {
+			// Gets the trimmed flag and saves it to the query
+			$prefix = trim( $query_key, '*' );
+			if ( $prefix !== $query_key ) {
+				$query_flags[ $prefix ] = false;
+				unset( $query_flags[ $query_key ] );
+			}
+
+			if ( str_starts_with( $query, "{$prefix}:" ) ) {
+				$value = true;
+				if ( str_ends_with( $query_key, '*' ) ) {
+					preg_match( "/^{$prefix}:(\w+)/", $query, $matches );
+					if ( count( $matches ) > 1 ) {
+						$value = $matches[1];
+					}
+				}
+				$query_flags[ $prefix ] = $value;
+				$value = $value === true ? '' : $value;
+				$query = preg_replace( "/^{$prefix}:{$value} ?/", '', $query );
+			}
+		}
+		if ( ! $query ) {
+			return [];
+		}
 
 		// Check by order ID
 		if ( intval( $query ) > 0 ) {
@@ -146,9 +196,6 @@ class Person {
 		} elseif ( is_email( $query ) ) {
 			$user_id = email_exists( $query );
 			$meta_keys[] = 'email';
-			// Check Instagram or other apps
-		} elseif ( str_starts_with( $query, '@' ) || is_url( $query ) ) {
-			$meta_keys[] = 'photo_url';
 		}
 
 		$people = [];
@@ -164,6 +211,18 @@ class Person {
 			}
 		}
 
+		if ( $query_flags['ig'] || is_url( $query ) ) {
+			$meta_keys[] = 'photo_url';
+		} elseif ( $query_flags['conf'] ) {
+			$meta_keys[] = 'conflicts';
+		} elseif ( $query_flags['access'] ) {
+			$meta_keys[] = 'accessibility';
+		} elseif ( $query_flags['extra'] ) {
+			$meta_keys[] = 'extra';
+		} elseif ( $query_flags['email'] && ! in_array( 'email', $meta_keys, true ) ) {
+			$meta_keys[] = 'email';
+		}
+
 		// Queries user names
 		$user_query = new \WP_User_Query( [
 			'search' => "{$query}*",
@@ -171,28 +230,32 @@ class Person {
 			'role' => 'customer',
 		] );
 		foreach ( $user_query->get_results() as $user ) {
-			$people[] = new self( $user );
+			$people = self::append_if_new( $people, $user );
 		}
 
 		// Now the application queries
 		$default_query_args = [
 			'post_type' => Applications::POST_TYPE,
-			'post_status' => [ Applications::STATUS_DENIED ], // Not approved as those are users
+			'post_status' => [ Applications::STATUS_DENIED, Applications::STATUS_APPROVED ],
 			'update_post_term_cache' => false,
 			'cache_results' => false,
 			'no_found_rows' => true,
 			'orderby' => 'date',
 			'order' => 'desc',
 		];
+		if ( $query_flags['status'] ) {
+			$default_query_args['post_status'] = $query_flags['status'];
+		}
 
 		// Meta query first
 		if ( count( $meta_keys ) > 0 ) {
-			$meta_query_array = [];
+			$meta_query_array = [ 'relation' => 'OR' ];
 			// phpcs:disable WordPress.DB.SlowDBQuery
 			foreach ( $meta_keys as $meta_key ) {
-				$meta_query[] = [
-					'meta_key' => $meta_key,
-					'meta_value' => $query,
+				$meta_query_array[] = [
+					'key' => $meta_key,
+					'value' => $query,
+					'compare' => 'LIKE',
 				];
 			}
 			$meta_query = new \WP_Query( [
@@ -201,7 +264,7 @@ class Person {
 			] );
 			// phpcs:enable
 			foreach ( $meta_query->get_posts() as $app ) {
-				$people[] = new self( null, $app );
+				$people = self::append_if_new( $people, null, $app );
 			}
 		}
 
@@ -211,11 +274,36 @@ class Person {
 			's' => $query,
 		] );
 		foreach ( $post_query->get_posts() as $app ) {
-			$people[] = new self( null, $app );
+			$people = self::append_if_new( $people, null, $app );
 		}
 
 		wp_cache_set( $query, $people, self::CACHE_GROUP, DAY_IN_SECONDS );
 
+		return $people;
+	}
+
+	/**
+	 * Appends a person if they aren't added yet
+	 *
+	 * @param array $people The array to modify
+	 * @param WP_User|null $user User
+	 * @param WP_Post|null $application Application
+	 * @param WC_Customer|null $customer Woo customer
+	 * @return array
+	 */
+	public static function append_if_new(
+		array $people,
+		?WP_User $user = null,
+		?WP_Post $application = null,
+		?WC_Customer $customer = null
+	): array {
+		$person = new self( $user, $application, $customer );
+		foreach ( $people as $old_person ) {
+			if ( $old_person->id === $person->id ) {
+				return $people;
+			}
+		}
+		$people[] = $person;
 		return $people;
 	}
 }
