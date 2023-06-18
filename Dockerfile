@@ -6,10 +6,9 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 
 RUN set -ex; \
 	apk update; \
-	apk add libxml2-dev vim;
+	apk add libxml2-dev vim
 
 RUN set -ex; \
 	docker-php-ext-install -j "$(nproc)" \
 	pdo_mysql \
-	soap \
-	; \
+	soap
