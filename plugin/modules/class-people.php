@@ -168,10 +168,7 @@ class People extends Module {
 	 * @return void
 	 */
 	public function render_search_widget_data() {
-		$user_query = new \WP_User_Query( [
-			'role' => 'customer',
-			'fields' => 'user_email',
-		] );
+		$user_query = new \WP_User_Query( [ 'fields' => 'user_email' ] );
 		echo '<datalist id="person-search-emails">';
 		/** @var \WP_User $user */
 		foreach ( $user_query->get_results() as $user_email ) {
