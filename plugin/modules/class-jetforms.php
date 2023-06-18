@@ -18,6 +18,7 @@ class JetForms extends Module {
 
 		add_filter( 'jet-form-builder/action/insert-post/pre-check', [ $this, 'before_insert' ] );
 		add_action( 'jet-form-builder/action/after-post-insert', [ $this, 'after_post_insert' ], 10, 2 );
+		add_filter( 'jet-form-builder/post-type/args', [ $this, 'filter_post_type_args' ] );
 	}
 
 	/**
@@ -87,5 +88,18 @@ class JetForms extends Module {
 			}
 		}
 		return $fields;
+	}
+
+	/**
+	 * Adjusts Jetform post type args to have higher perms
+	 *
+	 * @param array $args
+	 * @return array
+	 */
+	public function filter_post_type_args( array $args ): array {
+		$args['public'] = false;
+		$args['show_in_admin_bar'] = false;
+		$args['capability_type'] = 'page';
+		return $args;
 	}
 }
