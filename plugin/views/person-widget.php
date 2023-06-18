@@ -20,6 +20,13 @@ $people = $params['people'];
 	<label for="person-search">Search for someone:</label>
 	<input value="<?php echo esc_attr( $query ); ?>" type="search" name="person_search" list="person-search-emails" />
 	<button type="submit" class="button">Search</button>
+	<p class="description" style="margin-top: 1rem;">
+		Prefixes:
+		<code>ig:</code> to look for Instagram accounts,
+		<code>conf:</code> to search conflicts,
+		<code>access:</code> for accessibility,
+		<code>extra:</code> for extra
+	</p>
 	<ul>
 		<?php foreach ( $people as $person ) : ?>
 			<li>
