@@ -31,7 +31,7 @@ define( 'DB_USER', 'root' );
 define( 'DB_PASSWORD', 'password' );
 
 /** Database hostname */
-define( 'DB_HOST', '127.0.0.1:3306' );
+define( 'DB_HOST', getenv( 'DB_HOST' ) ?: '127.0.0.1:3306' );
 
 /** Database charset to use in creating database tables. */
 define( 'DB_CHARSET', 'utf8' );
@@ -100,7 +100,7 @@ if ( defined( 'WP_CLI' ) ) {
 define( 'WP_HOME', 'http://' . $_SERVER['HTTP_HOST'] . '/' );
 define( 'WP_SITEURL', 'http://' . $_SERVER['HTTP_HOST'] . '/' );
 define( 'WP_AUTO_UPDATE_CORE', false );
-define( 'WP_REDIS_HOST', '127.0.0.1' );
+define( 'WP_REDIS_HOST', getenv( 'REDIS_HOST' ) ?: '127.0.0.1' );
 define( 'WP_REDIS_PORT', 6379 );
 define( 'WP_REDIS_PREFIX', 'wordpress' );
 
