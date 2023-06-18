@@ -133,6 +133,9 @@ class People extends Module {
 	 * @return void
 	 */
 	public function register_widgets() {
+		if ( ! current_user_can( 'list_users' ) ) {
+			return;
+		}
 		wp_add_dashboard_widget(
 			prefix( 'search' ),
 			'Search People',
@@ -147,6 +150,9 @@ class People extends Module {
 	 * @return void
 	 */
 	public function render_search_widget() {
+		if ( ! current_user_can( 'list_users' ) ) {
+			return;
+		}
 		$query = '';
 		$people = [];
 		if ( ! empty( $_GET['person_search'] ) && ! empty( $_GET['_wpnonce'] ) ) {
@@ -154,8 +160,6 @@ class People extends Module {
 			$query = sanitize_text_field( wp_unslash( $_GET['person_search'] ) );
 			if ( $query && wp_verify_nonce( $nonce, prefix( 'person_search' ) ) ) {
 				$people = Person::search( $query );
-			} else {
-				echo '<!-- nonce failed :( -->';
 			}
 		}
 
@@ -168,6 +172,9 @@ class People extends Module {
 	 * @return void
 	 */
 	public function render_search_widget_data() {
+		if ( ! current_user_can( 'list_users' ) ) {
+			return;
+		}
 		$user_query = new \WP_User_Query( [ 'fields' => 'user_email' ] );
 		echo '<datalist id="person-search-emails">';
 		/** @var \WP_User $user */
