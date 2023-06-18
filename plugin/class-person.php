@@ -15,6 +15,7 @@ class Person {
 	public const CACHE_GROUP = PLUGIN_SLUG . '_person_search';
 
 	public string $id; // We use emails for person comparison
+	public ?int $user_id = null;
 
 	public function __construct(
 		public ?WP_User $user = null,
@@ -47,6 +48,9 @@ class Person {
 		}
 
 		$this->id = $this->email();
+		if ( $this->user ) {
+			$this->user_id = $this->user->ID;
+		}
 	}
 
 	/**
@@ -135,6 +139,41 @@ class Person {
 			'post_type' => 'shop_order',
 			'_customer_user' => $this->customer->get_id(),
 		], admin_url( 'edit.php' ) );
+	}
+
+	/**
+	 * Gets an instance from an email
+	 *
+	 * @param string $email
+	 * @return self|null
+	 */
+	public static function from_email( string $email ): ?self {
+		if ( ! is_email( $email ) ) {
+		return null;
+		}
+		$user_id = email_exists( $email );
+		$user = get_user_by( 'id', $user_id );
+		if ( $user ) {
+			return new self( $user );
+		}
+
+		$query_args = [
+			'post_type' => Applications::POST_TYPE,
+			'post_status' => [ Applications::STATUS_DENIED, Applications::STATUS_APPROVED, 'pending' ],
+			'update_post_term_cache' => false,
+			'cache_results' => false,
+			'no_found_rows' => true,
+			'posts_per_page' => 1,
+			'meta_key' => 'email', // phpcs:ignore WordPress.DB.SlowDBQuery
+			'meta_value' => $email, // phpcs:ignore WordPress.DB.SlowDBQuery
+			'orderby' => 'ID',
+		];
+		$query = new \WP_Query( $query_args );
+		if ( $query->have_posts() ) {
+			return new self( null, $query->posts[0] );
+		}
+
+		return null;
 	}
 
 	/**
