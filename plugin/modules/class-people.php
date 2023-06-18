@@ -133,7 +133,7 @@ class People extends Module {
 	 * @return void
 	 */
 	public function register_widgets() {
-		if ( ! current_user_can( 'list_users' ) ) {
+		if ( ! current_user_can( 'edit_apps' ) ) {
 			return;
 		}
 		wp_add_dashboard_widget(
@@ -150,7 +150,7 @@ class People extends Module {
 	 * @return void
 	 */
 	public function render_search_widget() {
-		if ( ! current_user_can( 'list_users' ) ) {
+		if ( ! current_user_can( 'edit_apps' ) ) {
 			return;
 		}
 		$query = '';
@@ -172,7 +172,7 @@ class People extends Module {
 	 * @return void
 	 */
 	public function render_search_widget_data() {
-		if ( ! current_user_can( 'list_users' ) ) {
+		if ( ! current_user_can( 'edit_apps' ) ) {
 			return;
 		}
 		$user_query = new \WP_User_Query( [ 'fields' => 'user_email' ] );
