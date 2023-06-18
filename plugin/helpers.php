@@ -160,6 +160,21 @@ function is_url( string $url ): bool {
 	}
 }
 
+/**
+ * Gets data from POST as a string, passed through sanitization.
+ *
+ * @param string $key The key name
+ * @return string|null The value, or null if it's not set
+ */
+function get_safe_post( string $key ): ?string {
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing
+	if ( ! isset( $_POST[ $key ] ) ) {
+		return null;
+	}
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing
+	return sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+}
+
 function strip_query( string $url ): string {
 	$result = strtok( $url, '?' );
 	if ( false === $result ) {
