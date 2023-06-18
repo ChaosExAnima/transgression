@@ -31,7 +31,8 @@ label {
 	display: block;
 }
 
-button {
+button,
+.button {
 	background-color: var(--wp--preset--color--primary);
 	border: none;
 	border-radius: var(--wp--custom--form--border--radius);
@@ -430,6 +431,11 @@ span.social-login {
 .woocommerce-MyAccount-content {
 	overflow: auto;
 	position: relative;
+}
+.woocommerce-account
+	.woocommerce-orders-table__cell.woocommerce-orders-table__cell-order-actions
+	a {
+	margin-bottom: 0;
 }
 @media screen and (max-width: 600px) {
 	.woocommerce-MyAccount-navigation > ul {
