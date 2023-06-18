@@ -95,6 +95,7 @@ class Applications extends Module {
 			'supports' => [ 'title', 'comments' ],
 			'register_meta_box_cb' => [ $this, 'meta_boxes' ],
 			'delete_with_user' => true,
+			'capability_type' => [ 'app', 'apps' ],
 			'capabilities' => [
 				'create_posts' => 'do_not_allow',
 			],
