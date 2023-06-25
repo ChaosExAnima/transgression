@@ -4,14 +4,9 @@ namespace Transgression\Modules;
 
 use Transgression\Modules\Email\Emailer;
 use Jet_Form_Builder\Actions\Action_Handler;
-use Jet_Form_Builder\Actions\Methods\Abstract_Modifier;
-use Jet_Form_Builder\Actions\Methods\Base_Object_Property;
-use Jet_Form_Builder\Actions\Methods\Object_Dynamic_Property;
 use Jet_Form_Builder\Actions\Types\Base;
 use Jet_Form_Builder\Blocks\Block_Helper;
 use Jet_Form_Builder\Classes\Arrayable\Collection;
-use Jet_Form_Builder\Exceptions\Action_Exception;
-use Transgression\Modules\Jetform_Application_Property as ModulesJetform_Application_Property;
 use Transgression\Person;
 
 use function Transgression\prefix;
@@ -25,13 +20,39 @@ class JetForms extends Module {
 			return;
 		}
 
+		add_filter( 'jet-form-builder/editor/hidden-field/config', [ $this, 'add_app_id_to_hidden' ] );
+		add_filter( 'jet-form-builder/fields/hidden-field/value-cb', [ $this, 'insert_email_app_id' ], 10, 2 );
 		add_filter( 'jet-form-builder/post-modifier/object-properties', [ $this, 'check_emails' ] );
 		add_filter( 'jet-form-builder/action/insert-post/pre-check', [ $this, 'before_insert' ] );
 		add_action( 'jet-form-builder/action/after-post-insert', [ $this, 'after_post_insert' ], 10, 2 );
 		add_filter( 'jet-form-builder/post-type/args', [ $this, 'filter_post_type_args' ] );
 	}
 
+	public function add_app_id_to_hidden( array $block_data ): array {
+		if ( isset( $block_data['sources'] ) ) {
+			$block_data['sources'][] = [
+				'value' => prefix( 'app_id' ),
+				'label' => 'App Email ID',
+			];
+		}
+		return $block_data;
+	}
+
+	public function insert_email_app_id( mixed $callback, string $value ): mixed {
+		if ( prefix( 'app_id' ) === $value ) {
+			return [ $this, 'insert_email' ];
+		}
+		return $callback;
+	}
+
+	public function insert_email(): ?int {
+		var_dump( $_REQUEST );
+		die;
+		return null;
+	}
+
 	public function check_emails( Collection $collection ): Collection {
+		require_once __DIR__ . '/inc/class-jetforms-app-property.php';
 		$collection->add( new Jetform_Application_Property() );
 		return $collection;
 	}
@@ -138,38 +159,5 @@ class JetForms extends Module {
 		$args['show_in_admin_bar'] = false;
 		$args['capability_type'] = 'page';
 		return $args;
-	}
-}
-
-class Jetform_Application_Property extends Base_Object_Property implements Object_Dynamic_Property {
-	public function get_id(): string {
-		return prefix( 'app_email' );
-	}
-
-	public function get_label(): string {
-		return 'Application Email';
-	}
-
-	/**
-	 * @param string $key
-	 * @param $value
-	 * @param Abstract_Modifier $modifier
-	 *
-	 * @throws Action_Exception
-	 */
-	public function do_before( string $key, mixed $value, Abstract_Modifier $modifier ) {
-		$email = $modifier->get_value( 'email' );
-		if ( ! $email ) {
-			throw new Action_Exception( 'no_email' );
-		}
-		$person = Person::from_email( $email );
-		if ( ! $person ) {
-			throw new Action_Exception( 'no_person' );
-		}
-		$this->value = $person->application->ID;
-	}
-
-	public function is_supported( string $key, mixed $value ): bool {
-		return true;
 	}
 }
