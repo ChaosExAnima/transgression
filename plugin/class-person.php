@@ -12,7 +12,8 @@ use WP_User;
  * Person class, used to find people by various means
  */
 class Person {
-	public const CACHE_GROUP = PLUGIN_SLUG . '_person_search';
+	public const CACHE_SEARCH = PLUGIN_SLUG . '_person_search';
+	public const CACHE_VACCINATED = PLUGIN_SLUG . '_person_vaxxed';
 
 	public string $id; // We use emails for person comparison
 
@@ -123,6 +124,25 @@ class Person {
 	}
 
 	/**
+	 * Returns true if someone is vaccinated
+	 *
+	 * @return boolean
+	 */
+	public function vaccinated( ?bool $set = null ): bool {
+		if ( ! $this->user ) {
+			return false;
+		}
+		if ( null !== $set ) {
+			update_user_meta( $this->user_id(), 'vaccinated', $set );
+		}
+		$vaccinated = $this->user->vaccinated;
+		if ( null === $vaccinated ) {
+			return $this->vaccinated( (bool) wc_get_customer_order_count( $this->user_id() ) > 1 );
+		}
+		return (bool) $vaccinated;
+	}
+
+	/**
 	 * Gets a link to all customer orders
 	 *
 	 * @return string|null
@@ -138,6 +158,15 @@ class Person {
 	}
 
 	/**
+	 * Gets the user ID
+	 *
+	 * @return integer|null
+	 */
+	public function user_id(): ?int {
+		return $this->user?->ID;
+	}
+
+	/**
 	 * Performs a search by query string
 	 *
 	 * @param string $query The query
@@ -146,7 +175,7 @@ class Person {
 	 */
 	public static function search( string $query, bool $prefer_one = true ): array {
 		$query = trim( $query );
-		$cached = wp_cache_get( $query, self::CACHE_GROUP );
+		$cached = wp_cache_get( $query, self::CACHE_SEARCH );
 		if ( is_array( $cached ) ) {
 			return $cached;
 		}
@@ -277,7 +306,7 @@ class Person {
 			$people = self::append_if_new( $people, null, $app );
 		}
 
-		wp_cache_set( $query, $people, self::CACHE_GROUP, DAY_IN_SECONDS );
+		wp_cache_set( $query, $people, self::CACHE_SEARCH, DAY_IN_SECONDS );
 
 		return $people;
 	}

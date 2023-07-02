@@ -38,9 +38,13 @@ $orders = $params['orders'];
 		<?php foreach ( $orders as $order ) : ?>
 			<tr>
 				<td class="order">
-					<a href="<?php echo esc_url( get_edit_post_link( $order['id'] ) ); ?>">
+					<?php if ( current_user_can( 'edit_products' ) ) : ?>
+						<a href="<?php echo esc_url( get_edit_post_link( $order['id'] ) ); ?>">
+							#<?php echo esc_html( $order['id'] ); ?>
+						</a>
+					<?php else : ?>
 						#<?php echo esc_html( $order['id'] ); ?>
-					</a>
+					<?php endif; ?>
 				</td>
 				<td class="pic">
 					<?php if ( $order['pic'] ) : ?>
@@ -50,14 +54,18 @@ $orders = $params['orders'];
 					<?php endif; ?>
 				</td>
 				<td class="name">
-					<a href="<?php echo esc_url( get_edit_user_link( $order['user_id'] ) ); ?>">
+					<?php if ( current_user_can( 'edit_user' ) ) : ?>
+						<a href="<?php echo esc_url( get_edit_user_link( $order['user_id'] ) ); ?>">
+							<?php echo esc_html( $order['name'] ); ?>
+						</a>
+					<?php else : ?>
 						<?php echo esc_html( $order['name'] ); ?>
-					</a>
+					<?php endif; ?>
 				</td>
 				<td class="email"><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
 				<td class="volunteer check"><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
 				<td class="vaccine check"><?php echo $order['vaccine'] ? '✔️' : ''; ?></td>
-				<td class="test check"></td>
+				<td class="test check"><?php echo $order['covid_test'] ? '✔️' : ''; ?></td>
 			</tr>
 		<?php endforeach; ?>
 	</tbody>

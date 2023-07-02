@@ -4,12 +4,17 @@ namespace Transgression\Modules;
 
 use Transgression\Admin\Page;
 use Transgression\Logger;
+use Transgression\Person;
 
 use function Transgression\{load_view};
 
 class Attendance extends Module {
 	/** @inheritDoc */
 	const REQUIRED_PLUGINS = [ 'woocommerce/woocommerce.php' ];
+
+	const ROLE_CHECKIN = 'check_in';
+
+	const CAP_ATTENDANCE = 'view_attendance';
 
 	const ICON = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OC4zNjkiIGhlaWdodD0iNzguMzY' .
 	'5IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3OC4zNjkgNzguMzY5IiB4bWw6c3BhY2U9InByZXNlcnZlIj' .
@@ -22,10 +27,29 @@ class Attendance extends Module {
 		if ( ! self::check_plugins() ) {
 			return;
 		}
-		$admin = new Page( 'attendance', 'Attendance Sheet', 'Attendance', 'edit_products' );
+		$admin = new Page( 'attendance', 'Attendance Sheet', 'Attendance', self::CAP_ATTENDANCE );
 		$admin->add_render_callback( [ $this, 'render' ] );
 		$admin->as_page( 'data:image/svg+xml;base64,' . self::ICON, 56 );
 		$admin->add_style( 'attendance' );
+
+		parent::__construct();
+	}
+
+	public function init() {
+		add_role(
+			self::ROLE_CHECKIN,
+			'Check-in',
+			[
+				'read' => true,
+				'view_admin_dashboard' => true, // This lets people see the back end
+				self::CAP_ATTENDANCE => true,
+			],
+		);
+		$roles = [ 'administrator', 'shop_manager' ];
+		foreach ( $roles as $role_slug ) {
+			$role = get_role( $role_slug );
+			$role->add_cap( self::CAP_ATTENDANCE );
+		}
 	}
 
 	/**
@@ -43,6 +67,18 @@ class Attendance extends Module {
 			$product_id = $products[0]->get_id();
 		}
 
+		$orders = $this->get_orders( $product_id );
+
+		load_view( 'attendance/table', compact( 'products', 'product_id', 'orders' ) );
+	}
+
+	/**
+	 * Get order data for a product
+	 *
+	 * @param int $product_id
+	 * @return array
+	 */
+	protected function get_orders( int $product_id ): array {
 		/** @var string[] */
 		$order_ids = [];
 		if ( $product_id ) {
@@ -50,7 +86,7 @@ class Attendance extends Module {
 			$query = $wpdb->prepare(
 				"SELECT order_id FROM {$wpdb->prefix}wc_order_product_lookup
 				WHERE product_id = %d AND product_qty > 0
-				LIMIT 200",
+				LIMIT 1000",
 				$product_id
 			);
 			/** @var string[] */
@@ -66,39 +102,39 @@ class Attendance extends Module {
 					Logger::info( "Attendance: no user for order ID {$order->get_id()}" );
 					continue;
 				}
-				$avatar_url = '';
-				if ( $user->image_url ) {
-					$avatar_url = $user->image_url;
-				} elseif ( $user->application ) {
-					$app = get_post( $user->application );
-					$avatar_url = $app->photo_img ?: $app->photo_url;
-				}
-				if ( $avatar_url && function_exists( 'jetpack_photon_url' ) ) {
-					$avatar_url = jetpack_photon_url( $avatar_url, [ 'resize' => '200,200' ] );
-				}
-				$is_volunteer = false;
-				if ( count( $order->get_coupons() ) > 0 ) {
-					$is_volunteer = true;
-				}
-				foreach ( $order->get_items() as $item ) {
-					if ( false !== stripos( $item->get_name(), 'volunteer' ) ) {
-						$is_volunteer = true;
-						break;
-					}
-				}
+				$person = new Person( $user );
+
 				$orders[] = [
 					'id' => $order->get_id(),
-					'pic' => $avatar_url,
-					'name' => ucwords( $user->display_name ),
-					'email' => $user->user_email,
+					'pic' => $person->image_url(),
+					'name' => $person->name(),
+					'email' => $person->email(),
 					'user_id' => $user->ID,
-					'volunteer' => $is_volunteer,
-					'vaccine' => wc_get_customer_order_count( $user->ID ) > 1,
+					'vaccine' => $person->vaccinated(),
+					'volunteer' => $this->is_volunteer( $order ),
+					'covid_test' => $order->get_meta( 'covid_test' ),
+					'checked_in' => $order->get_meta( 'checked_in' ),
 				];
 			}
 		}
-		$orders = wp_list_sort( $orders, 'name' );
+		return wp_list_sort( $orders, 'name' );
+	}
 
-		load_view( 'attendance/table', compact( 'products', 'product_id', 'orders' ) );
+	/**
+	 * Returns true if someone is probably a volunteer
+	 *
+	 * @param \WC_Order $order
+	 * @return boolean
+	 */
+	protected function is_volunteer( \WC_Order $order ): bool {
+		if ( count( $order->get_coupons() ) > 0 ) {
+			return true;
+		}
+		foreach ( $order->get_items() as $item ) {
+			if ( false !== stripos( $item->get_name(), 'volunteer' ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
