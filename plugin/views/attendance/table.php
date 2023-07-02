@@ -36,7 +36,7 @@ $orders = $params['orders'];
 	</thead>
 	<tbody>
 		<?php foreach ( $orders as $order ) : ?>
-			<tr data-order-id="<?php echo absint( $order['id'] ); ?>">
+			<tr data-order-id="<?php echo absint( $order['id'] ); ?>" id="order-<?php echo absint( $order['id'] ); ?>">
 				<td class="order">
 					<?php if ( current_user_can( 'edit_products' ) ) : ?>
 						<a href="<?php echo esc_url( get_edit_post_link( $order['id'] ) ); ?>">
