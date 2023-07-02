@@ -17,7 +17,9 @@
 		"setup": "concurrently yarn:setup:plugins yarn:setup:theme",
 		"setup:plugins": "wp plugin install --activate $(cat plugins.txt)",
 		"setup:theme": "wp theme install blockbase; yarn wp theme activate transgression",
-		"cron": "wp cron event run --due-now"
+		"cron": "wp cron event run --due-now",
+		"js": "tsc --build",
+		"js:watch": "tsc --watch"
 	},
 	"repository": "git@github.com:ChaosExAnima/transgression.git",
 	"author": "echo <ChaosExAnima@users.noreply.github.com>",
@@ -25,7 +27,8 @@
 	"private": true,
 	"devDependencies": {
 		"concurrently": "^7.2.1",
-		"prettier": "^2.6.2"
+		"prettier": "^2.6.2",
+		"typescript": "^5.1.6"
 	},
 	"volta": {
 		"node": "18.3.0"

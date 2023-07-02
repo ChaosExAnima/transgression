@@ -1,35 +1,47 @@
+declare global {
+	interface Window {
+		attendanceData: {
+			root: string;
+			nonce: string;
+		};
+	}
+}
+
+interface OrderRow {
+	id: string;
+	pic: string;
+	name: string;
+	email: string;
+	user_id: number;
+	volunteer: boolean;
+	checked_in: boolean;
+	vaccinated: boolean;
+}
+
 function main() {
 	const body = document.getElementById('attendance');
 	if (!body) {
 		return;
 	}
-	body.querySelectorAll('.checked-in > button').forEach((ele) =>
-		ele.addEventListener('click', toggleCheckIn)
+	body.querySelectorAll<HTMLButtonElement>('.checked-in > button').forEach(
+		(ele) => ele.addEventListener('click', toggleCheckIn)
 	);
 }
 
 document.addEventListener('DOMContentLoaded', main);
 
-/**
- * Updates row with data
- * @param {string} orderId
- * @param {OrderRow} row
- */
-function updateRow(orderId, row) {
-	/** @type {HTMLTableRowElement|null} */
+function updateRow(orderId: string, row: OrderRow) {
 	const tr = document.getElementById(`order-${orderId}`);
-	if (!tr) {
+	if (!(tr instanceof HTMLTableRowElement)) {
 		return;
 	}
-	/** @type HTMLTableCellElement|null */
 	const vax = tr.querySelector('.vaccinated');
-	if (row.vaccinated && vax) {
+	if (row.vaccinated && vax instanceof HTMLTableCellElement) {
 		vax.textContent = '✔️'; // We never need the opposite as people don't get unvaxed
 	}
 
-	/** @type {HTMLButtonElement|null} */
 	const checkedInBtn = tr.querySelector('.checked-in button');
-	if (checkedInBtn) {
+	if (checkedInBtn instanceof HTMLButtonElement) {
 		if (row.checked_in) {
 			checkedInBtn.textContent = 'Yes';
 			checkedInBtn.classList.remove('button-primary');
@@ -40,10 +52,7 @@ function updateRow(orderId, row) {
 	}
 }
 
-/**
- * @param {MouseEvent} event
- */
-async function toggleCheckIn(event) {
+async function toggleCheckIn(event: MouseEvent) {
 	const button = event.target;
 	if (!(button instanceof HTMLButtonElement)) {
 		return;
@@ -53,7 +62,7 @@ async function toggleCheckIn(event) {
 	try {
 		const id = button.closest('tr')?.dataset.orderId;
 		if (!id) {
-			throw new Error('Could not find ID for button', button);
+			throw new Error('Could not find ID for button');
 		}
 		const result = await queryApi(id, true);
 		updateRow(id, result);
@@ -64,12 +73,7 @@ async function toggleCheckIn(event) {
 	button.classList.remove('disabled');
 }
 
-/**
- * @param {number|string} orderId
- * @param {bool} update
- * @returns {Promise<OrderRow>}
- */
-async function queryApi(orderId, update = false) {
+async function queryApi(orderId: string, update = false): Promise<OrderRow> {
 	const { root, nonce } = window.attendanceData;
 	const response = await fetch(`${root}/checkin/${orderId}`, {
 		headers: {
@@ -82,3 +86,5 @@ async function queryApi(orderId, update = false) {
 	}
 	return response.json();
 }
+
+export {};
