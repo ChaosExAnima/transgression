@@ -31,6 +31,7 @@ class Attendance extends Module {
 		$admin->add_render_callback( [ $this, 'render' ] );
 		$admin->as_page( 'data:image/svg+xml;base64,' . self::ICON, 56 );
 		$admin->add_style( 'attendance' );
+		$admin->add_script( 'attendance' );
 
 		parent::__construct();
 	}
@@ -97,26 +98,39 @@ class Attendance extends Module {
 		foreach ( $order_ids as $order_id ) {
 			$order = wc_get_order( $order_id );
 			if ( $order->get_status() === 'completed' ) {
-				$user = $order->get_user();
-				if ( ! $user ) {
-					Logger::info( "Attendance: no user for order ID {$order->get_id()}" );
+				$order_data = $this->get_order_data( $order );
+				if ( ! $order_data ) {
+					Logger::info( "Attendance: no data for order ID {$order->get_id()}" );
 					continue;
 				}
-				$person = new Person( $user );
-
-				$orders[] = [
-					'id' => $order->get_id(),
-					'pic' => $person->image_url(),
-					'name' => $person->name(),
-					'email' => $person->email(),
-					'user_id' => $user->ID,
-					'vaccine' => $person->vaccinated(),
-					'volunteer' => $this->is_volunteer( $order ),
-					'checked_in' => $order->get_meta( 'checked_in' ),
-				];
+				$orders[] = $order_data;
 			}
 		}
 		return wp_list_sort( $orders, 'name' );
+	}
+
+	/**
+	 * Gets formatted order data
+	 *
+	 * @param \WC_Order $order
+	 * @return array|null
+	 */
+	protected function get_order_data( \WC_Order $order ): ?array {
+		$user = $order->get_user();
+		if ( ! $user ) {
+			return null;
+		}
+		$person = new Person( $user );
+		return [
+			'id' => $order->get_id(),
+			'pic' => $person->image_url(),
+			'name' => $person->name(),
+			'email' => $person->email(),
+			'user_id' => $user->ID,
+			'vaccine' => $person->vaccinated(),
+			'volunteer' => $this->is_volunteer( $order ),
+			'checked_in' => $order->get_meta( 'checked_in' ),
+		];
 	}
 
 	/**

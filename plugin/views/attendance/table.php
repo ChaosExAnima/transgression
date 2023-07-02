@@ -22,7 +22,7 @@ $orders = $params['orders'];
 	</p>
 </form>
 
-<table class="attendance">
+<table class="attendance" id="attendance">
 	<thead>
 		<tr>
 			<th>Order</th>
@@ -36,7 +36,7 @@ $orders = $params['orders'];
 	</thead>
 	<tbody>
 		<?php foreach ( $orders as $order ) : ?>
-			<tr id="order-<?php echo absint( $order['id'] ); ?>">
+			<tr data-order-id="<?php echo absint( $order['id'] ); ?>">
 				<td class="order">
 					<?php if ( current_user_can( 'edit_products' ) ) : ?>
 						<a href="<?php echo esc_url( get_edit_post_link( $order['id'] ) ); ?>">
@@ -65,7 +65,9 @@ $orders = $params['orders'];
 				<td class="email"><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
 				<td class="volunteer check"><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
 				<td class="vaccine check"><?php echo $order['vaccine'] ? '✔️' : ''; ?></td>
-				<td class="checked-in check"><?php echo $order['checked_in'] ? '✔️' : ''; ?></td>
+				<td class="checked-in">
+					<button class="button button"><?php echo $order['checked_in'] ? 'Yes' : 'No'; ?></button>
+				</td>
 			</tr>
 		<?php endforeach; ?>
 	</tbody>

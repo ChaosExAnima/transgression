@@ -160,10 +160,11 @@ class Page {
 	 * Adds a script from the assets directory
 	 *
 	 * @param string $name The name of the file, with or without the extension
+	 * @param array $deps Script dependencies
 	 * @return self
 	 */
-	public function add_script( string $name ): self {
-		$this->scripts[] = $name;
+	public function add_script( string $name, array $deps = [] ): self {
+		$this->scripts[ $name ] = $deps;
 		return $this;
 	}
 
@@ -245,25 +246,25 @@ class Page {
 		if ( $this->page_hook !== $hook ) {
 			return;
 		}
-		foreach ( $this->styles as $asset ) {
-			if ( str_ends_with( $asset, '.css' ) ) {
-				$asset = substr( $asset, -4 );
+		foreach ( $this->styles as $style ) {
+			if ( str_ends_with( $style, '.css' ) ) {
+				$style = substr( $style, -4 );
 			}
 			wp_enqueue_style(
-				PLUGIN_SLUG . "_{$asset}",
-				get_asset_url( "{$asset}.css" ),
+				PLUGIN_SLUG . "_{$style}",
+				get_asset_url( "{$style}.css" ),
 				[],
 				PLUGIN_VERSION
 			);
 		}
-		foreach ( $this->scripts as $script ) {
-			if ( str_ends_with( $asset, '.js' ) ) {
-				$script = substr( $asset, -3 );
+		foreach ( $this->scripts as $script => $deps ) {
+			if ( str_ends_with( $script, '.js' ) ) {
+				$script = substr( $script, -3 );
 			}
 			wp_enqueue_script(
 				PLUGIN_SLUG . "_{$script}",
-				get_asset_url( "{$script}.css" ),
-				[],
+				get_asset_url( "{$script}.js" ),
+				$deps,
 				PLUGIN_VERSION,
 				false
 			);

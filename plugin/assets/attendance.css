@@ -1,5 +1,4 @@
 .attendance {
-	max-width: 1000px;
 	width: 100%;
 	border-collapse: collapse;
 }
@@ -30,8 +29,12 @@
 	object-fit: cover;
 }
 
-.attendance .volunteer {
+.attendance .check {
 	width: 10px;
+}
+
+.attendance .checked-in {
+	width: 75px;
 }
 
 @media print {
