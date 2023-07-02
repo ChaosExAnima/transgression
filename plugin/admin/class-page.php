@@ -265,7 +265,7 @@ class Page {
 				get_asset_url( "{$script}.css" ),
 				[],
 				PLUGIN_VERSION,
-				true
+				false
 			);
 		}
 	}
