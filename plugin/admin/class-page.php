@@ -24,6 +24,9 @@ class Page {
 	/** @var string[] */
 	protected array $styles = [];
 
+	/** @var string[] */
+	protected array $scripts = [];
+
 	/**
 	 * Creates admin page
 	 *
@@ -40,6 +43,7 @@ class Page {
 	) {
 		$this->page_slug = PLUGIN_SLUG . "_{$slug}";
 		$this->menu_label = $menu_label ?? $label;
+		add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ] );
 	}
 
 	/**
@@ -148,10 +152,18 @@ class Page {
 	 * @return self
 	 */
 	public function add_style( string $name ): self {
-		if ( count( $this->styles ) === 0 ) {
-			add_action( 'admin_enqueue_scripts', [ $this, 'register_styles' ] );
-		}
 		$this->styles[] = $name;
+		return $this;
+	}
+
+	/**
+	 * Adds a script from the assets directory
+	 *
+	 * @param string $name The name of the file, with or without the extension
+	 * @return self
+	 */
+	public function add_script( string $name ): self {
+		$this->scripts[] = $name;
 		return $this;
 	}
 
@@ -228,22 +240,54 @@ class Page {
 	 * @param string $hook The page hook
 	 * @return void
 	 */
-	public function register_styles( string $hook ): void {
+	public function register_assets( string $hook ): void {
 		// Check page hook
 		if ( $this->page_hook !== $hook ) {
 			return;
 		}
-		foreach ( $this->styles as $style ) {
-			if ( str_ends_with( $style, '.css' ) ) {
-				$style = substr( $style, -4 );
+		foreach ( $this->styles as $asset ) {
+			if ( str_ends_with( $asset, '.css' ) ) {
+				$asset = substr( $asset, -4 );
 			}
 			wp_enqueue_style(
-				PLUGIN_SLUG . "_{$style}",
-				get_asset_url( "{$style}.css" ),
+				PLUGIN_SLUG . "_{$asset}",
+				get_asset_url( "{$asset}.css" ),
 				[],
 				PLUGIN_VERSION
 			);
 		}
+		foreach ( $this->scripts as $script ) {
+			if ( str_ends_with( $asset, '.js' ) ) {
+				$script = substr( $asset, -3 );
+			}
+			wp_enqueue_script(
+				PLUGIN_SLUG . "_{$script}",
+				get_asset_url( "{$script}.css" ),
+				[],
+				PLUGIN_VERSION,
+				true
+			);
+		}
+	}
+
+	/**
+	 * Filters script tag to be modules
+	 *
+	 * @param string $tag HTML
+	 * @param string $handle Script handle
+	 * @param string $src Script url
+	 * @return string
+	 */
+	public function filter_script_module( string $tag, string $handle, string $src ): string {
+		if ( in_array( $handle, $this->scripts, true ) ) {
+			return sprintf(
+				// phpcs:ignore
+				'<script type="module" id="%1$s" src="%2$s"></script>',
+				esc_attr( $handle ),
+				esc_url( $src )
+			);
+		}
+		return $tag;
 	}
 
 	/**
