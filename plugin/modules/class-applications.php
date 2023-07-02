@@ -43,12 +43,7 @@ class Applications extends Module {
 		'webp' => 'image/webp',
 	];
 
-	protected Page $conflicts;
-
-	public function __construct(
-		protected JetForms $jet_forms,
-		protected Emailer $emailer
-	) {
+	public function __construct( protected JetForms $jet_forms, protected Emailer $emailer ) {
 		parent::__construct();
 
 		// Actions

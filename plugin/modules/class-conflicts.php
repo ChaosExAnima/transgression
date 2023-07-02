@@ -14,6 +14,8 @@ class Conflicts extends Module {
 	public const COMMENT_TYPE = 'conflict_comment';
 	public const CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
 
+	protected Page $admin;
+
 	public function __construct() {
 		add_action( 'pending_to_' . Applications::STATUS_APPROVED, [ $this, 'bust_cache' ] );
 

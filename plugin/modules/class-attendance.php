@@ -24,6 +24,8 @@ class Attendance extends Module {
 	'MTEzIDIwLjExMiA0MS4xMTMtNDEuMTEzYTEuMDk1IDEuMDk1IDAgMCAxIDEuNTQ4IDBsNi43MDMgNi43MDRhMS4wOTQgMS4' .
 	'wOTQgMCAwIDEgMCAxLjU0OHoiLz48L3N2Zz4=';
 
+	protected Page $admin;
+
 	public function __construct() {
 		if ( ! self::check_plugins() ) {
 			return;

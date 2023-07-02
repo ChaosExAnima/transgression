@@ -394,6 +394,3 @@ class WooCommerce extends Module {
 		return floatval( $value );
 	}
 }
-);
-	}
-}
