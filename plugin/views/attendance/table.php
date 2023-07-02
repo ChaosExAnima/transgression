@@ -64,9 +64,11 @@ $orders = $params['orders'];
 				</td>
 				<td class="email"><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
 				<td class="volunteer check"><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
-				<td class="vaccine check"><?php echo $order['vaccine'] ? '✔️' : ''; ?></td>
+				<td class="vaccinated check"><?php echo $order['vaccinated'] ? '✔️' : ''; ?></td>
 				<td class="checked-in">
-					<button class="button button"><?php echo $order['checked_in'] ? 'Yes' : 'No'; ?></button>
+					<button class="button <?php echo ! $order['checked_in'] ? 'button-primary' : ''; ?>">
+						<?php echo $order['checked_in'] ? 'Yes' : 'No'; ?>
+					</button>
 				</td>
 			</tr>
 		<?php endforeach; ?>

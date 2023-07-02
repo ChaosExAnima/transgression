@@ -128,6 +128,11 @@ class Attendance extends Module {
 			$current = (bool) $order->get_meta( 'checked_in' );
 			$order->update_meta_data( 'checked_in', intval( ! $current ) );
 			$order->save();
+
+			$person = $this->order_to_person( $order );
+			if ( ! $current && $person && ! $person->vaccinated() ) {
+				$person->vaccinated( true );
+			}
 		}
 
 		return rest_ensure_response( $this->get_order_data( $order ) );
@@ -170,26 +175,39 @@ class Attendance extends Module {
 	}
 
 	/**
+	 * Gets a person from an order
+	 *
+	 * @param \WC_Order $order
+	 * @return Person|null
+	 */
+	protected function order_to_person( \WC_Order $order ): ?Person {
+		$user = $order->get_user();
+		if ( ! $user ) {
+			return null;
+		}
+		return new Person( $user );
+	}
+
+	/**
 	 * Gets formatted order data
 	 *
 	 * @param \WC_Order $order
 	 * @return array|null
 	 */
 	protected function get_order_data( \WC_Order $order ): ?array {
-		$user = $order->get_user();
-		if ( ! $user ) {
+		$person = $this->order_to_person( $order );
+		if ( ! $person ) {
 			return null;
 		}
-		$person = new Person( $user );
 		return [
 			'id' => $order->get_id(),
 			'pic' => $person->image_url(),
 			'name' => $person->name(),
 			'email' => $person->email(),
-			'user_id' => $user->ID,
-			'vaccine' => $person->vaccinated(),
+			'user_id' => $person->user_id(),
 			'volunteer' => $this->is_volunteer( $order ),
 			'checked_in' => (bool) $order->get_meta( 'checked_in' ),
+			'vaccinated' => $person->vaccinated(),
 		];
 	}
 

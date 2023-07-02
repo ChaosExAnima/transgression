@@ -133,13 +133,10 @@ class Person {
 			return false;
 		}
 		if ( null !== $set ) {
-			update_user_meta( $this->user_id(), 'vaccinated', $set );
+			update_user_meta( $this->user_id(), 'vaccinated', (int) $set );
+			return $set;
 		}
-		$vaccinated = $this->user->vaccinated;
-		if ( null === $vaccinated ) {
-			return $this->vaccinated( (bool) wc_get_customer_order_count( $this->user_id() ) > 1 );
-		}
-		return (bool) $vaccinated;
+		return (bool) $this->user->vaccinated;
 	}
 
 	/**

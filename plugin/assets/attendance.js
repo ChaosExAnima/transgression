@@ -6,6 +6,8 @@ async function toggleCheckIn(event) {
 	if (!(button instanceof HTMLButtonElement)) {
 		return;
 	}
+	button.disabled = true;
+	button.classList.add('disabled');
 	/** @type HTMLTableCellElement */
 	const td = button.parentElement;
 	const id = td.parentElement.dataset.orderId;
@@ -13,12 +15,21 @@ async function toggleCheckIn(event) {
 		const result = await queryApi(id, true);
 		if (result.checked_in) {
 			button.textContent = 'Yes';
+			button.classList.remove('button-primary');
 		} else {
 			button.textContent = 'No';
+			button.classList.add('button-primary');
+		}
+		/** @type HTMLTableCellElement|null */
+		const vax = td.parentElement.querySelector('.vaccinated');
+		if (result.vaccinated && vax) {
+			vax.textContent = '✔️';
 		}
 	} catch (err) {
 		console.warn(err);
 	}
+	button.disabled = false;
+	button.classList.remove('disabled');
 }
 
 function main() {
