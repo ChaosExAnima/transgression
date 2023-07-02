@@ -125,14 +125,9 @@ class Attendance extends Module {
 
 		$update = $request->get_method() !== \WP_REST_Server::READABLE;
 		if ( $update ) {
-			$current = (bool) $order->get_meta( 'checked_in' );
-			$order->update_meta_data( 'checked_in', intval( ! $current ) );
+			$order->update_meta_data( 'checked_in', time() );
 			$order->save();
-
-			$person = $this->order_to_person( $order );
-			if ( ! $current && $person && ! $person->vaccinated() ) {
-				$person->vaccinated( true );
-			}
+			$this->order_to_person( $order )?->vaccinated( true );
 		}
 
 		return rest_ensure_response( $this->get_order_data( $order ) );
