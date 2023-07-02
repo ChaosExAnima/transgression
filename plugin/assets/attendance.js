@@ -1,7 +1,7 @@
 /**
  * @param {MouseEvent} event
  */
-function toggleCheckIn(event) {
+async function toggleCheckIn(event) {
 	const button = event.target;
 	if (!(button instanceof HTMLButtonElement)) {
 		return;
@@ -9,11 +9,15 @@ function toggleCheckIn(event) {
 	/** @type HTMLTableCellElement */
 	const td = button.parentElement;
 	const id = td.parentElement.dataset.orderId;
-	console.log(`ID: ${id}`);
-	if (button.textContent === 'No') {
-		button.textContent = 'Yes';
-	} else {
-		button.textContent = 'No';
+	try {
+		const result = await queryApi(id, true);
+		if (result.checked_in) {
+			button.textContent = 'Yes';
+		} else {
+			button.textContent = 'No';
+		}
+	} catch (err) {
+		console.warn(err);
 	}
 }
 
@@ -28,3 +32,21 @@ function main() {
 }
 
 document.addEventListener('DOMContentLoaded', main);
+
+/**
+ * @param {number|string} orderId
+ * @param {bool} update
+ */
+async function queryApi(orderId, update = false) {
+	const { root, nonce } = window.attendanceData;
+	const response = await fetch(`${root}/checkin/${orderId}`, {
+		headers: {
+			'X-WP-Nonce': nonce,
+		},
+		method: update ? 'PUT' : 'GET',
+	});
+	if (!response.ok) {
+		throw new Error(`Got status ${response.status}`);
+	}
+	return response.json();
+}

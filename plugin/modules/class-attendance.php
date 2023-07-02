@@ -34,6 +34,7 @@ class Attendance extends Module {
 		$admin->add_style( 'attendance' );
 		$this->admin = $admin;
 
+		add_action( 'rest_api_init', [ $this, 'rest_api' ] );
 		parent::__construct();
 	}
 
@@ -64,6 +65,30 @@ class Attendance extends Module {
 	}
 
 	/**
+	 * Registers REST endpoints
+	 * @return void
+	 */
+	public function rest_api() {
+		register_rest_route(
+			prefix( 'v1', '/' ),
+			'/checkin/(?P<id>\d+)',
+			[
+				'methods' => [ 'GET', 'PUT' ],
+				'callback' => [ $this, 'checkin_endpoint' ],
+				'args' => [
+					'id' => [
+						'required' => true,
+						'validate_callback' => 'rest_is_integer',
+					],
+				],
+				'permission_callback' => function (): bool {
+					return current_user_can( self::CAP_ATTENDANCE );
+				},
+			]
+		);
+	}
+
+	/**
 	 * Renders the attendance table
 	 *
 	 * @return void
@@ -81,6 +106,29 @@ class Attendance extends Module {
 		$orders = $this->get_orders( $product_id );
 
 		load_view( 'attendance/table', compact( 'products', 'product_id', 'orders' ) );
+	}
+
+	/**
+	 * REST API response
+	 *
+	 * @param \WP_REST_Request $request
+	 * @return \WP_Error|\WP_REST_Response
+	 */
+	public function checkin_endpoint( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
+		$order_id = $request->get_param( 'id' );
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return new \WP_Error( 'no-id', 'Missing order ID', [ 'status' => 404 ] );
+		}
+
+		$update = $request->get_method() !== \WP_REST_Server::READABLE;
+		if ( $update ) {
+			$current = (bool) $order->get_meta( 'checked_in' );
+			$order->update_meta_data( 'checked_in', intval( ! $current ) );
+			$order->save();
+		}
+
+		return rest_ensure_response( $this->get_order_data( $order ) );
 	}
 
 	/**
@@ -139,7 +187,7 @@ class Attendance extends Module {
 			'user_id' => $user->ID,
 			'vaccine' => $person->vaccinated(),
 			'volunteer' => $this->is_volunteer( $order ),
-			'checked_in' => $order->get_meta( 'checked_in' ),
+			'checked_in' => (bool) $order->get_meta( 'checked_in' ),
 		];
 	}
 
