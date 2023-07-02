@@ -9,17 +9,17 @@ use WP_Post;
 class Discord extends Module {
 	protected const ACTION_RESULT = 'hook-result';
 
-	public function __construct( protected Page_Options $settings, Logger $logger ) {
-		$settings->add_section( 'discord', 'Discord' );
-		$settings->add_action( 'test-hook', [ $this, 'send_test' ] );
-		$settings->add_action( self::ACTION_RESULT, [ $this, 'test_message' ] );
-		$settings->add_settings( 'discord',
+	public function __construct( protected Page_Options $admin, Logger $logger ) {
+		$admin->add_section( 'discord', 'Discord' );
+		$admin->add_action( 'test-hook', [ $this, 'send_test' ] );
+		$admin->add_action( self::ACTION_RESULT, [ $this, 'test_message' ] );
+		$admin->add_settings( 'discord',
 			( new Option( DiscordHooks::Application->hook(), 'Application Webhook' ) )
 				->of_type( 'url' )
 				->render_after( [ $this, 'render_test_button' ] )
 		);
 		if ( WooCommerce::check_plugins() ) {
-			$settings->add_setting(
+			$admin->add_setting(
 				( new Option( DiscordHooks::WooCommerce->hook(), 'Purchase Webhook' ) )
 					->in_section( 'discord' )
 					->of_type( 'url' )
@@ -31,7 +31,7 @@ class Discord extends Module {
 			->in_section( 'discord' )
 			->of_type( 'url' )
 			->render_after( [ $this, 'render_test_button' ] )
-			->on_page( $settings );
+			->on_page( $admin );
 		if ( $logging_hook->get() ) {
 			$logger->register_destination( [ $this, 'send_logging_message' ] );
 		}
@@ -128,7 +128,7 @@ class Discord extends Module {
 	 * @return void
 	 */
 	public function render_test_button( Option $option ): void {
-		$test_url = $this->settings->get_url( [
+		$test_url = $this->admin->get_url( [
 			'test-hook' => $option->key,
 			'_wpnonce' => wp_create_nonce( "test-hook-{$option->key}" ),
 		] );
@@ -150,12 +150,12 @@ class Discord extends Module {
 		$url = null;
 		try {
 			$webhook = DiscordHooks::from_hook( $hook_type );
-			$url = $this->settings->value( $webhook->hook() );
+			$url = $this->admin->value( $webhook->hook() );
 		} catch ( \ValueError $error ) {
 			Logger::error( $error );
 		}
 		if ( ! $url ) {
-			$this->settings->action_redirect( self::ACTION_RESULT, 'not-conf' );
+			$this->admin->action_redirect( self::ACTION_RESULT, 'not-conf' );
 		}
 
 		$this->send_discord_message(
@@ -164,7 +164,7 @@ class Discord extends Module {
 			site_url(),
 			'This is a message to check things are working!'
 		);
-		$this->settings->action_redirect( self::ACTION_RESULT, 'success' );
+		$this->admin->action_redirect( self::ACTION_RESULT, 'success' );
 	}
 
 	/**
@@ -175,9 +175,9 @@ class Discord extends Module {
 	 */
 	public function test_message( string $result ): void {
 		if ( $result === 'not-conf' ) {
-			$this->settings->add_message( 'Hook not configured' );
+			$this->admin->add_message( 'Hook not configured' );
 		} elseif ( $result === 'success' ) {
-			$this->settings->add_message( 'Sent test message', 'success' );
+			$this->admin->add_message( 'Sent test message', 'success' );
 		}
 	}
 
@@ -212,7 +212,7 @@ class Discord extends Module {
 		array $extra_fields = [],
 		bool $simple = false
 	): void {
-		$hook_url = $this->settings->value( $webhook->hook() );
+		$hook_url = $this->admin->value( $webhook->hook() );
 		if ( ! $hook_url ) {
 			return;
 		}

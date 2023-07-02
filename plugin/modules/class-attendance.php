@@ -6,7 +6,8 @@ use Transgression\Admin\Page;
 use Transgression\Logger;
 use Transgression\Person;
 
-use function Transgression\{load_view};
+use function Transgression\load_view;
+use function Transgression\prefix;
 
 class Attendance extends Module {
 	/** @inheritDoc */
@@ -31,11 +32,15 @@ class Attendance extends Module {
 		$admin->add_render_callback( [ $this, 'render' ] );
 		$admin->as_page( 'data:image/svg+xml;base64,' . self::ICON, 56 );
 		$admin->add_style( 'attendance' );
-		$admin->add_script( 'attendance' );
+		$this->admin = $admin;
 
 		parent::__construct();
 	}
 
+	/**
+	 * Init actions
+	 * @return void
+	 */
 	public function init() {
 		add_role(
 			self::ROLE_CHECKIN,
@@ -51,6 +56,11 @@ class Attendance extends Module {
 			$role = get_role( $role_slug );
 			$role->add_cap( self::CAP_ATTENDANCE );
 		}
+
+		$this->admin->add_script( 'attendance', [], [
+			'root' => esc_url_raw( rest_url( prefix( 'v1', '/' ) ) ),
+			'nonce' => wp_create_nonce( 'wp_rest' ),
+		] );
 	}
 
 	/**

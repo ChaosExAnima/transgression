@@ -11,7 +11,7 @@ class WooCommerce extends Module {
 	/** @inheritDoc */
 	const REQUIRED_PLUGINS = [ 'woocommerce/woocommerce.php' ];
 
-	public function __construct( protected Page_Options $settings_page ) {
+	public function __construct( protected Page_Options $admin ) {
 		if ( ! self::check_plugins() ) {
 			return;
 		}
@@ -77,7 +77,7 @@ class WooCommerce extends Module {
 		}
 
 		// Adds all these settings.
-		$this->settings_page->add_section( 'woo', 'WooCommerce' );
+		$this->admin->add_section( 'woo', 'WooCommerce' );
 		/** @var \Transgression\Admin\Option[] */
 		$settings = [
 			$shop_title,
@@ -87,7 +87,7 @@ class WooCommerce extends Module {
 			$use_user_names,
 		];
 		foreach ( $settings as $setting ) {
-			$this->settings_page->add_setting( $setting->in_section( 'woo' ) );
+			$this->admin->add_setting( $setting->in_section( 'woo' ) );
 		}
 	}
 
@@ -392,5 +392,8 @@ class WooCommerce extends Module {
 			$product_id
 		) );
 		return floatval( $value );
+	}
+}
+);
 	}
 }

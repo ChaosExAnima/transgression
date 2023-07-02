@@ -2,9 +2,14 @@
 
 namespace Transgression\Modules;
 
+use Transgression\Admin\Page;
+
 abstract class Module {
 	/** @var array<string, string> */
 	const REQUIRED_PLUGINS = [];
+
+	/** @var Page|null Page admin, if any */
+	protected ?Page $admin = null;
 
 	public function __construct() {
 		if ( ! static::check_plugins() ) {
