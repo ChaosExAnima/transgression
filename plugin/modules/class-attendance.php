@@ -112,7 +112,6 @@ class Attendance extends Module {
 					'user_id' => $user->ID,
 					'vaccine' => $person->vaccinated(),
 					'volunteer' => $this->is_volunteer( $order ),
-					'covid_test' => $order->get_meta( 'covid_test' ),
 					'checked_in' => $order->get_meta( 'checked_in' ),
 				];
 			}

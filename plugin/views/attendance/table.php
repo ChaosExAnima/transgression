@@ -31,19 +31,19 @@ $orders = $params['orders'];
 			<th>Email</th>
 			<th>Volunteer</th>
 			<th>Vaccinated</th>
-			<th>Test Checked</th>
+			<th>Checked In</th>
 		</tr>
 	</thead>
 	<tbody>
 		<?php foreach ( $orders as $order ) : ?>
-			<tr>
+			<tr id="order-<?php echo absint( $order['id'] ); ?>">
 				<td class="order">
 					<?php if ( current_user_can( 'edit_products' ) ) : ?>
 						<a href="<?php echo esc_url( get_edit_post_link( $order['id'] ) ); ?>">
-							#<?php echo esc_html( $order['id'] ); ?>
+							#<?php echo absint( $order['id'] ); ?>
 						</a>
 					<?php else : ?>
-						#<?php echo esc_html( $order['id'] ); ?>
+						#<?php echo absint( $order['id'] ); ?>
 					<?php endif; ?>
 				</td>
 				<td class="pic">
@@ -65,7 +65,7 @@ $orders = $params['orders'];
 				<td class="email"><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
 				<td class="volunteer check"><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
 				<td class="vaccine check"><?php echo $order['vaccine'] ? '✔️' : ''; ?></td>
-				<td class="test check"><?php echo $order['covid_test'] ? '✔️' : ''; ?></td>
+				<td class="checked-in check"><?php echo $order['checked_in'] ? '✔️' : ''; ?></td>
 			</tr>
 		<?php endforeach; ?>
 	</tbody>
