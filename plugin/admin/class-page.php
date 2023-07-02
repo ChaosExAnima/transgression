@@ -5,8 +5,8 @@ namespace Transgression\Admin;
 use WP_Screen;
 
 use function Transgression\get_asset_url;
+use function Transgression\prefix;
 
-use const Transgression\PLUGIN_SLUG;
 use const Transgression\PLUGIN_VERSION;
 
 class Page {
@@ -41,7 +41,7 @@ class Page {
 		?string $menu_label = null,
 		protected string $permission = 'manage_options',
 	) {
-		$this->page_slug = PLUGIN_SLUG . "_{$slug}";
+		$this->page_slug = prefix( $slug );
 		$this->menu_label = $menu_label ?? $label;
 		add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ] );
 	}
@@ -148,7 +148,7 @@ class Page {
 	/**
 	 * Adds a stylesheet from the assets directory
 	 *
-	 * @param string $name The name of the file, with or without the extension
+	 * @param string $name The name of the file without the extension
 	 * @return self
 	 */
 	public function add_style( string $name ): self {
@@ -159,12 +159,16 @@ class Page {
 	/**
 	 * Adds a script from the assets directory
 	 *
-	 * @param string $name The name of the file, with or without the extension
+	 * @param string $name The name of the file without the extension
 	 * @param array $deps Script dependencies
+	 * @param array $params Script localization data
 	 * @return self
 	 */
-	public function add_script( string $name, array $deps = [] ): self {
-		$this->scripts[ $name ] = $deps;
+	public function add_script( string $name, array $deps = [], array $params = [] ): self {
+		$this->scripts[ $name ] = [
+			'deps' => $deps,
+			'params' => $params,
+		];
 		return $this;
 	}
 
@@ -246,49 +250,33 @@ class Page {
 		if ( $this->page_hook !== $hook ) {
 			return;
 		}
-		foreach ( $this->styles as $style ) {
-			if ( str_ends_with( $style, '.css' ) ) {
-				$style = substr( $style, -4 );
-			}
+		foreach ( $this->styles as $name ) {
 			wp_enqueue_style(
-				PLUGIN_SLUG . "_{$style}",
-				get_asset_url( "{$style}.css" ),
+				prefix( $name ),
+				get_asset_url( "{$name}.css" ),
 				[],
 				PLUGIN_VERSION
 			);
 		}
-		foreach ( $this->scripts as $script => $deps ) {
-			if ( str_ends_with( $script, '.js' ) ) {
-				$script = substr( $script, -3 );
-			}
+		foreach ( $this->scripts as $name => $args ) {
+			/** @var array $deps
+			 * @var array $params */
+			[ 'deps' => $deps, 'params' => $params ] = $args;
 			wp_enqueue_script(
-				PLUGIN_SLUG . "_{$script}",
-				get_asset_url( "{$script}.js" ),
+				prefix( $name ),
+				get_asset_url( "{$name}.js" ),
 				$deps,
 				PLUGIN_VERSION,
-				false
+				true
 			);
+			if ( count( $params ) > 0 ) {
+				wp_localize_script(
+					prefix( $name ),
+					"{$name}Data",
+					$params
+				);
+			}
 		}
-	}
-
-	/**
-	 * Filters script tag to be modules
-	 *
-	 * @param string $tag HTML
-	 * @param string $handle Script handle
-	 * @param string $src Script url
-	 * @return string
-	 */
-	public function filter_script_module( string $tag, string $handle, string $src ): string {
-		if ( in_array( $handle, $this->scripts, true ) ) {
-			return sprintf(
-				// phpcs:ignore
-				'<script type="module" id="%1$s" src="%2$s"></script>',
-				esc_attr( $handle ),
-				esc_url( $src )
-			);
-		}
-		return $tag;
 	}
 
 	/**

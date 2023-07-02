@@ -30,5 +30,3 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 }
 
 $transgression_application = new Main();
-
-add_action( 'plugins_loaded', [ $transgression_application, 'init' ] );
