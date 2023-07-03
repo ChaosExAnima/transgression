@@ -1,26 +1,12 @@
 <?php declare( strict_types = 1 );
-/** @var WC_Product[] */
-$products = $params['products'];
-/** @var int */
-$product_id = $params['product_id'];
+/**
+ * Template for the attendance table
+ * @var array $params
+ */
+
 /** @var WC_Order[] */
 $orders = $params['orders'];
 ?>
-<form action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" method="get">
-	<input type="hidden" name="page" value="transgression_attendance" />
-	<p>
-		<label for="product">Event</label>
-		<select name="product_id" id="product">
-			<?php foreach ( $products as $product ) : ?>
-				<option value="<?php echo absint( $product->get_id() ); ?>" <?php selected( $product_id, $product->get_id() ); ?>>
-					<?php echo esc_html( $product->get_title() ); ?>
-				</option>
-			<?php endforeach; ?>
-		</select>
-		<button type="submit" class="button button-primary">Update</button>
-		<button type="button" onclick="window.print()" class="button">Print</button>
-	</p>
-</form>
 
 <table class="attendance" id="attendance">
 	<thead>

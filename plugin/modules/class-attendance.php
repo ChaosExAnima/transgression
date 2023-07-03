@@ -8,6 +8,7 @@ use Transgression\Person;
 
 use function Transgression\load_view;
 use function Transgression\prefix;
+use function Transgression\render_datalist;
 
 class Attendance extends Module {
 	/** @inheritDoc */
@@ -98,16 +99,26 @@ class Attendance extends Module {
 	public function render() {
 		/** @var \WC_Product[] */
 		$products = wc_get_products( [
-			'limit' => 10,
+			'limit' => 100,
 		] );
+
 		$product_id = absint( filter_input( INPUT_GET, 'product_id', FILTER_VALIDATE_INT ) );
 		if ( ! $product_id && count( $products ) ) {
 			$product_id = $products[0]->get_id();
 		}
 
-		$orders = $this->get_orders( $product_id );
+		$search = '';
+		if ( ! empty( $_GET['search'] ) ) {
+			check_admin_referer( prefix( 'attendance' ) );
+			$search = sanitize_text_field( wp_unslash( $_GET['search'] ) );
+		}
 
-		load_view( 'attendance/table', compact( 'products', 'product_id', 'orders' ) );
+		load_view( 'attendance/header', compact( 'products', 'product_id', 'search' ) );
+
+		$orders = $this->get_orders( $product_id );
+		render_datalist( 'attendance-search', wp_list_pluck( $orders, 'name' ) );
+
+		load_view( 'attendance/table', compact( 'orders' ) );
 	}
 
 	/**

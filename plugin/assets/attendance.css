@@ -1,3 +1,17 @@
+.product-wrapper,
+.search-wrapper {
+	display: flex;
+	gap: 0.5em;
+	align-items: center;
+}
+
+.search-wrapper .button {
+	padding: 0 4px;
+}
+.search-wrapper .dashicons {
+	vertical-align: middle;
+}
+
 .attendance {
 	width: 100%;
 	border-collapse: collapse;
