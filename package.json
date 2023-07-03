@@ -18,8 +18,8 @@
 		"setup:plugins": "wp plugin install --activate $(cat plugins.txt)",
 		"setup:theme": "wp theme install blockbase; yarn wp theme activate transgression",
 		"cron": "wp cron event run --due-now",
-		"js": "tsc --build",
-		"js:watch": "tsc --watch"
+		"js": "esbuild --bundle --outbase=. --outdir=. --sourcemap --target=chrome58,firefox57,safari11 plugin/assets/[!_]*.ts",
+		"js:watch": "yarn js --watch"
 	},
 	"repository": "git@github.com:ChaosExAnima/transgression.git",
 	"author": "echo <ChaosExAnima@users.noreply.github.com>",
@@ -27,6 +27,7 @@
 	"private": true,
 	"devDependencies": {
 		"concurrently": "^7.2.1",
+		"esbuild": "^0.18.11",
 		"prettier": "^2.6.2",
 		"typescript": "^5.1.6"
 	},

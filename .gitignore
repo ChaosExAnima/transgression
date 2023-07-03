@@ -27,3 +27,4 @@ wp-trackback.php
 xmlrpc.php
 .well-known
 *.js
+*.js.map
