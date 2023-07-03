@@ -76,13 +76,17 @@ class Attendance extends Module {
 	public function rest_api() {
 		register_rest_route(
 			PLUGIN_REST_NAMESPACE,
-			'/checkin',
+			'/orders/(?P<product_id>\d+)',
 			[
 				'methods' => \WP_REST_Server::READABLE,
-				'callback' => [ $this, 'checkin_endpoint' ],
-				'permission_callback' => function (): bool {
-					return current_user_can( self::CAP_ATTENDANCE );
-				},
+				'callback' => [ $this, 'orders_endpoint' ],
+				'args' => [
+					'product_id' => [
+						'required' => true,
+						'validate_callback' => 'rest_is_integer',
+					],
+				],
+				'permission_callback' => [ $this, 'can_use_endpoints' ],
 			]
 		);
 		register_rest_route(
@@ -97,9 +101,7 @@ class Attendance extends Module {
 						'validate_callback' => 'rest_is_integer',
 					],
 				],
-				'permission_callback' => function (): bool {
-					return current_user_can( self::CAP_ATTENDANCE );
-				},
+				'permission_callback' => [ $this, 'can_use_endpoints' ],
 			]
 		);
 	}
@@ -156,7 +158,27 @@ class Attendance extends Module {
 	}
 
 	/**
-	 * REST API response
+	 * Returns true when a user can use the endpoints
+	 *
+	 * @return boolean
+	 */
+	public function can_use_endpoints(): bool {
+		return current_user_can( self::CAP_ATTENDANCE );
+	}
+
+	/**
+	 * Gets all orders for a given product
+	 *
+	 * @param \WP_REST_Request $request
+	 * @return \WP_Error|\WP_REST_Response
+	 */
+	public function orders_endpoint( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
+		$product_id = absint( $request->get_param( 'product_id' ) );
+		return rest_ensure_response( $this->get_orders( $product_id ) );
+	}
+
+	/**
+	 * Checks an order in or out
 	 *
 	 * @param \WP_REST_Request $request
 	 * @return \WP_Error|\WP_REST_Response
