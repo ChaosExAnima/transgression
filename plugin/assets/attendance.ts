@@ -41,6 +41,9 @@ function main() {
 	if (getSearch()) {
 		updateRows();
 	}
+
+	// TODO: Switch to Heartbeat API
+	setInterval(updateOrders, 5000);
 }
 
 document.addEventListener('DOMContentLoaded', main);
@@ -115,11 +118,15 @@ async function toggleCheckIn(event: MouseEvent) {
 		}
 		const result = await apiCheckin(id, true);
 		updateRowData(result);
+		if (!result.checked_in) {
+			button.disabled = false;
+			button.classList.remove('disabled');
+		}
 	} catch (err) {
 		console.warn(err);
+		button.disabled = false;
+		button.classList.remove('disabled');
 	}
-	button.disabled = false;
-	button.classList.remove('disabled');
 }
 
 function updateRowData(order: OrderRow) {
@@ -127,16 +134,19 @@ function updateRowData(order: OrderRow) {
 	if (!(tr instanceof HTMLTableRowElement)) {
 		return;
 	}
-	const vax = tr.querySelector('.vaccinated');
-	if (order.vaccinated && vax instanceof HTMLTableCellElement) {
+	const vax = tr.querySelector<HTMLTableCellElement>('.vaccinated');
+	if (order.vaccinated && vax) {
 		vax.textContent = '✔️'; // We never need the opposite as people don't get unvaxed
 	}
 
-	const checkedInBtn = tr.querySelector('.checked-in button');
-	if (checkedInBtn instanceof HTMLButtonElement) {
+	const checkedInBtn =
+		tr.querySelector<HTMLButtonElement>('.checked-in button');
+	if (checkedInBtn) {
 		if (order.checked_in) {
 			checkedInBtn.textContent = 'Yes';
 			checkedInBtn.classList.remove('button-primary');
+			checkedInBtn.classList.add('disabled');
+			checkedInBtn.disabled = true;
 		} else {
 			checkedInBtn.textContent = 'No';
 			checkedInBtn.classList.add('button-primary');
@@ -144,14 +154,14 @@ function updateRowData(order: OrderRow) {
 	}
 }
 
-async function updateOrders(): Promise<OrderRow[]> {
+async function updateOrders() {
 	const productId = productSelect.value;
-	if (!productId) {
-		return [];
+	if (document.visibilityState !== 'visible' || !productId) {
+		return;
 	}
 	const results = await apiQuery<OrderRow[]>(`/orders/${productId}`);
+	results.forEach(updateRowData);
 	orders = results;
-	return results;
 }
 
 function apiCheckin(orderId: string, update = false): Promise<OrderRow> {

@@ -52,7 +52,7 @@ $orders = $params['orders'];
 				<td class="volunteer check"><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
 				<td class="vaccinated check"><?php echo $order['vaccinated'] ? '✔️' : ''; ?></td>
 				<td class="checked-in">
-					<button class="button <?php echo ! $order['checked_in'] ? 'button-primary' : ''; ?>">
+					<button class="button <?php echo ! $order['checked_in'] ? 'button-primary' : 'disabled'; ?>" <?php disabled( $order['checked_in'] ); ?>>
 						<?php echo $order['checked_in'] ? 'Yes' : 'No'; ?>
 					</button>
 				</td>

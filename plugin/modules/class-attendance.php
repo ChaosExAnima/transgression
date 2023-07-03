@@ -15,7 +15,6 @@ use function Transgression\prefix;
 class Attendance extends Module {
 	const ROLE_CHECKIN = 'check_in';
 	const CAP_ATTENDANCE = 'view_attendance';
-	const CACHE_GROUP = PLUGIN_SLUG . '_attendance_orders';
 
 	/** @inheritDoc */
 	const REQUIRED_PLUGINS = [ 'woocommerce/woocommerce.php' ];
@@ -122,15 +121,21 @@ class Attendance extends Module {
 			] );
 			$product_id = reset( $product_ids );
 		}
+		$lock = false;
 		if ( $product_id ) {
 			$this->product_id = $product_id;
 			$this->orders = $this->get_orders( $product_id );
+			$lock = wp_check_post_lock( $product_id );
+			if ( ! $lock ) {
+				wp_set_post_lock( $product_id );
+			}
 		}
 
 		$this->admin->add_script( 'attendance', [], [
 			'root' => esc_url_raw( rest_url( PLUGIN_REST_NAMESPACE ) ),
 			'nonce' => wp_create_nonce( 'wp_rest' ),
 			'orders' => $this->orders,
+			'lock' => $lock,
 		] );
 	}
 
@@ -210,10 +215,6 @@ class Attendance extends Module {
 		if ( ! $product_id ) {
 			return [];
 		}
-		$cached = wp_cache_get( $product_id, self::CACHE_GROUP );
-		if ( is_array( $cached ) ) {
-			return $cached;
-		}
 		/** @var string[] */
 		$order_ids = [];
 		if ( $product_id ) {
@@ -241,7 +242,6 @@ class Attendance extends Module {
 			}
 		}
 		$sorted = wp_list_sort( $orders, 'name' );
-		wp_cache_set( $product_id, $sorted, self::CACHE_GROUP, MINUTE_IN_SECONDS * 5 );
 		return $sorted;
 	}
 
