@@ -40,7 +40,6 @@ $search = $params['search'];
 			incremental
 			placeholder='Search for order id, name, or email'
 			autocomplete="name email"
-			list="attendance-search"
 		/>
 		<button type="submit" class="button button-primary">
 			<span class="dashicons dashicons-search"></span>

@@ -44,6 +44,7 @@ class Page {
 		$this->page_slug = prefix( $slug );
 		$this->menu_label = $menu_label ?? $label;
 		add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ] );
+		add_action( 'current_screen', [ $this, 'do_screen_actions' ] );
 	}
 
 	/**
@@ -129,6 +130,18 @@ class Page {
 	 */
 	public function add_render_callback( callable $callback, int $priority = 10 ): self {
 		add_action( "{$this->page_slug}_render", $callback, $priority );
+		return $this;
+	}
+
+	/**
+	 * Sets a screen callback
+	 *
+	 * @param callable $callback
+	 * @param integer $priority
+	 * @return self
+	 */
+	public function add_screen_callback( callable $callback, int $priority = 10 ): self {
+		add_action( "{$this->page_slug}_screen_loaded", $callback, $priority );
 		return $this;
 	}
 
@@ -237,6 +250,18 @@ class Page {
 			$this->actions[] = 'messages';
 		}
 		return $this;
+	}
+
+	/**
+	 * Calls hook whenever the screen is loaded
+	 *
+	 * @param \WP_Screen $screen
+	 * @return void
+	 */
+	public function do_screen_actions( \WP_Screen $screen ): void {
+		if ( $this->page_hook && $screen->id === $this->page_hook ) {
+			do_action( "{$this->page_slug}_screen_loaded", $this );
+		}
 	}
 
 	/**

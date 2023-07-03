@@ -6,17 +6,19 @@ use Transgression\Admin\Page;
 use Transgression\Logger;
 use Transgression\Person;
 
+use const Transgression\PLUGIN_REST_NAMESPACE;
+use const Transgression\PLUGIN_SLUG;
+
 use function Transgression\load_view;
 use function Transgression\prefix;
-use function Transgression\render_datalist;
 
 class Attendance extends Module {
+	const ROLE_CHECKIN = 'check_in';
+	const CAP_ATTENDANCE = 'view_attendance';
+	const CACHE_GROUP = PLUGIN_SLUG . '_attendance_orders';
+
 	/** @inheritDoc */
 	const REQUIRED_PLUGINS = [ 'woocommerce/woocommerce.php' ];
-
-	const ROLE_CHECKIN = 'check_in';
-
-	const CAP_ATTENDANCE = 'view_attendance';
 
 	const ICON = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OC4zNjkiIGhlaWdodD0iNzguMzY' .
 	'5IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3OC4zNjkgNzguMzY5IiB4bWw6c3BhY2U9InByZXNlcnZlIj' .
@@ -27,6 +29,10 @@ class Attendance extends Module {
 
 	protected Page $admin;
 
+	protected ?int $product_id = null;
+	/** @var \WC_Order[] Array of orders for a given event */
+	protected array $orders = [];
+
 	public function __construct() {
 		if ( ! self::check_plugins() ) {
 			return;
@@ -35,6 +41,7 @@ class Attendance extends Module {
 		$admin->add_render_callback( [ $this, 'render' ] );
 		$admin->as_page( 'data:image/svg+xml;base64,' . self::ICON, 56 );
 		$admin->add_style( 'attendance' );
+		$admin->add_screen_callback( [ $this, 'pre_render' ] );
 		$this->admin = $admin;
 
 		add_action( 'rest_api_init', [ $this, 'rest_api' ] );
@@ -60,11 +67,6 @@ class Attendance extends Module {
 			$role = get_role( $role_slug );
 			$role->add_cap( self::CAP_ATTENDANCE );
 		}
-
-		$this->admin->add_script( 'attendance', [], [
-			'root' => esc_url_raw( rest_url( prefix( 'v1', '/' ) ) ),
-			'nonce' => wp_create_nonce( 'wp_rest' ),
-		] );
 	}
 
 	/**
@@ -73,7 +75,18 @@ class Attendance extends Module {
 	 */
 	public function rest_api() {
 		register_rest_route(
-			prefix( 'v1', '/' ),
+			PLUGIN_REST_NAMESPACE,
+			'/checkin',
+			[
+				'methods' => \WP_REST_Server::READABLE,
+				'callback' => [ $this, 'checkin_endpoint' ],
+				'permission_callback' => function (): bool {
+					return current_user_can( self::CAP_ATTENDANCE );
+				},
+			]
+		);
+		register_rest_route(
+			PLUGIN_REST_NAMESPACE,
 			'/checkin/(?P<id>\d+)',
 			[
 				'methods' => [ 'GET', 'PUT' ],
@@ -92,6 +105,34 @@ class Attendance extends Module {
 	}
 
 	/**
+	 * Runs admin actions when the screen is loaded
+	 *
+	 * @return void
+	 */
+	public function pre_render() {
+		$product_id = absint( filter_input( INPUT_GET, 'product_id', FILTER_VALIDATE_INT ) );
+		if ( ! $product_id ) {
+			/** @var int[] */
+			$product_ids = wc_get_products( [
+				'status' => 'publish',
+				'limit' => 1,
+				'return' => 'ids',
+			] );
+			$product_id = reset( $product_ids );
+		}
+		if ( $product_id ) {
+			$this->product_id = $product_id;
+			$this->orders = $this->get_orders( $product_id );
+		}
+
+		$this->admin->add_script( 'attendance', [], [
+			'root' => esc_url_raw( rest_url( PLUGIN_REST_NAMESPACE ) ),
+			'nonce' => wp_create_nonce( 'wp_rest' ),
+			'orders' => $this->orders,
+		] );
+	}
+
+	/**
 	 * Renders the attendance table
 	 *
 	 * @return void
@@ -102,23 +143,16 @@ class Attendance extends Module {
 			'limit' => 100,
 		] );
 
-		$product_id = absint( filter_input( INPUT_GET, 'product_id', FILTER_VALIDATE_INT ) );
-		if ( ! $product_id && count( $products ) ) {
-			$product_id = $products[0]->get_id();
-		}
-
 		$search = '';
 		if ( ! empty( $_GET['search'] ) ) {
 			check_admin_referer( prefix( 'attendance' ) );
 			$search = sanitize_text_field( wp_unslash( $_GET['search'] ) );
 		}
 
+		$product_id = $this->product_id;
 		load_view( 'attendance/header', compact( 'products', 'product_id', 'search' ) );
 
-		$orders = $this->get_orders( $product_id );
-		render_datalist( 'attendance-search', wp_list_pluck( $orders, 'name' ) );
-
-		load_view( 'attendance/table', compact( 'orders' ) );
+		load_view( 'attendance/table', [ 'orders' => $this->orders ] );
 	}
 
 	/**
@@ -151,6 +185,13 @@ class Attendance extends Module {
 	 * @return array
 	 */
 	protected function get_orders( int $product_id ): array {
+		if ( ! $product_id ) {
+			return [];
+		}
+		$cached = wp_cache_get( $product_id, self::CACHE_GROUP );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
 		/** @var string[] */
 		$order_ids = [];
 		if ( $product_id ) {
@@ -177,7 +218,9 @@ class Attendance extends Module {
 				$orders[] = $order_data;
 			}
 		}
-		return wp_list_sort( $orders, 'name' );
+		$sorted = wp_list_sort( $orders, 'name' );
+		wp_cache_set( $product_id, $sorted, self::CACHE_GROUP, MINUTE_IN_SECONDS * 5 );
+		return $sorted;
 	}
 
 	/**
