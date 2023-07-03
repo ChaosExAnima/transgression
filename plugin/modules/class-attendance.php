@@ -121,21 +121,15 @@ class Attendance extends Module {
 			] );
 			$product_id = reset( $product_ids );
 		}
-		$lock = false;
 		if ( $product_id ) {
 			$this->product_id = $product_id;
 			$this->orders = $this->get_orders( $product_id );
-			$lock = wp_check_post_lock( $product_id );
-			if ( ! $lock ) {
-				wp_set_post_lock( $product_id );
-			}
 		}
 
 		$this->admin->add_script( 'attendance', [], [
 			'root' => esc_url_raw( rest_url( PLUGIN_REST_NAMESPACE ) ),
 			'nonce' => wp_create_nonce( 'wp_rest' ),
 			'orders' => $this->orders,
-			'lock' => $lock,
 		] );
 	}
 
