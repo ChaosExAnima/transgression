@@ -1,14 +1,17 @@
+import { apiQuery } from './lib';
+
 declare global {
 	interface Window {
 		attendanceData: {
 			root: string;
 			nonce: string;
+			orders: OrderRow[];
 		};
 	}
 }
 
 interface OrderRow {
-	id: string;
+	id: number;
 	pic: string;
 	name: string;
 	email: string;
@@ -18,37 +21,83 @@ interface OrderRow {
 	vaccinated: boolean;
 }
 
+type ColFields = 'id' | 'name' | 'email';
+
+const table = document.getElementById('attendance') as HTMLTableElement;
+const searchInput = document.getElementById('search') as HTMLInputElement;
+const productSelect = document.getElementById('product') as HTMLSelectElement;
+
+let orders = window.attendanceData.orders;
+
 function main() {
-	const body = document.getElementById('attendance');
-	if (!body) {
+	if (!table) {
 		return;
 	}
-	body.querySelectorAll<HTMLButtonElement>('.checked-in > button').forEach(
-		(ele) => ele.addEventListener('click', toggleCheckIn)
-	);
+	table
+		.querySelectorAll<HTMLButtonElement>('.checked-in > button')
+		.forEach((ele) => ele.addEventListener('click', toggleCheckIn));
+
+	searchInput.addEventListener('input', updateRows);
+	if (getSearch()) {
+		updateRows();
+	}
 }
 
 document.addEventListener('DOMContentLoaded', main);
 
-function updateRow(orderId: string, row: OrderRow) {
-	const tr = document.getElementById(`order-${orderId}`);
+function getSearch() {
+	const search = searchInput.value.trim();
+	if (search.length > 1) {
+		return search.toLowerCase();
+	}
+	return null;
+}
+
+function updateRows() {
+	const search = getSearch();
+	for (const order of orders) {
+		updateRowSearch(order, search);
+	}
+}
+
+function updateRowSearch(order: OrderRow, search: string | null) {
+	const tr = document.getElementById(`order-${order.id}`);
 	if (!(tr instanceof HTMLTableRowElement)) {
 		return;
 	}
-	const vax = tr.querySelector('.vaccinated');
-	if (row.vaccinated && vax instanceof HTMLTableCellElement) {
-		vax.textContent = '✔️'; // We never need the opposite as people don't get unvaxed
+
+	const fields = tr.querySelectorAll<HTMLTableCellElement>('td[data-col]');
+	let found = false;
+	for (const field of fields) {
+		const col = field.dataset.col;
+		if (!col) {
+			continue;
+		}
+		// Get raw value from source, ideally
+		let plainValue = field.textContent ?? '';
+		if (col === 'id') {
+			plainValue = `#${order.id}`;
+		} else if (col in order) {
+			plainValue = order[col as ColFields].toString();
+		}
+
+		const loc = plainValue.toLowerCase().indexOf(search ?? '');
+		if (search && -1 !== loc) {
+			found = true;
+			field.innerHTML = plainValue.replaceAll(
+				new RegExp(search, 'ig'),
+				() =>
+					`<mark>${plainValue.slice(loc, loc + search.length)}</mark>`
+			);
+		} else {
+			field.innerHTML = plainValue;
+		}
 	}
 
-	const checkedInBtn = tr.querySelector('.checked-in button');
-	if (checkedInBtn instanceof HTMLButtonElement) {
-		if (row.checked_in) {
-			checkedInBtn.textContent = 'Yes';
-			checkedInBtn.classList.remove('button-primary');
-		} else {
-			checkedInBtn.textContent = 'No';
-			checkedInBtn.classList.add('button-primary');
-		}
+	if (search && !found) {
+		tr.classList.add('hidden');
+	} else {
+		tr.classList.remove('hidden');
 	}
 }
 
@@ -64,8 +113,8 @@ async function toggleCheckIn(event: MouseEvent) {
 		if (!id) {
 			throw new Error('Could not find ID for button');
 		}
-		const result = await queryApi(id, true);
-		updateRow(id, result);
+		const result = await apiCheckin(id, true);
+		updateRowData(result);
 	} catch (err) {
 		console.warn(err);
 	}
@@ -73,18 +122,38 @@ async function toggleCheckIn(event: MouseEvent) {
 	button.classList.remove('disabled');
 }
 
-async function queryApi(orderId: string, update = false): Promise<OrderRow> {
-	const { root, nonce } = window.attendanceData;
-	const response = await fetch(`${root}/checkin/${orderId}`, {
-		headers: {
-			'X-WP-Nonce': nonce,
-		},
-		method: update ? 'PUT' : 'GET',
-	});
-	if (!response.ok) {
-		throw new Error(`Got status ${response.status}`);
+function updateRowData(order: OrderRow) {
+	const tr = document.getElementById(`order-${order.id}`);
+	if (!(tr instanceof HTMLTableRowElement)) {
+		return;
 	}
-	return response.json();
+	const vax = tr.querySelector('.vaccinated');
+	if (order.vaccinated && vax instanceof HTMLTableCellElement) {
+		vax.textContent = '✔️'; // We never need the opposite as people don't get unvaxed
+	}
+
+	const checkedInBtn = tr.querySelector('.checked-in button');
+	if (checkedInBtn instanceof HTMLButtonElement) {
+		if (order.checked_in) {
+			checkedInBtn.textContent = 'Yes';
+			checkedInBtn.classList.remove('button-primary');
+		} else {
+			checkedInBtn.textContent = 'No';
+			checkedInBtn.classList.add('button-primary');
+		}
+	}
 }
 
-export {};
+async function updateOrders(): Promise<OrderRow[]> {
+	const productId = productSelect.value;
+	if (!productId) {
+		return [];
+	}
+	const results = await apiQuery<OrderRow[]>(`/orders/${productId}`);
+	orders = results;
+	return results;
+}
+
+function apiCheckin(orderId: string, update = false): Promise<OrderRow> {
+	return apiQuery(`/checkin/${orderId}`, update ? 'PUT' : 'GET');
+}

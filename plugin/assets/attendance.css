@@ -22,6 +22,10 @@
 	border-width: 1px 0;
 }
 
+.attendance tr:not(.hidden) ~ .empty {
+	display: none;
+}
+
 .attendance th {
 	text-align: left;
 }

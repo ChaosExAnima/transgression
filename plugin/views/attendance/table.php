@@ -23,8 +23,8 @@ $orders = $params['orders'];
 	<tbody>
 		<?php foreach ( $orders as $order ) : ?>
 			<tr data-order-id="<?php echo absint( $order['id'] ); ?>" id="order-<?php echo absint( $order['id'] ); ?>">
-				<td class="order">
-					<?php if ( current_user_can( 'edit_products' ) ) : ?>
+				<td class="order" data-col="id">
+					<?php if ( current_user_can( 'edit_products' ) ) : // phpcs:ignore ?>
 						<a href="<?php echo esc_url( get_edit_post_link( $order['id'] ) ); ?>">
 							#<?php echo absint( $order['id'] ); ?>
 						</a>
@@ -39,7 +39,7 @@ $orders = $params['orders'];
 						<em>None on record</em>
 					<?php endif; ?>
 				</td>
-				<td class="name">
+				<td class="name" data-col="name">
 					<?php if ( current_user_can( 'edit_user' ) ) : ?>
 						<a href="<?php echo esc_url( get_edit_user_link( $order['user_id'] ) ); ?>">
 							<?php echo esc_html( $order['name'] ); ?>
@@ -48,7 +48,7 @@ $orders = $params['orders'];
 						<?php echo esc_html( $order['name'] ); ?>
 					<?php endif; ?>
 				</td>
-				<td class="email"><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
+				<td class="email" data-col="email"><?php echo esc_html( strtolower( $order['email'] ) ); ?></td>
 				<td class="volunteer check"><?php echo $order['volunteer'] ? '✔️' : ''; ?></td>
 				<td class="vaccinated check"><?php echo $order['vaccinated'] ? '✔️' : ''; ?></td>
 				<td class="checked-in">
@@ -58,5 +58,8 @@ $orders = $params['orders'];
 				</td>
 			</tr>
 		<?php endforeach; ?>
+		<tr class="empty">
+			<td colspan="100">Nobody found</td>
+		</tr>
 	</tbody>
 </table>
