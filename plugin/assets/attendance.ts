@@ -42,7 +42,14 @@ function main() {
 		updateRows();
 	}
 
-	// TODO: Switch to Heartbeat API
+	const observer = new IntersectionObserver(
+		([e]) => e.target.classList.toggle('stuck', e.intersectionRatio < 1),
+		{ threshold: [1] }
+	);
+	if (searchInput.parentElement) {
+		observer.observe(searchInput.parentElement);
+	}
+
 	setInterval(updateOrders, 5000);
 }
 
@@ -142,15 +149,11 @@ function updateRowData(order: OrderRow) {
 	const checkedInBtn =
 		tr.querySelector<HTMLButtonElement>('.checked-in button');
 	if (checkedInBtn) {
-		if (order.checked_in) {
-			checkedInBtn.textContent = 'Yes';
-			checkedInBtn.classList.remove('button-primary');
-			checkedInBtn.classList.add('disabled');
-			checkedInBtn.disabled = true;
-		} else {
-			checkedInBtn.textContent = 'No';
-			checkedInBtn.classList.add('button-primary');
-		}
+		const checkedIn = order.checked_in;
+		checkedInBtn.textContent = checkedIn ? 'Yes' : 'No';
+		checkedInBtn.classList.toggle('button-primary', !checkedIn);
+		checkedInBtn.classList.toggle('disabled', checkedIn);
+		checkedInBtn.disabled = checkedIn;
 	}
 }
 

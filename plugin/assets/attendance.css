@@ -5,6 +5,15 @@
 	align-items: center;
 }
 
+.search-wrapper {
+	position: sticky;
+	top: -1px;
+}
+.search-wrapper.stuck {
+	margin-top: calc(32px + 1em + 1px);
+	background-color: #ccc;
+}
+
 .search-wrapper .button {
 	padding: 0 4px;
 }

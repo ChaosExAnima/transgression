@@ -13,7 +13,7 @@ $products = $params['products'];
 /** @var string search string */
 $search = $params['search'];
 ?>
-<form action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" method="get">
+<form id="header-form" class="header" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" method="get">
 	<input type="hidden" name="page" value="transgression_attendance" />
 	<?php wp_nonce_field( prefix( 'attendance' ) ); ?>
 	<p class="product-wrapper">

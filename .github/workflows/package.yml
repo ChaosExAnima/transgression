@@ -13,11 +13,22 @@ jobs:
 
         steps:
             - uses: actions/checkout@v3
+            - name: Set Node.js 18
+              uses: actions/setup-node@v3
+              with:
+                node-version: 18
+                cache: yarn
+            - run: yarn install --frozen-lockfile
+            - run: yarn js
             - uses: actions/upload-artifact@v1
               with:
                   name: transgression
-                  path: ${{ github.workspace }}/src
+                  path: |
+                    src
+                    !src/**/*.ts
             - uses: actions/upload-artifact@v1
               with:
                   name: transgression-plugin
-                  path: ${{ github.workspace }}/plugin
+                  path: |
+                    plugin
+                    !src/**/*.ts
