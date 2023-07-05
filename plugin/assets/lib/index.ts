@@ -14,3 +14,17 @@ export async function apiQuery<Response>(
 	}
 	return response.json() as Response;
 }
+
+export function descendantListener<E extends Event>(
+	selector: string,
+	callback: (event: E) => void
+): (event: E) => void {
+	return (event) => {
+		if (event.target instanceof Element) {
+			const element = event.target.closest(selector);
+			if (element) {
+				callback({ ...event, target: element });
+			}
+		}
+	};
+}
