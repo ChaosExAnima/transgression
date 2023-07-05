@@ -24,6 +24,7 @@ interface OrderRow {
 type ColFields = 'id' | 'name' | 'email';
 
 const table = document.getElementById('attendance') as HTMLTableElement;
+const percentage = document.getElementById('percentage') as HTMLMeterElement;
 const searchInput = document.getElementById('search') as HTMLInputElement;
 const productSelect = document.getElementById('product') as HTMLSelectElement;
 
@@ -49,6 +50,11 @@ function main() {
 	if (searchInput.parentElement) {
 		observer.observe(searchInput.parentElement);
 	}
+	const checkedInCount = orders.filter((order) => order.checked_in).length;
+	percentage.value = checkedInCount;
+	percentage.max = orders.length;
+	percentage.textContent = `${checkedInCount} / ${orders.length}`;
+	percentage.title = percentage.textContent;
 
 	setInterval(updateOrders, 5000);
 }
@@ -164,6 +170,9 @@ async function updateOrders() {
 	}
 	const results = await apiQuery<OrderRow[]>(`/orders/${productId}`);
 	results.forEach(updateRowData);
+	const checkedInCount = results.filter((order) => order.checked_in).length;
+	percentage.value = checkedInCount;
+	percentage.textContent = `${checkedInCount} / ${results.length}`;
 	orders = results;
 }
 
