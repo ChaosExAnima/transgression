@@ -2,10 +2,12 @@
 
 set -ex
 
-rsync -iavzrhu --delete --checksum \
+yarn js
+
+rsync -iavzrhu --delete --checksum --exclude='*.ts' \
 	-e 'ssh -p 2222 -i ~/.ssh/keys/transgression-backup' \
 	src/ transgression@central:/var/www/html/wp-content/themes/transgression "$@"
 
-rsync -iavzrhu --delete --checksum \
+rsync -iavzrhu --delete --checksum --exclude='*.ts' \
 	-e 'ssh -p 2222 -i ~/.ssh/keys/transgression-backup' \
 	plugin/ transgression@central:/var/www/html/wp-content/plugins/transgression "$@"

@@ -5,8 +5,8 @@ namespace Transgression\Admin;
 use WP_Screen;
 
 use function Transgression\get_asset_url;
+use function Transgression\prefix;
 
-use const Transgression\PLUGIN_SLUG;
 use const Transgression\PLUGIN_VERSION;
 
 class Page {
@@ -24,6 +24,9 @@ class Page {
 	/** @var string[] */
 	protected array $styles = [];
 
+	/** @var string[] */
+	protected array $scripts = [];
+
 	/**
 	 * Creates admin page
 	 *
@@ -38,8 +41,10 @@ class Page {
 		?string $menu_label = null,
 		protected string $permission = 'manage_options',
 	) {
-		$this->page_slug = PLUGIN_SLUG . "_{$slug}";
+		$this->page_slug = prefix( $slug );
 		$this->menu_label = $menu_label ?? $label;
+		add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ] );
+		add_action( 'current_screen', [ $this, 'do_screen_actions' ] );
 	}
 
 	/**
@@ -129,6 +134,18 @@ class Page {
 	}
 
 	/**
+	 * Sets a screen callback
+	 *
+	 * @param callable $callback
+	 * @param integer $priority
+	 * @return self
+	 */
+	public function add_screen_callback( callable $callback, int $priority = 10 ): self {
+		add_action( "{$this->page_slug}_screen_loaded", $callback, $priority );
+		return $this;
+	}
+
+	/**
 	 * Adds an action on on page load
 	 *
 	 * @param string $key Action key to check in request object
@@ -144,14 +161,27 @@ class Page {
 	/**
 	 * Adds a stylesheet from the assets directory
 	 *
-	 * @param string $name The name of the file, with or without the extension
+	 * @param string $name The name of the file without the extension
 	 * @return self
 	 */
 	public function add_style( string $name ): self {
-		if ( count( $this->styles ) === 0 ) {
-			add_action( 'admin_enqueue_scripts', [ $this, 'register_styles' ] );
-		}
 		$this->styles[] = $name;
+		return $this;
+	}
+
+	/**
+	 * Adds a script from the assets directory
+	 *
+	 * @param string $name The name of the file without the extension
+	 * @param array $deps Script dependencies
+	 * @param array $params Script localization data
+	 * @return self
+	 */
+	public function add_script( string $name, array $deps = [], array $params = [] ): self {
+		$this->scripts[ $name ] = [
+			'deps' => $deps,
+			'params' => $params,
+		];
 		return $this;
 	}
 
@@ -223,26 +253,54 @@ class Page {
 	}
 
 	/**
+	 * Calls hook whenever the screen is loaded
+	 *
+	 * @param \WP_Screen $screen
+	 * @return void
+	 */
+	public function do_screen_actions( \WP_Screen $screen ): void {
+		if ( $this->page_hook && $screen->id === $this->page_hook ) {
+			do_action( "{$this->page_slug}_screen_loaded", $this );
+		}
+	}
+
+	/**
 	 * Registers the styles if the correct page is loaded
 	 *
 	 * @param string $hook The page hook
 	 * @return void
 	 */
-	public function register_styles( string $hook ): void {
+	public function register_assets( string $hook ): void {
 		// Check page hook
 		if ( $this->page_hook !== $hook ) {
 			return;
 		}
-		foreach ( $this->styles as $style ) {
-			if ( str_ends_with( $style, '.css' ) ) {
-				$style = substr( $style, -4 );
-			}
+		foreach ( $this->styles as $name ) {
 			wp_enqueue_style(
-				PLUGIN_SLUG . "_{$style}",
-				get_asset_url( "{$style}.css" ),
+				prefix( $name ),
+				get_asset_url( "{$name}.css" ),
 				[],
 				PLUGIN_VERSION
 			);
+		}
+		foreach ( $this->scripts as $name => $args ) {
+			/** @var array $deps
+			 * @var array $params */
+			[ 'deps' => $deps, 'params' => $params ] = $args;
+			wp_enqueue_script(
+				prefix( $name ),
+				get_asset_url( "{$name}.js" ),
+				$deps,
+				PLUGIN_VERSION,
+				true
+			);
+			if ( count( $params ) > 0 ) {
+				wp_localize_script(
+					prefix( $name ),
+					"{$name}Data",
+					$params
+				);
+			}
 		}
 	}
 

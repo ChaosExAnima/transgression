@@ -12,6 +12,7 @@ namespace Transgression;
 const PLUGIN_ROOT = __DIR__;
 const PLUGIN_VERSION = '1.0.0';
 const PLUGIN_SLUG = 'transgression';
+const PLUGIN_REST_NAMESPACE = 'transgression/v1';
 
 require_once PLUGIN_ROOT . '/stubs.php';
 
@@ -30,5 +31,3 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 }
 
 $transgression_application = new Main();
-
-add_action( 'plugins_loaded', [ $transgression_application, 'init' ] );

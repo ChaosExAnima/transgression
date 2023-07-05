@@ -105,6 +105,7 @@ define( 'WP_REDIS_PORT', 6379 );
 define( 'WP_REDIS_PREFIX', 'wordpress' );
 
 define( 'WP_ENVIRONMENT_TYPE', 'local' );
+define( 'WP_DEBUG_DISPLAY', true );
 /* That's all, stop editing! Happy publishing. */
 
 /** Absolute path to the WordPress directory. */

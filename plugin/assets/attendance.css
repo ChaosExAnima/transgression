@@ -1,12 +1,82 @@
+.header {
+	position: sticky;
+	top: 0;
+	padding: 1em;
+	background-color: #f0f0f1;
+	display: flex;
+	flex-direction: column;
+	gap: 1em;
+	border-bottom: 1px solid #ccc;
+}
+
+@media screen and (min-width: 600px) {
+	.header {
+		top: 46px;
+	}
+}
+
+@media screen and (min-width: 783px) {
+	.header {
+		top: 32px;
+	}
+}
+
+.header > p {
+	margin: 0;
+}
+
+.product-wrapper,
+.search-wrapper {
+	display: flex;
+	gap: 0.5em;
+	align-items: center;
+}
+
+.product-wrapper .button,
+.search-wrapper .button {
+	margin: 0;
+}
+
+.product-wrapper {
+	flex-wrap: wrap;
+}
+
+.product-wrapper > .button-print {
+	display: none;
+}
+@media screen and (min-width: 1000px) {
+	.product-wrapper > .button-print {
+		display: inherit;
+	}
+}
+
+.search-wrapper .button {
+	padding: 0 4px;
+}
+.search-wrapper .dashicons {
+	vertical-align: middle;
+}
+
 .attendance {
-	max-width: 1000px;
 	width: 100%;
 	border-collapse: collapse;
+	display: block;
+	overflow-x: auto;
+}
+
+@media screen and (min-width: 1000px) {
+	.attendance {
+		display: table;
+	}
 }
 
 .attendance tbody tr {
 	border: solid #ccc;
 	border-width: 1px 0;
+}
+
+.attendance tr:not(.hidden) ~ .empty {
+	display: none;
 }
 
 .attendance th {
@@ -30,8 +100,14 @@
 	object-fit: cover;
 }
 
-.attendance .volunteer {
+.attendance .check {
 	width: 10px;
+	text-align: center;
+}
+
+.attendance .checked-in {
+	width: 75px;
+	text-align: right;
 }
 
 @media print {

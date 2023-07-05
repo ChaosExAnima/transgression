@@ -6,6 +6,15 @@ use Transgression\Admin\Page_Options;
 use Transgression\Modules\{Applications, Attendance, Auth0, Conflicts, Discord, People, Email\Emailer, JetForms, WooCommerce};
 
 class Main {
+	public function __construct() {
+		add_action( 'plugins_loaded', [ $this, 'init' ] );
+		add_filter( 'script_loader_tag', [ $this, 'filter_script_module' ], 10, 3 );
+	}
+
+	/**
+	 * Main initialization
+	 * @return void
+	 */
 	public function init() {
 		$logger = new Logger();
 		$emailer = new Emailer();
@@ -23,5 +32,25 @@ class Main {
 		new WooCommerce( $settings );
 
 		Event_Schema::init();
+	}
+
+	/**
+	 * Filters script tag to be modules
+	 *
+	 * @param string $tag HTML
+	 * @param string $handle Script handle
+	 * @param string $src Script url
+	 * @return string
+	 */
+	public function filter_script_module( string $tag, string $handle, string $src ): string {
+		if ( str_starts_with( $handle, PLUGIN_SLUG ) ) {
+			return sprintf(
+				// phpcs:ignore
+				'<script type="module" id="%1$s" src="%2$s"></script>',
+				esc_attr( $handle ),
+				esc_url( $src )
+			);
+		}
+		return $tag;
 	}
 }

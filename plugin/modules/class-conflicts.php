@@ -14,25 +14,25 @@ class Conflicts extends Module {
 	public const COMMENT_TYPE = 'conflict_comment';
 	public const CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
 
-	protected Page $page;
+	protected Page $admin;
 
 	public function __construct() {
 		add_action( 'pending_to_' . Applications::STATUS_APPROVED, [ $this, 'bust_cache' ] );
 
-		$page = new Page( 'conflicts', 'Conflicts', null, 'edit_posts' );
-		$page->as_post_subpage( Applications::POST_TYPE );
-		$page->add_render_callback( [ $this, 'render_conflicts' ] );
-		$page->add_style( 'conflicts' );
+		$admin = new Page( 'conflicts', 'Conflicts', null, 'edit_posts' );
+		$admin->as_post_subpage( Applications::POST_TYPE );
+		$admin->add_render_callback( [ $this, 'render_conflicts' ] );
+		$admin->add_style( 'conflicts' );
 
-		$page->add_action( 'resolve', [ $this, 'resolve_conflict' ] );
-		$page->register_message( 'resolve_error', 'Could not hide conflict' );
-		$page->register_message( 'resolve_success', 'Hid conflict', 'success' );
+		$admin->add_action( 'resolve', [ $this, 'resolve_conflict' ] );
+		$admin->register_message( 'resolve_error', 'Could not hide conflict' );
+		$admin->register_message( 'resolve_success', 'Hid conflict', 'success' );
 
-		$page->add_action( 'comment', [ $this, 'add_comment' ] );
-		$page->register_message( 'comment_error', 'Could not add comment' );
-		$page->register_message( 'comment_success', 'Added comment', 'success' );
+		$admin->add_action( 'comment', [ $this, 'add_comment' ] );
+		$admin->register_message( 'comment_error', 'Could not add comment' );
+		$admin->register_message( 'comment_success', 'Added comment', 'success' );
 
-		$this->page = $page;
+		$this->admin = $admin;
 	}
 
 	/**
@@ -89,10 +89,10 @@ class Conflicts extends Module {
 
 		$app = get_post( absint( $application_id ) );
 		if ( ! $app ) {
-			$this->page->redirect_message( 'resolve_error' );
+			$this->admin->redirect_message( 'resolve_error' );
 		}
 		update_post_meta( $app->ID, 'hide_conflict', true );
-		$this->page->redirect_message( 'resolve_success' );
+		$this->admin->redirect_message( 'resolve_success' );
 	}
 
 	/**
@@ -106,7 +106,7 @@ class Conflicts extends Module {
 		check_admin_referer( "comment-{$app_id}" );
 
 		if ( ! $comment || ! $app_id ) {
-			wp_safe_redirect( $this->page->get_url() );
+			wp_safe_redirect( $this->admin->get_url() );
 			exit;
 		}
 
@@ -131,8 +131,8 @@ class Conflicts extends Module {
 			'user_id' => $user->ID,
 		] );
 		if ( ! $result ) {
-			$this->page->redirect_message( 'comment_error' );
+			$this->admin->redirect_message( 'comment_error' );
 		}
-		$this->page->redirect_message( 'comment_success' );
+		$this->admin->redirect_message( 'comment_success' );
 	}
 }
