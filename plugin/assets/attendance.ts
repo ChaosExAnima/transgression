@@ -35,6 +35,7 @@ class Attendance {
 		([e]) => e.target.classList.toggle('stuck', e.intersectionRatio < 1),
 		{ threshold: [1] }
 	);
+	protected controller = new AbortController();
 
 	public constructor() {
 		this.table = document.getElementById('attendance') as HTMLTableElement;
@@ -59,6 +60,7 @@ class Attendance {
 			return;
 		}
 
+		document.addEventListener('keypress', this.focusSearch.bind(this));
 		this.table.addEventListener(
 			'click',
 			descendantListener(
@@ -66,13 +68,23 @@ class Attendance {
 				this.toggleCheckIn.bind(this)
 			)
 		);
+		this.searchInput.addEventListener('input', this.doSearch.bind(this));
+		if (this.getSearch()) {
+			this.doSearch();
+		}
 
 		if (this.searchInput.parentElement) {
 			this.observer.observe(this.searchInput.parentElement);
 		}
 
 		this.updatePercentage();
-		setInterval(this.pollOrderApi.bind(this), 5000);
+		const interval = setInterval(this.pollOrderApi.bind(this), 5000);
+
+		window.addEventListener('unload', () => {
+			clearInterval(interval);
+			this.observer.disconnect();
+			this.controller.abort();
+		});
 	}
 
 	protected updateOrders(orders: OrderRow[]) {
@@ -152,7 +164,9 @@ class Attendance {
 			if (!id) {
 				throw new Error('Could not find ID for button');
 			}
-			const result = await apiQuery<OrderRow>(`/checkin/${id}`, 'PUT');
+			const result = await apiQuery<OrderRow>(`/checkin/${id}`, 'PUT', {
+				signal: this.controller.signal,
+			});
 			this.updateRowDisplay(result);
 		} catch (err) {
 			console.warn(err);
@@ -166,7 +180,13 @@ class Attendance {
 		if (document.visibilityState !== 'visible' || !productId) {
 			return;
 		}
-		const results = await apiQuery<OrderRow[]>(`/orders/${productId}`);
+		const results = await apiQuery<OrderRow[]>(
+			`/orders/${productId}`,
+			'GET',
+			{
+				signal: this.controller.signal,
+			}
+		);
 		this.updateOrders(results);
 	}
 
@@ -178,6 +198,22 @@ class Attendance {
 			return search.toLowerCase();
 		}
 		return null;
+	}
+
+	protected focusSearch(event: KeyboardEvent) {
+		if (
+			document.activeElement !== this.searchInput &&
+			(event.key === '/' || event.key === '?')
+		) {
+			this.searchInput.focus();
+			event.preventDefault();
+		} else if (
+			document.activeElement === this.searchInput &&
+			event.key === 'Escape'
+		) {
+			this.searchInput.blur();
+			event.preventDefault();
+		}
 	}
 
 	protected doSearch() {
@@ -201,8 +237,14 @@ class Attendance {
 			if (!col) {
 				continue;
 			}
+
 			// Get raw value from source, ideally
-			let plainValue = field.textContent ?? '';
+			let textEle: HTMLElement = field;
+			if (field.firstElementChild instanceof HTMLAnchorElement) {
+				textEle = field.firstElementChild;
+			}
+
+			let plainValue = textEle.textContent ?? '';
 			if (col === 'id') {
 				plainValue = `#${order.id}`;
 			} else if (col in order) {
@@ -210,7 +252,6 @@ class Attendance {
 			}
 
 			const loc = plainValue.toLowerCase().indexOf(search ?? '');
-			const textEle = field.children.item(0) ?? field;
 			if (search && -1 !== loc) {
 				found = true;
 				textEle.innerHTML = plainValue.replaceAll(

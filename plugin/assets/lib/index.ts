@@ -1,10 +1,13 @@
 export async function apiQuery<Response>(
 	path: string,
-	method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET'
+	method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+	options: Omit<RequestInit, 'method'> = {}
 ): Promise<Response> {
 	const { root, nonce } = window.attendanceData;
 	const response = await fetch(root + path, {
+		...options,
 		headers: {
+			...(options.headers ?? {}),
 			'X-WP-Nonce': nonce,
 		},
 		method,
