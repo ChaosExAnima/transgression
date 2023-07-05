@@ -31,10 +31,6 @@ class Attendance {
 	protected productSelect: HTMLSelectElement;
 
 	protected orderMap: Map<number, OrderRow>;
-	protected observer = new IntersectionObserver(
-		([e]) => e.target.classList.toggle('stuck', e.intersectionRatio < 1),
-		{ threshold: [1] }
-	);
 	protected controller = new AbortController();
 
 	public constructor() {
@@ -73,16 +69,11 @@ class Attendance {
 			this.doSearch();
 		}
 
-		if (this.searchInput.parentElement) {
-			this.observer.observe(this.searchInput.parentElement);
-		}
-
 		this.updatePercentage();
 		const interval = setInterval(this.pollOrderApi.bind(this), 5000);
 
 		window.addEventListener('unload', () => {
 			clearInterval(interval);
-			this.observer.disconnect();
 			this.controller.abort();
 		});
 	}

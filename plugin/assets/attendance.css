@@ -5,13 +5,19 @@
 	align-items: center;
 }
 
-.search-wrapper {
+.header {
 	position: sticky;
-	top: -1px;
+	top: 32px;
+	padding: 1em;
+	background-color: #f0f0f1;
+	display: flex;
+	flex-direction: column;
+	gap: 1em;
+	border-bottom: 1px solid #ccc;
 }
-.search-wrapper.stuck {
-	margin-top: calc(32px + 1em + 1px);
-	background-color: #ccc;
+
+.header > p {
+	margin: 0;
 }
 
 .search-wrapper .button {
