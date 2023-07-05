@@ -135,6 +135,7 @@ class Attendance {
 		}
 		this.percentage.value = checkedInCount;
 		this.percentage.textContent = `${checkedInCount} / ${orders.length}`;
+		this.percentage.title = this.percentage.textContent;
 	}
 
 	// Check in
