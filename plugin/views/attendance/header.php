@@ -26,7 +26,7 @@ $search = $params['search'];
 			<?php endforeach; ?>
 		</select>
 		<button type="submit" class="button button-primary">Update</button>
-		<button type="button" onclick="window.print()" class="button">Print</button>
+		<button type="button" onclick="window.print()" class="button button-print">Print</button>
 		<label for="percentage">Attending</label>
 		<meter id="percentage" value="0" min="0">0 / 0</meter>
 	</p>

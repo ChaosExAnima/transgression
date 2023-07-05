@@ -1,13 +1,6 @@
-.product-wrapper,
-.search-wrapper {
-	display: flex;
-	gap: 0.5em;
-	align-items: center;
-}
-
 .header {
 	position: sticky;
-	top: 32px;
+	top: 0;
 	padding: 1em;
 	background-color: #f0f0f1;
 	display: flex;
@@ -16,8 +9,45 @@
 	border-bottom: 1px solid #ccc;
 }
 
+@media screen and (min-width: 600px) {
+	.header {
+		top: 46px;
+	}
+}
+
+@media screen and (min-width: 783px) {
+	.header {
+		top: 32px;
+	}
+}
+
 .header > p {
 	margin: 0;
+}
+
+.product-wrapper,
+.search-wrapper {
+	display: flex;
+	gap: 0.5em;
+	align-items: center;
+}
+
+.product-wrapper .button,
+.search-wrapper .button {
+	margin: 0;
+}
+
+.product-wrapper {
+	flex-wrap: wrap;
+}
+
+.product-wrapper > .button-print {
+	display: none;
+}
+@media screen and (min-width: 1000px) {
+	.product-wrapper > .button-print {
+		display: inherit;
+	}
 }
 
 .search-wrapper .button {
@@ -30,6 +60,14 @@
 .attendance {
 	width: 100%;
 	border-collapse: collapse;
+	display: block;
+	overflow-x: auto;
+}
+
+@media screen and (min-width: 1000px) {
+	.attendance {
+		display: table;
+	}
 }
 
 .attendance tbody tr {
@@ -69,6 +107,7 @@
 
 .attendance .checked-in {
 	width: 75px;
+	text-align: right;
 }
 
 @media print {
