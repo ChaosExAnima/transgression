@@ -31,4 +31,4 @@ jobs:
                   name: transgression-plugin
                   path: |
                     {{ github.workspace }}/plugin
-                    !{{ github.workspace }}/src/**/*.ts
+                    !{{ github.workspace }}/plugin/**/*.ts
