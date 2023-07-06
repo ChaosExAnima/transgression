@@ -24,11 +24,11 @@ jobs:
               with:
                   name: transgression
                   path: |
-                    src
-                    !src/**/*.ts
+                    {{ github.workspace }}/src
+                    !{{ github.workspace }}/src/**/*.ts
             - uses: actions/upload-artifact@v1
               with:
                   name: transgression-plugin
                   path: |
-                    plugin
-                    !src/**/*.ts
+                    {{ github.workspace }}/plugin
+                    !{{ github.workspace }}/src/**/*.ts
