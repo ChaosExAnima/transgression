@@ -29,6 +29,8 @@ class People extends Module {
 		// Admin
 		add_action( 'wp_dashboard_setup', [ $this, 'register_widgets' ] );
 		add_action( 'admin_notices', [ $this, 'show_application' ] );
+		add_filter( 'manage_users_columns', [ $this, 'filter_admin_columns' ] );
+		add_filter( 'manage_users_custom_column', [ $this, 'filter_admin_column' ], 10, 3 );
 		add_filter( 'user_row_actions', [ $this, 'filter_admin_row' ], 10, 2 );
 		add_filter( 'user_contactmethods', [ $this, 'filter_contact_methods' ] );
 
@@ -263,6 +265,42 @@ class People extends Module {
 	}
 
 	/**
+	 * Removes posts and adds orders column
+	 * @param array $columns
+	 * @return array
+	 */
+	public function filter_admin_columns( array $columns ): array {
+		if ( isset( $columns['posts'] ) ) {
+			unset( $columns['posts'] );
+		}
+		$columns['orders'] = 'Orders';
+		return $columns;
+	}
+
+	/**
+	 * Returns custom column markup
+	 *
+	 * @param string $html
+	 * @param string $column_name
+	 * @param integer $user_id
+	 * @return string
+	 */
+	public function filter_admin_column( string $html, string $column_name, int $user_id ): string {
+		if ( 'orders' === $column_name ) {
+			$orders_link = add_query_arg( [
+				'post_type' => 'shop_order',
+				'_customer_user' => $user_id,
+			], admin_url( 'edit.php' ) );
+			return sprintf(
+				'<a href="%1$s">%2$s</a>',
+				esc_url( $orders_link ),
+				esc_html( wc_get_customer_order_count( $user_id ) )
+			);
+		}
+		return $html;
+	}
+
+	/**
 	 * Filters the admin to allow regenerating users
 	 *
 	 * @param array $actions
@@ -272,6 +310,12 @@ class People extends Module {
 	public function filter_admin_row( array $actions, WP_User $user ): array {
 		if ( $this->is_passwordless( $user->ID ) ) {
 			unset( $actions['resetpassword'] );
+		}
+		if ( $user->application ) {
+			$actions['application'] = sprintf(
+				'<a href="%s" class="application">View application</a>',
+				esc_url( get_edit_post_link( $user->application ) )
+			);
 		}
 		return $actions;
 	}

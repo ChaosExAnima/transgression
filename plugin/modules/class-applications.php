@@ -43,14 +43,10 @@ class Applications extends Module {
 		'webp' => 'image/webp',
 	];
 
-	protected Page $conflicts;
+	public function __construct( protected JetForms $jet_forms, protected Emailer $emailer ) {
+		parent::__construct();
 
-	public function __construct(
-		protected JetForms $jet_forms,
-		protected Emailer $emailer
-	) {
 		// Actions
-		add_action( 'init', [ $this, 'init' ] );
 		add_action( 'save_post_' . self::POST_TYPE, [ $this, 'save' ] );
 		add_action( 'post_action_verdict', [ $this, 'action_verdict' ] );
 

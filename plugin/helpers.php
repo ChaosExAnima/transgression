@@ -209,3 +209,22 @@ function falsey_to_null( mixed $input ): mixed {
 	}
 	return $input;
 }
+
+/**
+ * Renders a datalist
+ *
+ * @param string $id The HTML ID attribute
+ * @param array $data An array of data, either numeric or key => label
+ * @return void
+ */
+function render_datalist( string $id, array $data ) {
+	printf( '<datalist id="%s">', esc_attr( $id ) );
+	foreach ( $data as $label => $value ) {
+		if ( is_int( $label ) ) {
+			printf( '<option value="%s" />', esc_attr( $value ) );
+		} else {
+			printf( '<option value="%s">%s</option>', esc_attr( $label ), esc_html( $value ) );
+		}
+	}
+	echo '</datalist>';
+}
