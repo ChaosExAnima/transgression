@@ -54,7 +54,7 @@ button:disabled {
 	cursor: not-allowed;
 }
 
-button[type="submit"] {
+button[type='submit'] {
 	width: 100%;
 }
 
@@ -63,11 +63,24 @@ input {
 	transition: var(--wp--custom--timing--short) border-color linear;
 }
 
+input:not([type='radio']),
+textarea {
+	border: 2px solid var(--wp--preset--color--secondary);
+	border-radius: var(--wp--custom--form--border--radius);
+	font-family: inherit;
+	padding: 1em;
+}
+
+input:not([type='radio']):focus,
+textarea:focus {
+	border-color: var(--wp--preset--color--primary);
+}
+
 input:disabled {
 	cursor: not-allowed;
 }
 
-input[type="radio"] {
+input[type='radio'] {
 	appearance: none;
 	border-radius: 50%;
 	width: 1.2em;
@@ -76,7 +89,7 @@ input[type="radio"] {
 	transition: var(--wp--custom--timing--short) all linear;
 }
 
-input[type="radio"]:checked {
+input[type='radio']:checked {
 	border: 0.4em solid var(--wp--preset--color--primary);
 }
 
@@ -105,7 +118,7 @@ input[type="radio"]:checked {
 
 .jet-form-builder__desc {
 	margin-bottom: 0.5em;
-	line-height: 1.4;
+	line-height: normal;
 }
 
 .jet-form-builder__desc > small {
@@ -118,6 +131,35 @@ input[type="radio"]:checked {
 
 .jet-form-builder__field-wrap > :is(textarea, input) {
 	transition: border-color var(--wp--custom--timing--short);
+}
+
+.jet-form-builder__field.radio-field {
+	width: 2em;
+	height: 2em;
+	margin-right: 1em;
+	position: static;
+	opacity: 1;
+}
+.jet-form-builder__field.radio-field:checked {
+	border-width: 0.6em;
+}
+.jet-form-builder__field-label.for-radio > span::before {
+	display: none;
+}
+
+.jet-form-builder__field-label > span::before {
+	border-color: var(--wp--preset--color--secondary);
+}
+.jet-form-builder__field-label.for-checkbox
+	:not(:disabled):not(:checked):hover
+	+ span::before {
+	border-color: var(--wp--preset--color--primary);
+}
+.jet-form-builder__field-label.for-checkbox
+	:not(:disabled):active
+	+ span::before {
+	background-color: var(--wp--preset--color--primary);
+	border-color: var(--wp--preset--color--primary);
 }
 
 .jet-form-builder__field-label.for-checkbox :checked + span::before {
