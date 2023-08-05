@@ -11,10 +11,13 @@ namespace Transgression;
 $app_id = $params['id'];
 /** @var \WP_Comment[] */
 $comments = $params['comments'];
-/** @var string */
-$current_url = $params['url'];
+/** @var Admin\Page */
+$admin = $params['admin'];
 
-$comment_url = wp_nonce_url( add_query_arg( 'app_id', $app_id, $current_url ), "comment-{$app_id}" );
+$comment_url = $admin->get_url( [
+	'app_id' => $app_id,
+	...nonce_array( "conflict-{$app_id}" ),
+] );
 
 ?>
 <?php if ( count( $comments ) > 0 ) : ?>

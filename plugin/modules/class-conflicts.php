@@ -3,6 +3,7 @@
 namespace Transgression\Modules;
 
 use Transgression\Admin\Page;
+use Transgression\Logger;
 use WP_Post;
 use WP_Query;
 
@@ -18,7 +19,8 @@ class Conflicts extends Module {
 
 	protected Page $admin;
 
-	public function __construct() {
+	public function __construct( protected Logger $logger ) {
+		parent::__construct();
 		add_action( 'pending_to_' . Applications::STATUS_APPROVED, [ $this, 'bust_cache' ] );
 
 		$admin = new Page( 'conflicts', 'Conflicts', null, 'edit_posts' );
@@ -27,7 +29,7 @@ class Conflicts extends Module {
 		$admin->add_style( 'conflicts' );
 		$admin->add_script( 'conflicts' );
 
-		$admin->add_action( 'resolve', [ $this, 'resolve_conflict' ] );
+		$admin->add_action( 'resolve', [ $this, 'action_resolve' ] );
 		$admin->register_message( 'resolve_error', 'Could not hide conflict' );
 		$admin->register_message( 'resolve_success', 'Hid conflict', 'success' );
 
@@ -93,12 +95,11 @@ class Conflicts extends Module {
 			'posts_per_page' => -1,
 			'post__in' => $post_ids,
 		] );
-		$current_url = add_query_arg( [
-			'post_type' => Applications::POST_TYPE,
-			'page' => PLUGIN_SLUG . '_conflicts',
-		], admin_url( 'edit.php' ) );
 
-		load_view( 'conflicts/table', compact( 'current_url', 'query' ) );
+		load_view( 'conflicts/table', [
+			'query' => $query,
+			'admin' => $this->admin,
+		]  );
 	}
 
 	/**
@@ -119,7 +120,7 @@ class Conflicts extends Module {
 	 * @param string $application_id
 	 * @return void
 	 */
-	public function resolve_conflict( string $application_id ) {
+	public function action_resolve( string $application_id ) {
 		check_admin_referer( "conflict-{$application_id}" );
 
 		$app = get_post( absint( $application_id ) );
@@ -171,7 +172,7 @@ class Conflicts extends Module {
 	 */
 	public function add_flag( string $name ): void {
 		$app_id = absint( $_GET['app_id'] ?? null );
-		check_admin_referer( "flag-{$app_id}" );
+		check_admin_referer( "conflict-{$app_id}" );
 		if ( ! $name || ! $app_id ) {
 			wp_safe_redirect( $this->admin->get_url() );
 			exit;
@@ -185,6 +186,7 @@ class Conflicts extends Module {
 			self::TAX_SLUG,
 		);
 		if ( is_wp_error( $result ) ) {
+			$this->logger->error( $result );
 			$this->admin->redirect_message( 'flag_error' );
 		}
 
@@ -196,6 +198,7 @@ class Conflicts extends Module {
 			true
 		);
 		if ( ! is_int( $meta_id ) ) {
+			$this->logger->error( $result );
 			$this->admin->redirect_message( 'flag_error' );
 		}
 
@@ -206,6 +209,7 @@ class Conflicts extends Module {
 			self::TAX_SLUG
 		);
 		if ( is_wp_error( $result ) ) {
+			$this->logger->error( $result );
 			$this->admin->redirect_message( 'flag_error' );
 		}
 

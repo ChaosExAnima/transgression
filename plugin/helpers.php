@@ -244,3 +244,13 @@ function render_datalist( string $id, array $data ) {
 	}
 	echo '</datalist>';
 }
+
+/**
+ * Returns a nonce as an array, useful for add_query_arg.
+ *
+ * @param string $action
+ * @return array
+ */
+function nonce_array( string $action ): array {
+	return [ '_wpnonce' => wp_create_nonce( $action ) ];
+}
