@@ -1,6 +1,31 @@
+declare global {
+	interface Window {
+		conflictsData: {
+			flags: {
+				[name: string]: {
+					id: number;
+					source_id?: number;
+				};
+			};
+		};
+	}
+}
+
 const actions = document.querySelectorAll<HTMLElement>('.actions > *');
 for (const button of actions) {
 	button.addEventListener('click', handleAction);
+}
+
+const textCells = document.querySelectorAll<HTMLTableCellElement>('.text');
+const flagNames = Object.keys(window.conflictsData.flags);
+for (const cell of textCells) {
+	if (cell.textContent) {
+		for (const name of flagNames) {
+			if (cell.textContent.includes(name)) {
+				console.log(`Found ${name} in cell: ${cell.textContent}`);
+			}
+		}
+	}
 }
 
 function handleAction(event: MouseEvent) {
@@ -56,3 +81,5 @@ function commentAction(button: HTMLElement) {
 		button.setAttribute('aria-pressed', !hidden ? 'true' : 'false');
 	}
 }
+
+export {};

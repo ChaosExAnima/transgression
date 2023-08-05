@@ -15,7 +15,8 @@ class Conflicts extends Module {
 	public const TAX_SLUG = PLUGIN_SLUG . '_conflict';
 	public const CAP_EDIT = 'edit_apps';
 	public const COMMENT_TYPE = 'conflict_comment';
-	public const CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
+	public const IDS_CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
+	public const FLAGS_CACHE_KEY = PLUGIN_SLUG . '_confict_flags';
 
 	protected Page $admin;
 
@@ -27,7 +28,6 @@ class Conflicts extends Module {
 		$admin->as_post_subpage( Applications::POST_TYPE );
 		$admin->add_render_callback( [ $this, 'render_conflicts' ] );
 		$admin->add_style( 'conflicts' );
-		$admin->add_script( 'conflicts' );
 
 		$admin->add_action( 'resolve', [ $this, 'action_resolve' ] );
 		$admin->register_message( 'resolve_error', 'Could not hide conflict' );
@@ -70,6 +70,8 @@ class Conflicts extends Module {
 				],
 			]
 		);
+
+		$this->admin->add_script( 'conflicts', [], [ 'flags' => $this->get_flags() ] );
 	}
 
 	/**
@@ -78,7 +80,7 @@ class Conflicts extends Module {
 	 * @return void
 	 */
 	public function render_conflicts(): void {
-		$post_ids = wp_cache_get( self::CACHE_KEY );
+		$post_ids = wp_cache_get( self::IDS_CACHE_KEY );
 		if ( $post_ids === false ) {
 			global $wpdb;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
@@ -86,7 +88,7 @@ class Conflicts extends Module {
 				"SELECT post_id FROM {$wpdb->postmeta}
 				WHERE meta_key = 'conflicts' AND CHAR_LENGTH(meta_value) > 4"
 			);
-			wp_cache_set( self::CACHE_KEY, $post_ids );
+			wp_cache_set( self::IDS_CACHE_KEY, $post_ids );
 		}
 
 		$query = new WP_Query( [
@@ -110,7 +112,7 @@ class Conflicts extends Module {
 	 */
 	public function bust_cache( WP_Post $post ): void {
 		if ( Applications::POST_TYPE === $post->post_type ) {
-			wp_cache_delete( self::CACHE_KEY );
+			wp_cache_delete( self::IDS_CACHE_KEY );
 		}
 	}
 
@@ -215,6 +217,30 @@ class Conflicts extends Module {
 
 		// Success!
 		$this->admin->redirect_message( 'flag_success' );
+	}
+
+	protected function get_flags(): array {
+		$cached = wp_cache_get( self::FLAGS_CACHE_KEY );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$terms = get_terms( [
+			'taxonomy' => self::TAX_SLUG,
+			'hide_empty' => false,
+		] );
+		if ( is_wp_error( $terms ) ) {
+			return [];
+		}
+		$flags = [];
+		foreach ( $terms as $term ) {
+			$flags[ $term->name ] = [
+				'id' => $term->term_id,
+				'source_id' => $term->source,
+			];
+		}
+		wp_cache_set( self::FLAGS_CACHE_KEY, $flags, '', DAY_IN_SECONDS );
+		return $flags;
 	}
 
 	/**
