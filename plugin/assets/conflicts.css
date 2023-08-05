@@ -23,8 +23,13 @@ td {
 	border-color: #d63638;
 }
 
+.actions > .resolve-action:hover {
+	color: #a02628;
+	border-color: #a02628;
+}
+
 .comments q {
-	quotes: "‘" "’";
+	quotes: '‘' '’';
 }
 .comments q::before {
 	content: open-quote;

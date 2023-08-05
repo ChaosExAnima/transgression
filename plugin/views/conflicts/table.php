@@ -88,25 +88,3 @@ $current_url = $params['current_url'];
 	</tfoot>
 </table>
 
-<script type="module">
-const actions = document.querySelectorAll('.actions > button');
-for (const button of actions) {
-	button.addEventListener('click', handleAction);
-}
-
-function handleAction(event) {
-	event.preventDefault();
-	if (this.classList.contains('resolve-action')) {
-		if (this.dataset.url && confirm('Resolve this conflict?')) {
-			location.assign(this.dataset.url);
-		}
-	} else if (this.classList.contains('comment-action')) {
-		const commentsRow = document.getElementById(this.getAttribute('aria-controls'));
-		if (commentsRow) {
-			const show = !commentsRow.hidden;
-			commentsRow.hidden = show;
-			this.setAttribute('aria-pressed', !show);
-		}
-	}
-}
-</script>

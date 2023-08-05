@@ -198,6 +198,21 @@ class Page {
 	}
 
 	/**
+	 * Gets the page URL with an action
+	 *
+	 * @param string $key
+	 * @param string $value
+	 * @param array $params Additional parameters to add
+	 * @return string
+	 */
+	public function get_action_url( string $key, string $value, array $params = [] ): string {
+		if ( in_array( $key, $this->actions, true ) ) {
+			$params[ $key ] = $value;
+		}
+		return $this->get_url( $params );
+	}
+
+	/**
 	 * Redirects to action with given key
 	 *
 	 * @param string $key
@@ -209,9 +224,9 @@ class Page {
 		if ( ! in_array( $key, $this->actions, true ) ) {
 			return;
 		}
-		$params[ $key ] = $value;
-		$url = $this->get_url( $params );
-		wp_safe_redirect( $url );
+		wp_safe_redirect(
+			$this->get_action_url( $key, $value, $params )
+		);
 		exit;
 	}
 
@@ -222,11 +237,11 @@ class Page {
 	 * @param string $type Type of message. One of notice, error, success, or warning
 	 * @return void
 	 */
-	public function add_message( string $message, string $type = 'error' ) {
+	public function add_message( string $message, string $type = 'error', array $holders = [] ) {
 		add_settings_error(
 			"{$this->page_slug}_messages",
 			sanitize_title( substr( $message, 0, 10 ) ),
-			$message,
+			sprintf( $message, ...$holders ),
 			$type
 		);
 	}
@@ -239,10 +254,15 @@ class Page {
 	 * @param string $type Type of message- success, notice, or error
 	 * @return self
 	 */
-	public function register_message( string $key, string $message, string $type = 'error' ): self {
-		$callback = function ( string $action ) use ( $key, $message, $type ) {
+	public function register_message(
+		string $key,
+		string $message,
+		string $type = 'error',
+		array $holders = [],
+	): self {
+		$callback = function ( string $action ) use ( $key, $message, $type, $holders ) {
 			if ( $action === $key ) {
-				$this->add_message( $message, $type );
+				$this->add_message( $message, $type, $holders );
 			}
 		};
 		add_action( "{$this->page_slug}_action_messages", $callback, 10, 2 );

@@ -11,6 +11,8 @@ use function Transgression\load_view;
 use const Transgression\PLUGIN_SLUG;
 
 class Conflicts extends Module {
+	public const TAX_SLUG = PLUGIN_SLUG . '_conflict';
+	public const CAP_EDIT = 'edit_apps';
 	public const COMMENT_TYPE = 'conflict_comment';
 	public const CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
 
@@ -23,6 +25,7 @@ class Conflicts extends Module {
 		$admin->as_post_subpage( Applications::POST_TYPE );
 		$admin->add_render_callback( [ $this, 'render_conflicts' ] );
 		$admin->add_style( 'conflicts' );
+		$admin->add_script( 'conflicts' );
 
 		$admin->add_action( 'resolve', [ $this, 'resolve_conflict' ] );
 		$admin->register_message( 'resolve_error', 'Could not hide conflict' );
@@ -32,7 +35,39 @@ class Conflicts extends Module {
 		$admin->register_message( 'comment_error', 'Could not add comment' );
 		$admin->register_message( 'comment_success', 'Added comment', 'success' );
 
+		$admin->add_action( 'flag', [ $this, 'add_flag' ] );
+		$admin->register_message( 'flag_error', 'Could not add flag' );
+		$admin->register_message( 'flag_success', 'Added flag', 'success' );
+
 		$this->admin = $admin;
+	}
+
+	/**
+	 * Registers taxonomy
+	 * @return void
+	 */
+	public function init(): void {
+		register_taxonomy(
+			self::TAX_SLUG,
+			Applications::POST_TYPE,
+			[
+				'labels' => [
+					'name' => 'Conflicts',
+					'singular_name' => 'Conflict',
+					'search_items' => 'Search Conflicts',
+					'all_items' => 'All Conflicts',
+					'edit_item' => 'Edit Conflict',
+					'update_item' => 'Update Conflict',
+				],
+				'public' => false,
+				'capabilities' => [
+					'manage_terms' => self::CAP_EDIT,
+					'edit_terms' => self::CAP_EDIT,
+					'delete_terms' => self::CAP_EDIT,
+					'assign_terms' => self::CAP_EDIT,
+				],
+			]
+		);
 	}
 
 	/**
@@ -110,15 +145,7 @@ class Conflicts extends Module {
 			exit;
 		}
 
-		$app = get_post( $app_id );
-		if (
-			! $app ||
-			Applications::POST_TYPE !== $app->post_type ||
-			Applications::STATUS_APPROVED !== $app->post_status
-		) {
-			wp_die( 'Application invalid' );
-		}
-
+		$app = $this->get_action_app( $app_id );
 		$user = wp_get_current_user();
 		if ( ! user_can( $user, 'edit_posts' ) ) {
 			wp_die( 'Cannot leave comments' );
@@ -134,5 +161,73 @@ class Conflicts extends Module {
 			$this->admin->redirect_message( 'comment_error' );
 		}
 		$this->admin->redirect_message( 'comment_success' );
+	}
+
+	/**
+	 * Adds a new flag to an application
+	 *
+	 * @param string $name
+	 * @return void
+	 */
+	public function add_flag( string $name ): void {
+		$app_id = absint( $_GET['app_id'] ?? null );
+		check_admin_referer( "flag-{$app_id}" );
+		if ( ! $name || ! $app_id ) {
+			wp_safe_redirect( $this->admin->get_url() );
+			exit;
+		}
+		// Just validate
+		$this->get_action_app( $app_id );
+
+		// Create flag name
+		$result = wp_insert_term(
+			$name,
+			self::TAX_SLUG,
+		);
+		if ( is_wp_error( $result ) ) {
+			$this->admin->redirect_message( 'flag_error' );
+		}
+
+		// Add term meta of source
+		$meta_id = add_term_meta(
+			$result['term_id'],
+			'source',
+			$app_id,
+			true
+		);
+		if ( ! is_int( $meta_id ) ) {
+			$this->admin->redirect_message( 'flag_error' );
+		}
+
+		// Then add to the application that created it
+		$result = wp_add_object_terms(
+			$app_id,
+			$result['term_id'],
+			self::TAX_SLUG
+		);
+		if ( is_wp_error( $result ) ) {
+			$this->admin->redirect_message( 'flag_error' );
+		}
+
+		// Success!
+		$this->admin->redirect_message( 'flag_success' );
+	}
+
+	/**
+	 * Gets the app for an action
+	 *
+	 * @param integer $app_id
+	 * @return \WP_Post
+	 */
+	protected function get_action_app( int $app_id ): \WP_Post {
+		$app = get_post( $app_id );
+		if (
+			! $app ||
+			Applications::POST_TYPE !== $app->post_type ||
+			Applications::STATUS_APPROVED !== $app->post_status
+		) {
+			wp_die( 'Application invalid' );
+		}
+		return $app;
 	}
 }

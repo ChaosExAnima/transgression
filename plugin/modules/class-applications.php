@@ -15,6 +15,8 @@ use function Transgression\{get_asset_url, insert_in_array, load_view};
 class Applications extends Module {
 	public const POST_TYPE = 'application';
 	public const COMMENT_TYPE = 'review_comment';
+	public const ROLE_REVIEWER = PLUGIN_SLUG . '_reviewer';
+
 	public const STATUS_APPROVED = 'approved';
 	public const STATUS_DENIED = 'denied';
 
@@ -82,7 +84,7 @@ class Applications extends Module {
 	 * @return void
 	 */
 	public function init() {
-		register_post_type( self::POST_TYPE, [
+		$post_type = register_post_type( self::POST_TYPE, [
 			'label' => self::LABELS['name'],
 			'labels' => self::LABELS,
 			'show_ui' => true,
@@ -121,6 +123,26 @@ class Applications extends Module {
 				'transgression'
 			),
 		] );
+
+		$app_caps = [];
+		foreach ( array_keys( (array) $post_type->cap ) as $cap ) {
+			$app_caps[ $cap ] = true;
+		}
+
+		add_role(
+			self::ROLE_REVIEWER,
+			'App Reviewer',
+			[
+				'read' => true,
+				'view_admin_dashboard' => true, // This lets people see the back end
+				...$app_caps,
+			]
+		);
+
+		$role = get_role( 'administrator' );
+		foreach ( array_keys( $app_caps ) as $cap ) {
+			$role->add_cap( $cap );
+		}
 	}
 
 	/**

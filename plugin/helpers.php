@@ -167,14 +167,30 @@ function is_url( string $url ): bool {
  * @return string|null The value, or null if it's not set
  */
 function get_safe_post( string $key ): ?string {
-	// phpcs:ignore WordPress.Security.NonceVerification.Missing
-	if ( ! isset( $_POST[ $key ] ) ) {
-		return null;
-	}
-	// phpcs:ignore WordPress.Security.NonceVerification.Missing
-	return sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+	return get_safe_request( $key );
 }
 
+/**
+ * Gets data from POST or GET as a string, passed through sanitization.
+ *
+ * @param string $key The key name
+ * @return string|null The value, or null if it's not set
+ */
+function get_safe_request( string $key, string $type = 'POST' ): ?string {
+	// phpcs:ignore WordPress.Security.NonceVerification
+	$raw_input = $type === 'POST' ? $_POST : $_GET;
+	if ( ! isset( $raw_input[ $key ] ) ) {
+		return null;
+	}
+	return sanitize_text_field( wp_unslash( $raw_input[ $key ] ) );
+}
+
+/**
+ * Strips query string from a URL.
+ *
+ * @param string $url
+ * @return string
+ */
 function strip_query( string $url ): string {
 	$result = strtok( $url, '?' );
 	if ( false === $result ) {
