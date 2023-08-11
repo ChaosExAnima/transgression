@@ -27,7 +27,7 @@ class WooCommerce extends Module {
 		// Clears the cart and redirects to the shop
 		add_action( 'template_redirect', [ $this, 'clear_cart' ] );
 		// Automatically skip the processing step
-		add_action( 'woocommerce_checkout_order_processed', [ $this, 'skip_processing' ] );
+		add_action( 'woocommerce_thankyou', [ $this, 'skip_processing' ] );
 
 		add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' ); // Never require shipping
 		add_filter( 'woocommerce_navigation_wp_toolbar_disabled', '__return_false' ); // Enables WP toolbar
@@ -122,6 +122,7 @@ class WooCommerce extends Module {
 	/**
 	 * Skips processing status as it doesn't matter
 	 *
+	 * @see https://woocommerce.com/document/automatically-complete-orders/
 	 * @param int $order_id The order ID
 	 * @return void
 	 */
