@@ -6,6 +6,7 @@ use Error;
 use MailPoet\Config\ServicesChecker;
 
 use MailPoet\Entities\{NewsletterEntity, SegmentEntity, SubscriberEntity};
+use MailPoet\Features\FeaturesController;
 use MailPoet\Logging\LoggerFactory;
 use MailPoet\Newsletter\{NewslettersRepository, Renderer\Preprocessor};
 use MailPoet\Newsletter\Renderer\{Renderer, Blocks\Renderer as BlocksRenderer, Columns\Renderer as ColumnsRenderer};
@@ -79,7 +80,8 @@ class MailPoet extends Email {
 			$this->mailpoet_container->get( Functions::class ),
 			$this->mailpoet_container->get( LoggerFactory::class ),
 			$this->get_newsletter_repo(),
-			$this->mailpoet_container->get( SendingQueuesRepository::class )
+			$this->mailpoet_container->get( SendingQueuesRepository::class ),
+			$this->mailpoet_container->get( FeaturesController::class ),
 		);
 	}
 
