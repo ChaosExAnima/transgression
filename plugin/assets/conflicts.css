@@ -1,5 +1,6 @@
-tr:nth-child(4n + 1),
-tr:nth-child(4n + 1) + tr {
+tr:nth-child(6n + 1),
+tr:nth-child(6n + 2),
+tr:nth-child(6n + 3) {
 	background-color: #f6f7f7;
 }
 
@@ -16,6 +17,14 @@ td {
 	align-items: center;
 	display: inline-flex;
 	padding: 0 5px;
+}
+
+.actions > .button[aria-pressed="true"] {
+	background-color: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+	text-decoration: none;
+	text-shadow: none;
 }
 
 .actions > .resolve-action {
@@ -43,3 +52,10 @@ td {
 	color: #646970;
 	text-decoration: underline dotted;
 }
+
+.add-flag {
+	display: flex;
+	gap: .5em;
+	align-items: center;
+}
+
