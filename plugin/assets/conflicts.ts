@@ -24,11 +24,18 @@ function toggleRow(button: HTMLElement) {
 		return;
 	}
 	const detailsRow = document.getElementById(rowId);
-	if (detailsRow) {
-		const hidden = detailsRow.hidden;
-		detailsRow.hidden = !hidden;
-		button.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+	if (!detailsRow) {
+		return;
 	}
+	const hidden = detailsRow.hidden;
+	detailsRow.hidden = !hidden;
+	button.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+
+	const form = detailsRow.querySelector('form');
+	if (!form) {
+		return;
+	}
+	form.reset();
 }
 
 export {};
