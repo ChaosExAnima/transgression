@@ -6,9 +6,11 @@ use Error;
 use MailPoet\Config\ServicesChecker;
 
 use MailPoet\Entities\{NewsletterEntity, SegmentEntity, SubscriberEntity};
+use MailPoet\Features\FeaturesController;
 use MailPoet\Logging\LoggerFactory;
 use MailPoet\Newsletter\{NewslettersRepository, Renderer\Preprocessor};
-use MailPoet\Newsletter\Renderer\{Renderer, Blocks\Renderer as BlocksRenderer, Columns\Renderer as ColumnsRenderer};
+use MailPoet\EmailEditor\Engine\Renderer\Renderer as GutenbergRenderer;
+use MailPoet\Newsletter\Renderer\{Renderer, BodyRenderer};
 use MailPoet\Newsletter\Sending\SendingQueuesRepository;
 use MailPoet\Newsletter\Shortcodes\Shortcodes;
 use MailPoet\Segments\SegmentsRepository;
@@ -71,15 +73,16 @@ class MailPoet extends Email {
 
 	private function get_renderer(): ?Renderer {
 		return new Renderer(
-			$this->mailpoet_container->get( BlocksRenderer::class ),
-			$this->mailpoet_container->get( ColumnsRenderer::class ),
+			$this->mailpoet_container->get( BodyRenderer::class ),
+			$this->mailpoet_container->get( GutenbergRenderer::class ),
 			$this->mailpoet_container->get( Preprocessor::class ),
 			$this->mailpoet_container->get( CSS::class ),
 			$this->mailpoet_container->get( ServicesChecker::class ),
 			$this->mailpoet_container->get( Functions::class ),
 			$this->mailpoet_container->get( LoggerFactory::class ),
 			$this->get_newsletter_repo(),
-			$this->mailpoet_container->get( SendingQueuesRepository::class )
+			$this->mailpoet_container->get( SendingQueuesRepository::class ),
+			$this->mailpoet_container->get( FeaturesController::class ),
 		);
 	}
 
