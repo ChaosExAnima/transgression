@@ -28,6 +28,7 @@ $flags = $params['flags'];
 <form action="" method="POST" class="add-flag">
 	<span>Add new flag:</span>
 	<input type="text" name="name" placeholder="Name" required data-1p-ignore />
-	<input type="text" name="name" placeholder="Instagram" data-1p-ignore />
+	<input type="text" name="instagram" placeholder="Instagram" data-1p-ignore />
+	<input type="text" name="email" placeholder="Email" data-1p-ignore />
 	<?php submit_button( 'Add flag', 'primary', 'submit', false ); ?>
 </form>
