@@ -6,6 +6,7 @@ use Transgression\Modules\Email\Emailer;
 use Jet_Form_Builder\Actions\Action_Handler;
 use Jet_Form_Builder\Actions\Types\Base;
 use Jet_Form_Builder\Blocks\Block_Helper;
+use Transgression\Person;
 
 class JetForms extends Module {
 	/** @inheritDoc */
@@ -32,10 +33,15 @@ class JetForms extends Module {
 		// phpcs:ignore WordPress.Security.NonceVerification
 		if ( isset( $_REQUEST['email'] ) ) {
 			$email = sanitize_email( wp_unslash( $_REQUEST['email'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
-			$user_id = email_exists( $email );
-			if ( $user_id ) {
-				$email = $this->emailer->create();
-				$email->with_template( 'app_dupe' )->to_user( $user_id )->send();
+			$people = Person::search( $email );
+			if ( count( $people ) > 0 ) {
+				foreach ( $people as $person ) {
+					if ( $person->approved() && $person->user_id() ) {
+						$email = $this->emailer->create();
+						$email->with_template( 'app_dupe' )->to_user( $person->user_id() )->send();
+						break;
+					}
+				}
 				return false;
 			}
 		}
