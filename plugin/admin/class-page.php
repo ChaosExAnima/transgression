@@ -281,7 +281,19 @@ class Page {
 	public function do_screen_actions( \WP_Screen $screen ): void {
 		if ( $this->page_hook && $screen->id === $this->page_hook ) {
 			do_action( "{$this->page_slug}_screen_loaded", $this );
+			add_filter( 'removable_query_args', [ $this, 'remove_messages_arg' ] );
 		}
+	}
+
+	/**
+	 * Removes the messages arg for the current page.
+	 *
+	 * @param array $args
+	 * @return array
+	 */
+	public function remove_messages_arg( array $args ): array {
+		$args[] = 'messages';
+		return $args;
 	}
 
 	/**
