@@ -57,6 +57,7 @@ class Applications extends Module {
 
 		// Display
 		add_action( 'admin_enqueue_scripts', [ $this, 'scripts' ] );
+		add_action( 'admin_head', [ $this, 'conflict_message' ] );
 		add_filter( 'post_updated_messages', [ $this, 'update_messages' ] );
 		add_action( 'edit_form_top', [ $this, 'render_status' ] );
 		add_action(
@@ -398,15 +399,43 @@ class Applications extends Module {
 		return $args;
 	}
 
+	/**
+	 * Shows a warning if conflicts are found.
+	 *
+	 * @return void
+	 */
+	public function conflict_message(): void {
+		$screen = get_current_screen();
+		if ( ! $screen || $screen->id !== self::POST_TYPE ) {
+			return;
+		}
+		$post = get_post();
+		if ( ! $post ) {
+			return;
+		}
+
+		$conflicts = wp_get_post_terms( $post->ID, Conflicts::TAX_SLUG );
+		if ( is_array( $conflicts ) && count( $conflicts ) > 0 ) {
+			wp_admin_notice( 'Conflicts found, please resolve them before adding a verdict!', [ 'type' => 'warning' ] );
+		}
+	}
+
+	/**
+	 * Add messages for applications.
+	 *
+	 * @param array $messages Post messages array.
+	 * @return array
+	 */
 	public function update_messages( array $messages ): array {
-		$verdict_message = sprintf(
-			'Verdict added. <a href="%s">See all applications</a>.',
+		$app_link = sprintf(
+			'<a href="%s">See all applications</a>.',
 			admin_url( 'edit.php?post_type=' . self::POST_TYPE )
 		);
+		// We're starting at 100 to avoid conflicts with posts.
 		$messages[ self::POST_TYPE ] = [
-			100 => $verdict_message, // We're starting at 100 to avoid conflicts with posts.
-			101 => 'Rejection sent',
-			102 => 'Application approved',
+			100 => "Verdict added. {$app_link}",
+			101 => 'Application rejected',
+			102 => "Application approved. {$app_link}",
 			103 => 'Error creating new user',
 			104 => 'Emailed application results',
 		];
