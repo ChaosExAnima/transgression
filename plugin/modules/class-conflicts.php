@@ -72,7 +72,7 @@ class Conflicts extends Module {
 			]
 		);
 
-		$this->admin->add_script( 'conflicts', [], [ 'flags' => $this->get_flags() ] );
+		$this->admin->add_script( 'conflicts' );
 	}
 
 	/**
@@ -185,26 +185,36 @@ class Conflicts extends Module {
 			$this->admin->redirect_message( 'flag_error' );
 		}
 
-		// Build up the term name.
-		$term_name = $name;
-		$email = get_safe_post( 'email' );
-		if ( is_email( $email ) ) {
-			$term_name .= "-{$email}";
-		}
-		$instagram = get_safe_post( 'instagram' );
-		if ( $instagram ) {
-			$term_name .= "-{$instagram}";
-		}
-
 		// Create flag name
 		$result = wp_insert_term(
-			$term_name,
+			$name,
 			self::TAX_SLUG,
 		);
 		$this->handle_flag_error( $result );
+		wp_cache_delete( self::FLAGS_CACHE_KEY );
 		$term_id = $result['term_id'];
 
-		// Add term meta of source
+		// Term meta
+		$email = get_safe_post( 'email' );
+		if ( is_email( $email ) ) {
+			add_term_meta(
+				$term_id,
+				'email',
+				$email,
+				true
+			);
+		}
+		$instagram = get_safe_post( 'instagram' );
+		if ( $instagram ) {
+			add_term_meta(
+				$term_id,
+				'instagram',
+				$instagram,
+				true
+			);
+		}
+
+		// App data
 		if ( $app_id ) {
 			$meta_id = add_term_meta(
 				$term_id,
@@ -213,15 +223,15 @@ class Conflicts extends Module {
 				true
 			);
 			$this->handle_flag_error( $meta_id );
-		}
 
-		// Then add to the application that created it
-		$result = wp_add_object_terms(
-			$app_id,
-			$result['term_id'],
-			self::TAX_SLUG
-		);
-		$this->handle_flag_error( $result );
+			// Then add to the application that created it
+			$result = wp_add_object_terms(
+				$app_id,
+				$term_id,
+				self::TAX_SLUG
+			);
+			$this->handle_flag_error( $result );
+		}
 
 		// Success!
 		$this->admin->redirect_message( 'flag_success' );
@@ -249,9 +259,12 @@ class Conflicts extends Module {
 		}
 		$flags = [];
 		foreach ( $terms as $term ) {
-			$flags[ $term->name ] = [
+			$flags[] = [
 				'id' => $term->term_id,
 				'source_id' => $term->source,
+				'name' => $term->name,
+				'email' => $term->email,
+				'instagram' => $term->instagram,
 			];
 		}
 		wp_cache_set( self::FLAGS_CACHE_KEY, $flags, '', DAY_IN_SECONDS );

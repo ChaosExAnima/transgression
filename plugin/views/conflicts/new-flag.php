@@ -16,7 +16,7 @@ $action_url = $admin->get_action_url( 'flag', (string) $app_id );
 
 ?>
 <form action="<?php echo esc_url( $action_url ); ?>" method="POST" class="add-flag">
-	<?php wp_nonce_field( 'conflict-{$app_id}' ); ?>
+	<?php wp_nonce_field( "conflict-{$app_id}" ); ?>
 	<span>Add new flag:</span>
 	<input type="text" name="name" placeholder="Name" required data-1p-ignore />
 	<input type="text" name="instagram" placeholder="Instagram" data-1p-ignore />
