@@ -237,14 +237,12 @@ class Conflicts extends Module {
 		$this->admin->redirect_message( 'flag_success' );
 	}
 
-	protected function handle_flag_error( mixed $result ): void {
-		if ( is_wp_error( $result ) ) {
-			$this->logger->error( $result );
-			$this->admin->redirect_message( 'flag_error' );
-		}
-	}
-
-	protected function get_flags(): array {
+	/**
+	 * Gets all flags from the term data
+	 *
+	 * @return array
+	 */
+	public static function get_flags(): array {
 		$cached = wp_cache_get( self::FLAGS_CACHE_KEY );
 		if ( is_array( $cached ) ) {
 			return $cached;
@@ -269,6 +267,19 @@ class Conflicts extends Module {
 		}
 		wp_cache_set( self::FLAGS_CACHE_KEY, $flags, '', DAY_IN_SECONDS );
 		return $flags;
+	}
+
+	/**
+	 * Handles a flag error
+	 *
+	 * @param mixed $result WP_Error or something else.
+	 * @return void
+	 */
+	protected function handle_flag_error( mixed $result ): void {
+		if ( is_wp_error( $result ) ) {
+			$this->logger->error( $result );
+			$this->admin->redirect_message( 'flag_error' );
+		}
 	}
 
 	/**
