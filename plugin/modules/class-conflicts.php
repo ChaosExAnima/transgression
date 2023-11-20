@@ -7,6 +7,7 @@ use Transgression\Logger;
 use WP_Post;
 use WP_Query;
 
+use function Transgression\get_safe_post;
 use function Transgression\load_view;
 
 use const Transgression\PLUGIN_SLUG;
@@ -172,36 +173,46 @@ class Conflicts extends Module {
 	 * @param string $name
 	 * @return void
 	 */
-	public function add_flag( string $name ): void {
-		$app_id = absint( $_GET['app_id'] ?? null );
+	public function add_flag( string $app_id ): void {
+		// Validation
+		$app_id = absint( $app_id );
 		check_admin_referer( "conflict-{$app_id}" );
-		if ( ! $name || ! $app_id ) {
-			wp_safe_redirect( $this->admin->get_url() );
-			exit;
+		if ( $app_id ) {
+			$this->get_action_app( $app_id );
 		}
-		// Just validate
-		$this->get_action_app( $app_id );
+		$name = get_safe_post( 'name' );
+		if ( ! $name ) {
+			$this->admin->redirect_message( 'flag_error' );
+		}
+
+		// Build up the term name.
+		$term_name = $name;
+		$email = get_safe_post( 'email' );
+		if ( is_email( $email ) ) {
+			$term_name .= "-{$email}";
+		}
+		$instagram = get_safe_post( 'instagram' );
+		if ( $instagram ) {
+			$term_name .= "-{$instagram}";
+		}
 
 		// Create flag name
 		$result = wp_insert_term(
-			$name,
+			$term_name,
 			self::TAX_SLUG,
 		);
-		if ( is_wp_error( $result ) ) {
-			$this->logger->error( $result );
-			$this->admin->redirect_message( 'flag_error' );
-		}
+		$this->handle_flag_error( $result );
+		$term_id = $result['term_id'];
 
 		// Add term meta of source
-		$meta_id = add_term_meta(
-			$result['term_id'],
-			'source',
-			$app_id,
-			true
-		);
-		if ( ! is_int( $meta_id ) ) {
-			$this->logger->error( $result );
-			$this->admin->redirect_message( 'flag_error' );
+		if ( $app_id ) {
+			$meta_id = add_term_meta(
+				$term_id,
+				'source',
+				$app_id,
+				true
+			);
+			$this->handle_flag_error( $meta_id );
 		}
 
 		// Then add to the application that created it
@@ -210,13 +221,17 @@ class Conflicts extends Module {
 			$result['term_id'],
 			self::TAX_SLUG
 		);
+		$this->handle_flag_error( $result );
+
+		// Success!
+		$this->admin->redirect_message( 'flag_success' );
+	}
+
+	protected function handle_flag_error( mixed $result ): void {
 		if ( is_wp_error( $result ) ) {
 			$this->logger->error( $result );
 			$this->admin->redirect_message( 'flag_error' );
 		}
-
-		// Success!
-		$this->admin->redirect_message( 'flag_success' );
 	}
 
 	protected function get_flags(): array {
