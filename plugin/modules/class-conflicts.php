@@ -17,7 +17,8 @@ class Conflicts extends Module {
 	public const CAP_EDIT = 'edit_apps';
 	public const COMMENT_TYPE = 'conflict_comment';
 	public const IDS_CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
-	public const FLAGS_CACHE_KEY = PLUGIN_SLUG . '_confict_flags';
+	public const FLAGS_CACHE_KEY = PLUGIN_SLUG . '_conflict_flags';
+	public const APP_CHECKED_META = PLUGIN_SLUG . '_checked';
 
 	protected Page $admin;
 
@@ -235,6 +236,39 @@ class Conflicts extends Module {
 
 		// Success!
 		$this->admin->redirect_message( 'flag_success' );
+	}
+
+	/**
+	 * Checks conflicts for a given application.
+	 *
+	 * @param WP_Post $app The application post.
+	 * @return void
+	 */
+	public function check_conflict( WP_Post $app ): void {
+		$name = $app->post_title;
+		$names = [ $name ];
+		if ( str_contains( $name, ' ' ) ) {
+			$name_parts = explode( ' ', $app->post_title, 2 );
+			$names[] = $name_parts[0];
+		}
+		/** @var int[] */
+		$checked_ids = array_map( 'absint', get_post_meta( $app->ID, self::APP_CHECKED_META ) );
+		$terms = get_terms( [
+			'name' => $names,
+			'exclude' => $checked_ids,
+			'fields' => 'ids',
+			'taxonomy' => self::TAX_SLUG,
+			'hide_empty' => false,
+		] );
+		if ( is_wp_error( $terms ) ) {
+			$this->logger->error( $terms );
+			return;
+		}
+
+		$result = wp_add_object_terms( $app->ID, $terms, self::TAX_SLUG );
+		if ( is_wp_error( $result ) ) {
+			$this->logger->error( $result );
+		}
 	}
 
 	/**

@@ -22,14 +22,14 @@ class Main {
 		$settings = new Page_Options( 'settings', 'Ticketing Settings', 'Ticketing' );
 		$settings->as_subpage( 'options-general.php' );
 
-		$jetforms = new JetForms( $emailer );
-		new Applications( $jetforms, $emailer );
+		$conflicts = new Conflicts( $logger );
+		new Applications( $conflicts, $emailer );
 		new Attendance();
 		$people = new People( $emailer );
 		new Auth0( $people, $settings );
-		new Conflicts( $logger );
 		new Discord( $settings, $logger );
 		new WooCommerce( $settings );
+		new JetForms( $emailer );
 
 		Event_Schema::init();
 	}

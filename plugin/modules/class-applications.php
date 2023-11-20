@@ -45,7 +45,10 @@ class Applications extends Module {
 		'webp' => 'image/webp',
 	];
 
-	public function __construct( protected JetForms $jet_forms, protected Emailer $emailer ) {
+	public function __construct(
+		protected Conflicts $conflicts,
+		protected Emailer $emailer
+	) {
 		parent::__construct();
 
 		// Actions
@@ -165,6 +168,9 @@ class Applications extends Module {
 			] );
 		}
 
+		$this->conflicts->check_conflict( get_post( $post_id ) );
+
+		// Handle new image
 		if ( empty( $_FILES['social_image'] ) ) {
 			return;
 		}
@@ -437,7 +443,7 @@ class Applications extends Module {
 
 		$email = sanitize_email( $post->email );
 		$name = trim( $post->post_title );
-		$name_parts = explode( ' ', $name );
+		$name_parts = explode( ' ', $name, 2 );
 		$user_meta = [
 			'nickname' => $name,
 			'first_name' => $name_parts[0] ?? $name,
