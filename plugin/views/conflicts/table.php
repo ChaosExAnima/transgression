@@ -16,6 +16,10 @@ $admin = $params['admin'];
 
 ?>
 
+<aside class="new-flag">
+	<?php load_view( 'conflicts/new-flag', compact( 'admin' ) ); ?>
+</aside>
+
 <table class="wp-list-table widefat conflicts">
 	<thead>
 		<tr>

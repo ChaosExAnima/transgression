@@ -141,7 +141,7 @@ class Conflicts extends Module {
 	 */
 	public function add_comment( string $comment ): void {
 		$app_id = absint( $_GET['app_id'] ?? null );
-		check_admin_referer( "comment-{$app_id}" );
+		check_admin_referer( "conflict-{$app_id}" );
 
 		if ( ! $comment || ! $app_id ) {
 			wp_safe_redirect( $this->admin->get_url() );

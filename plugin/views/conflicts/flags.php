@@ -13,7 +13,6 @@ $app_id = $params['id'];
 $admin = $params['admin'];
 /** @var \WP_Term[] */
 $flags = $params['flags'];
-
 ?>
 <?php if ( count( $flags ) > 0 ) : ?>
 	<ul>
@@ -25,10 +24,5 @@ $flags = $params['flags'];
 	</ul>
 	<hr />
 <?php endif; ?>
-<form action="" method="POST" class="add-flag">
-	<span>Add new flag:</span>
-	<input type="text" name="name" placeholder="Name" required data-1p-ignore />
-	<input type="text" name="instagram" placeholder="Instagram" data-1p-ignore />
-	<input type="text" name="email" placeholder="Email" data-1p-ignore />
-	<?php submit_button( 'Add flag', 'primary', 'submit', false ); ?>
-</form>
+<?php
+load_view( 'conflicts/new-flag', $params );
