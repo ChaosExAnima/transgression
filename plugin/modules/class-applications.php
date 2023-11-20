@@ -265,7 +265,7 @@ class Applications extends Module {
 		}
 	}
 
-	public function meta_boxes() {
+	public function meta_boxes( WP_Post $application ) {
 		add_meta_box(
 			self::POST_TYPE . '_fields',
 			'Form Entry',
@@ -274,6 +274,16 @@ class Applications extends Module {
 			'normal',
 			'high'
 		);
+		if ( count( $this->conflicts->get_for_app( $application ) ) > 0 ) {
+			add_meta_box(
+				self::POST_TYPE . '_conflicts',
+				'Conflicts',
+				[ $this, 'render_metabox_conflicts' ],
+				self::POST_TYPE,
+				'normal',
+				'high'
+			);
+		}
 		add_meta_box(
 			self::POST_TYPE . '_comments',
 			'Comments',
@@ -308,6 +318,13 @@ class Applications extends Module {
 		$fields = self::FIELDS;
 
 		load_view( 'applications/fields', compact( 'post', 'fields' ) );
+	}
+
+	public function render_metabox_conflicts( WP_Post $post ) {
+		$conflicts = $this->conflicts->get_for_app( $post );
+		$checked = $this->conflicts->get_app_checked_ids( $post );
+
+		load_view( 'applications/conflicts', compact( 'conflicts', 'checked' ) );
 	}
 
 	public function render_metabox_comments( WP_Post $post ) {

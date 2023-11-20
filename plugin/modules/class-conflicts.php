@@ -237,6 +237,45 @@ class Conflicts extends Module {
 	}
 
 	/**
+	 * Gets checked IDs for a given application.
+	 *
+	 * @param WP_Post $app
+	 * @return int[]
+	 */
+	public function get_app_checked_ids( WP_Post $app ): array {
+		return array_map( 'absint', get_post_meta( $app->ID, self::APP_CHECKED_META ) );
+	}
+
+	/**
+	 * Gets unresolved conflicts for a given application.
+	 *
+	 * @param WP_Post $app
+	 * @param bool $unresolved
+	 * @return array
+	 */
+	public function get_for_app( WP_Post $app, bool $unresolved = false ): array {
+		/** @var \WP_Term[] */
+		$conflicts = wp_get_post_terms( $app->ID, self::TAX_SLUG );
+		if ( is_wp_error( $conflicts ) ) {
+			$this->logger->error( $conflicts );
+			return [];
+		}
+
+		if ( ! $unresolved ) {
+			return $conflicts;
+		}
+
+		$checked_ids = $this->get_app_checked_ids( $app );
+		$unresolved_conflicts = [];
+		foreach ( $conflicts as $conflict ) {
+			if ( ! in_array( $conflict->term_id, $checked_ids, true ) ) {
+				$unresolved_conflicts[] = $conflict;
+			}
+		}
+		return $unresolved_conflicts;
+	}
+
+	/**
 	 * Checks conflicts for a given application.
 	 *
 	 * @param WP_Post $app The application post.
@@ -249,12 +288,10 @@ class Conflicts extends Module {
 			$name_parts = explode( ' ', $app->post_title, 2 );
 			$names[] = $name_parts[0];
 		}
-		/** @var int[] */
-		$checked_ids = array_map( 'absint', get_post_meta( $app->ID, self::APP_CHECKED_META ) );
+		$checked_ids = $this->get_app_checked_ids( $app );
 		$terms = get_terms( [
 			'name' => $names,
 			'exclude' => $checked_ids,
-			'fields' => 'ids',
 			'taxonomy' => self::TAX_SLUG,
 			'hide_empty' => false,
 		] );
@@ -263,7 +300,17 @@ class Conflicts extends Module {
 			return;
 		}
 
-		$result = wp_add_object_terms( $app->ID, $terms, self::TAX_SLUG );
+		$added_terms = [];
+		foreach ( $terms as $term ) {
+			if ( $term->email && $term->email !== $app->email ) {
+				continue;
+			}
+			$added_terms[] = $term->term_id;
+		}
+		if ( count( $added_terms ) === 0 ) {
+			return;
+		}
+		$result = wp_add_object_terms( $app->ID, $added_terms, self::TAX_SLUG );
 		if ( is_wp_error( $result ) ) {
 			$this->logger->error( $result );
 		}
