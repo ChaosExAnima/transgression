@@ -17,7 +17,6 @@ class Conflicts extends Module {
 	public const CAP_EDIT = 'edit_apps';
 	public const COMMENT_TYPE = 'conflict_comment';
 	public const IDS_CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
-	public const FLAGS_CACHE_KEY = PLUGIN_SLUG . '_conflict_flags';
 	public const APP_CHECKED_META = PLUGIN_SLUG . '_checked';
 
 	protected Page $admin;
@@ -192,7 +191,6 @@ class Conflicts extends Module {
 			self::TAX_SLUG,
 		);
 		$this->handle_flag_error( $result );
-		wp_cache_delete( self::FLAGS_CACHE_KEY );
 		$term_id = $result['term_id'];
 
 		// Term meta
@@ -269,38 +267,6 @@ class Conflicts extends Module {
 		if ( is_wp_error( $result ) ) {
 			$this->logger->error( $result );
 		}
-	}
-
-	/**
-	 * Gets all flags from the term data
-	 *
-	 * @return array
-	 */
-	public static function get_flags(): array {
-		$cached = wp_cache_get( self::FLAGS_CACHE_KEY );
-		if ( is_array( $cached ) ) {
-			return $cached;
-		}
-
-		$terms = get_terms( [
-			'taxonomy' => self::TAX_SLUG,
-			'hide_empty' => false,
-		] );
-		if ( is_wp_error( $terms ) ) {
-			return [];
-		}
-		$flags = [];
-		foreach ( $terms as $term ) {
-			$flags[] = [
-				'id' => $term->term_id,
-				'source_id' => $term->source,
-				'name' => $term->name,
-				'email' => $term->email,
-				'instagram' => $term->instagram,
-			];
-		}
-		wp_cache_set( self::FLAGS_CACHE_KEY, $flags, '', DAY_IN_SECONDS );
-		return $flags;
 	}
 
 	/**
