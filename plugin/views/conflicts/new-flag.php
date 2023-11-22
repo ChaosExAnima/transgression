@@ -19,7 +19,15 @@ $action_url = $admin->get_action_url( 'flag', (string) $app_id );
 	<?php wp_nonce_field( "conflict-{$app_id}" ); ?>
 	<span>Add new flag:</span>
 	<input type="text" name="name" placeholder="Name" required data-1p-ignore />
-	<input type="text" name="instagram" placeholder="Instagram" data-1p-ignore />
-	<input type="text" name="email" placeholder="Email" data-1p-ignore />
+	<label class="input">@
+	<input
+		type="text"
+		name="instagram"
+		placeholder="Instagram"
+		class="plain"
+		pattern="^[a-zA-Z0-9._]{3,30}$"
+		data-1p-ignore
+	/></label>
+	<input type="email" name="email" placeholder="Email" data-1p-ignore />
 	<?php submit_button( 'Add flag', 'primary', 'submit', false ); ?>
 </form>
