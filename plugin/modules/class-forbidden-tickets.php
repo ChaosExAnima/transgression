@@ -56,6 +56,7 @@ class ForbiddenTickets extends Module {
 
 		add_action( 'user_register', [ $this, 'set_user_code' ] );
 		add_action( 'profile_update', [ $this, 'set_user_code' ] );
+		add_filter( 'allowed_redirect_hosts', [ $this, 'filter_ft_host' ] );
 	}
 
 	public function init() {
@@ -139,8 +140,9 @@ class ForbiddenTickets extends Module {
 			$code = $this->get_code( get_current_user_id() );
 		}
 		$tickets_url = $this->event_url( '/events/%s' );
+		$error_code = absint( $_GET['error_code'] ?? '' );
 		ob_start();
-		load_view( 'forbidden-tickets/login', compact( 'code', 'tickets_url' ) );
+		load_view( 'forbidden-tickets/login', compact( 'code', 'error_code', 'tickets_url' ) );
 		return ob_get_clean();
 	}
 
@@ -209,6 +211,17 @@ class ForbiddenTickets extends Module {
 		update_user_meta( $user_id, self::USER_CODE_KEY, $code );
 		wp_cache_delete( self::CACHE_ALL_KEY, PLUGIN_SLUG );
 		return $code;
+	}
+
+	/**
+	 * Filter the Forbidden Tickets host for wp_safe_redirect
+	 *
+	 * @param array $hosts
+	 * @return array
+	 */
+	public function filter_ft_host( array $hosts ): array {
+		$hosts[] = 'forbiddentickets.com';
+		return $hosts;
 	}
 
 	/**
