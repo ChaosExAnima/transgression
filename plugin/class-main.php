@@ -21,8 +21,8 @@ class Main {
 	 */
 	public function init() {
 		$logger = new Logger();
-		$ft = new ForbiddenTickets();
-		$emailer = new Emailer( $ft );
+		$tickets = new ForbiddenTickets();
+		$emailer = new Emailer( $tickets );
 
 		$settings = new Page_Options( 'settings', 'Ticketing Settings', 'Ticketing' );
 		$settings->as_subpage( 'options-general.php' );
@@ -31,7 +31,7 @@ class Main {
 		new Applications( $jetforms, $emailer );
 		new Attendance();
 		$people = new People( $emailer );
-		new Auth0( $people, $settings );
+		new Auth0( $people, $settings, $tickets );
 		new Conflicts();
 		new Discord( $settings, $logger );
 		new WooCommerce( $settings );

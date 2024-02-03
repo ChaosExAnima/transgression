@@ -30,6 +30,11 @@ class ForbiddenTickets extends Module {
 		$admin->add_style( 'forbidden-tickets' );
 		$admin->add_script( 'forbidden-tickets' );
 
+		( new Option( 'current_event', 'Current event url' ) )
+			->of_type( 'url' )
+			->describe( 'The Forbidden Tickets event URL' )
+			->on_page( $admin );
+
 		( new Option( 'copy_codes', 'Event codes' ) )
 			->of_type( 'none' )
 			->render_after( [ $this, 'render_copy' ] )
@@ -79,6 +84,21 @@ class ForbiddenTickets extends Module {
 				'render_callback' => [ $this, 'render_tickets_block' ],
 			]
 		);
+	}
+
+	/**
+	 * Get the user ticket URL
+	 *
+	 * @param int $user_id User ID
+	 * @return string
+	 */
+	public function user_ticket_url( int $user_id ): string {
+		$code = $this->get_code( $user_id );
+		$event_url = $this->admin->get_setting( 'current_event' )->get();
+		if ( ! $event_url ) {
+			$event_url = $this->event_url( '/events/%s' );
+		}
+		return add_query_arg( 'code', $code, $event_url );
 	}
 
 	/**

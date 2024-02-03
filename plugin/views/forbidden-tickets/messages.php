@@ -30,7 +30,7 @@ switch ( $code ) {
 		$message = 'There was a problem with your login.';
 		break;
 	case 105:
-		$message = 'There is no account associated with the email you provided. Is this this correct one?';
+		$message = 'We donʼt recognize this email. Did you use a different one?';
 		break;
 }
 
@@ -38,4 +38,7 @@ switch ( $code ) {
 
 <div class="message message-<?php echo esc_attr( $level ); ?>">
 	<?php echo esc_html( $message ); ?>
+	<a href="mailto:<?php echo esc_attr( get_bloginfo( 'admin_email' ) ); ?>?subject=Cannot get tickets (code <?php echo absint( $code ); ?>)">
+		Click here to get help
+	</a>
 </div>

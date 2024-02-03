@@ -43,3 +43,8 @@
 .message.message-success {
 	color: var(--wp--preset--color--vivid-green-cyan);
 }
+
+.message > a {
+	display: block;
+	font-size: 1.5rem;
+}
