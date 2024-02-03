@@ -5,16 +5,13 @@
 	padding: 2rem;
 }
 
-.tickets-login > *:not(.quiet) {
+.tickets-login > .flex {
 	align-items: center;
 	display: flex;
 	gap: 1rem;
 }
 
-.tickets-login .quiet {
-	color: var(--wp--preset--color--primary);
-	font-size: var(--wp--preset--font-size--medium);
-	text-align: center;
+.tickets-login p {
 	margin: 0;
 }
 
@@ -32,4 +29,10 @@
 .tickets-login button {
 	max-width: 10vw;
 	padding: 0;
+}
+
+.tickets-login > code {
+	display: block;
+	text-align: center;
+	letter-spacing: 0.1em;
 }

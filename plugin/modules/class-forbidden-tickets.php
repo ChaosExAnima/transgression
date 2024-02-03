@@ -134,8 +134,13 @@ class ForbiddenTickets extends Module {
 	 * @return string
 	 */
 	public function render_tickets_block(): string {
+		$code = '';
+		if ( is_user_logged_in() ) {
+			$code = $this->get_code( get_current_user_id() );
+		}
+		$tickets_url = $this->event_url( '/events/%s' );
 		ob_start();
-		load_view( 'forbidden-tickets/login' );
+		load_view( 'forbidden-tickets/login', compact( 'code', 'tickets_url' ) );
 		return ob_get_clean();
 	}
 
