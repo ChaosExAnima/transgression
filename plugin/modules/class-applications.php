@@ -2,11 +2,9 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\Page;
 use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
-use WP_Query;
 
 use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
 
@@ -51,9 +49,10 @@ class Applications extends Module {
 	) {
 		parent::__construct();
 
-		// Actions
+		// Logic
 		add_action( 'save_post_' . self::POST_TYPE, [ $this, 'save' ] );
 		add_action( 'post_action_verdict', [ $this, 'action_verdict' ] );
+		add_filter( 'update_post_term_count_statuses', [ $this, 'filter_term_counts' ], 10, 2 );
 
 		// Display
 		add_action( 'admin_enqueue_scripts', [ $this, 'scripts' ] );
@@ -221,6 +220,13 @@ class Applications extends Module {
 		}
 		wp_safe_redirect( $redirect );
 		exit;
+	}
+
+	public function filter_term_counts( array $statuses, \WP_Taxonomy $taxonomy ): array {
+		if ( $taxonomy->name === Conflicts::TAX_SLUG ) {
+			return [ self::STATUS_APPROVED ];
+		}
+		return $statuses;
 	}
 
 	/**

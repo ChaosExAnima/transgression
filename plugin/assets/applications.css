@@ -52,3 +52,7 @@
 	border-color: #c62426;
 	color: #fff;
 }
+
+table.app-conflicts {
+	border: none;
+}

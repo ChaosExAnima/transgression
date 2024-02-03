@@ -17,6 +17,7 @@ class Conflicts extends Module {
 	public const CAP_EDIT = 'edit_apps';
 	public const COMMENT_TYPE = 'conflict_comment';
 	public const IDS_CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
+	public const EMPTY_CACHE_KEY = PLUGIN_SLUG . '_conflict_empty_ids';
 	public const APP_CHECKED_META = PLUGIN_SLUG . '_checked';
 
 	protected Page $admin;
@@ -193,6 +194,20 @@ class Conflicts extends Module {
 		$this->handle_flag_error( $result );
 		$term_id = $result['term_id'];
 
+		// Save the author and creation time
+		add_term_meta(
+			$term_id,
+			'author',
+			get_current_user_id(),
+			true
+		);
+		add_term_meta(
+			$term_id,
+			'created',
+			time(),
+			true
+		);
+
 		// Term meta
 		$email = get_safe_post( 'email' );
 		if ( is_email( $email ) ) {
@@ -251,7 +266,7 @@ class Conflicts extends Module {
 	 *
 	 * @param WP_Post $app
 	 * @param bool $unresolved
-	 * @return array
+	 * @return \WP_Term[]
 	 */
 	public function get_for_app( WP_Post $app, bool $unresolved = false ): array {
 		/** @var \WP_Term[] */

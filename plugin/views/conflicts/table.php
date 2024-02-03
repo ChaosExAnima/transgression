@@ -14,11 +14,24 @@ $query = $params['query'];
 /** @var Admin\Page */
 $admin = $params['admin'];
 
+global $wpdb;
+$raw_results = $wpdb->get_col(
+	$wpdb->prepare( "SELECT term_id FROM {$wpdb->term_taxonomy} WHERE count = 0 AND taxonomy = %s", Conflicts::TAX_SLUG )
+);
+$terms = get_terms( [
+	'taxonomy' => Conflicts::TAX_SLUG,
+	'include' => array_map( 'absint', $raw_results ),
+	'hide_empty' => false,
+] );
 ?>
 
 <aside class="new-flag">
 	<?php load_view( 'conflicts/new-flag', compact( 'admin' ) ); ?>
 </aside>
+
+<pre>
+	<?php var_dump( $terms ); ?>
+</pre>
 
 <table class="wp-list-table widefat conflicts">
 	<thead>
