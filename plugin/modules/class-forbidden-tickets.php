@@ -25,6 +25,7 @@ class ForbiddenTickets extends Module {
 		$admin->add_action( 'generate_codes', [ $this, 'action_generate_codes' ] );
 		$admin->as_page( 'ticket.svg', 56 );
 		$admin->add_style( 'forbidden-tickets' );
+		$admin->add_script( 'forbidden-tickets' );
 
 		$admin->add_settings(
 			( new Option( 'copy_codes', 'Event codes' ) )
