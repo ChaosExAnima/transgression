@@ -5,6 +5,7 @@ namespace Transgression\Modules\Email;
 use Transgression\Admin\{Option, Page_Options};
 use Transgression\Logger;
 use Transgression\Modules\Applications;
+use Transgression\Modules\ForbiddenTickets;
 
 class Emailer {
 	/** @var Option[] */
@@ -12,7 +13,7 @@ class Emailer {
 
 	public Page_Options $admin;
 
-	public function __construct() {
+	public function __construct( public ?ForbiddenTickets $f_tix = null ) {
 		$admin = new Page_Options( 'emails', 'Emails' );
 		$this->admin = $admin;
 		call_user_func( [ $this->get_email_class(), 'init' ], $this );

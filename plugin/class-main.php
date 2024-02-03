@@ -17,7 +17,8 @@ class Main {
 	 */
 	public function init() {
 		$logger = new Logger();
-		$emailer = new Emailer();
+		$ft = new ForbiddenTickets();
+		$emailer = new Emailer( $ft );
 
 		$settings = new Page_Options( 'settings', 'Ticketing Settings', 'Ticketing' );
 		$settings->as_subpage( 'options-general.php' );
@@ -30,7 +31,6 @@ class Main {
 		new Conflicts();
 		new Discord( $settings, $logger );
 		new WooCommerce( $settings );
-		new ForbiddenTickets();
 
 		Event_Schema::init();
 	}

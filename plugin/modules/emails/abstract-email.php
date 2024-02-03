@@ -5,7 +5,6 @@ namespace Transgression\Modules\Email;
 use Error;
 use Transgression\Admin\Option;
 use Transgression\Logger;
-use Transgression\Modules\ForbiddenTickets;
 use WP_User;
 
 abstract class Email {
@@ -147,12 +146,9 @@ abstract class Email {
 		if ( ! isset( $sc['events'] ) ) {
 			$this->set_url( 'events', 'https://forbiddentickets.com/events/transgression-nyc' );
 		}
-		if ( ! isset( $sc['code'] ) ) {
+		if ( ! isset( $sc['code'] ) && $this->emailer->f_tix ) {
 			$this->shortcodes['code'] = function (): string {
-				if ( $this->user ) {
-					return get_user_meta( $this->user->ID, ForbiddenTickets::USER_CODE_KEY, true ) || '';
-				}
-				return '';
+				return $this->emailer->f_tix->get_code( $this->user->ID );
 			};
 		}
 	}
