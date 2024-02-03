@@ -1,0 +1,15 @@
+.flex {
+	display: flex;
+}
+
+.grow {
+	flex-grow: 1;
+}
+
+.gap-2 {
+	gap: 0.5rem;
+}
+
+.align-top {
+	vertical-align: top;
+}

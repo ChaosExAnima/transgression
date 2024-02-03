@@ -5,7 +5,11 @@ namespace Transgression;
 use Transgression\Admin\Page_Options;
 use Transgression\Modules\{Applications, Attendance, Auth0, Conflicts, Discord, People, Email\Emailer, ForbiddenTickets, JetForms, WooCommerce};
 
+use const Transgression\PLUGIN_VERSION;
+
 class Main {
+	protected const BLOCKS = [ 'tickets' ];
+
 	public function __construct() {
 		add_action( 'plugins_loaded', [ $this, 'init' ] );
 		add_filter( 'script_loader_tag', [ $this, 'filter_script_module' ], 10, 3 );
@@ -33,6 +37,8 @@ class Main {
 		new WooCommerce( $settings );
 
 		Event_Schema::init();
+
+		add_action( 'init', [ $this, 'register_blocks' ] );
 	}
 
 	/**
@@ -53,5 +59,35 @@ class Main {
 			);
 		}
 		return $tag;
+	}
+
+	public function register_blocks() {
+		foreach ( self::BLOCKS as $block ) {
+			wp_register_style(
+				"transgression-blocks-{$block}-style",
+				plugin_dir_url( PLUGIN_ROOT ) . "transgression/blocks/{$block}/style.css",
+				[],
+				PLUGIN_VERSION,
+			);
+			wp_register_script(
+				"transgression-blocks-{$block}-editor",
+				plugin_dir_url( PLUGIN_ROOT ) . "transgression/blocks/{$block}/index.js",
+				[ 'wp-blocks' ],
+				PLUGIN_VERSION,
+				true,
+			);
+			$block = register_block_type(
+				PLUGIN_ROOT . "/blocks/{$block}",
+				[
+					'render_callback' => [ $this, 'render_block' ],
+				]
+			);
+		}
+	}
+
+	public function render_block(): string {
+		ob_start();
+		load_view( 'forbidden-tickets/login' );
+		return ob_get_clean();
 	}
 }
