@@ -36,3 +36,10 @@
 	text-align: center;
 	letter-spacing: 0.1em;
 }
+
+.message.message-error {
+	color: var(--wp--preset--color--vivid-red);
+}
+.message.message-success {
+	color: var(--wp--preset--color--vivid-green-cyan);
+}

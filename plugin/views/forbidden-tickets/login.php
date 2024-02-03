@@ -12,7 +12,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $code = $params['code'];
+$error_code = absint( $params['error_code'] );
 $tickets_url = $params['tickets_url'];
+
+load_view( 'forbidden-tickets/messages', [ 'code' => $error_code ] );
 ?>
 <aside class="tickets-login">
 	<?php if ( ! is_user_logged_in() ) : ?>
