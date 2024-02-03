@@ -56,7 +56,9 @@ class People extends Module {
 			}
 		}
 
-		load_view( 'person-widget', compact( 'query', 'people' ) );
+		$tickets = $this->tickets;
+
+		load_view( 'person-widget', compact( 'query', 'people', 'tickets' ) );
 	}
 
 	/**
