@@ -33,6 +33,10 @@ switch ( $code ) {
 	case 202:
 		$message = 'We donʼt know this email. Did you apply with another one?';
 		break;
+	case 200:
+		$message = 'We sent you an email with your ticket code.';
+		$level = 'success';
+		break;
 	case 201:
 		$message = 'Invalid email. Please try again.';
 		break;
@@ -48,7 +52,9 @@ $email = sprintf(
 
 <div class="message message-<?php echo esc_attr( $level ); ?>">
 	<?php echo esc_html( $message ); ?>
-	<a href="<?php echo esc_url( $email ); ?>" target="_blank">
-		Click here to get help
-	</a>
+	<?php if ( $level !== 'success' ) : ?>
+		<a href="<?php echo esc_url( $email ); ?>" target="_blank">
+			Click here to get help
+		</a>
+	<?php endif; ?>
 </div>

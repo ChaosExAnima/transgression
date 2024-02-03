@@ -152,7 +152,13 @@ class ForbiddenTickets extends Module {
 			->to_user( $user_id )
 			->with_subject( 'Your ticket code' )
 			->with_template( 'tickets' )
+			->set_shortcode( 'code', fn() => sprintf(
+				'<a href="%s"><code>%s</code></a>',
+				$this->user_ticket_url( $user_id ),
+				$this->get_code( $user_id ),
+			) )
 			->send();
+		error_code_redirect( 200 );
 	}
 
 	/**
