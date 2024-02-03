@@ -7,6 +7,7 @@ use WP_Screen;
 use function Transgression\get_asset_url;
 use function Transgression\prefix;
 
+use const Transgression\PLUGIN_ROOT;
 use const Transgression\PLUGIN_VERSION;
 
 class Page {
@@ -56,6 +57,13 @@ class Page {
 	 */
 	public function as_page( string $icon, ?int $position = null ): self {
 		$callback = function () use ( $icon, $position ) {
+			if ( str_ends_with( $icon, '.svg' ) ) {
+				$path = PLUGIN_ROOT . '/assets/icons/' . $icon;
+				if ( file_exists( $path ) ) {
+					// @phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+					$icon = 'data:image/svg+xml;base64,' . base64_encode( file_get_contents( $path ) );
+				}
+			}
 			$admin_page = add_menu_page(
 				$this->label,
 				$this->menu_label,
