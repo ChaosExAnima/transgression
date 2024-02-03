@@ -4,7 +4,6 @@ namespace Transgression;
 
 use Error;
 use Transgression\Modules\Applications;
-use WC_Customer;
 use WP_Post;
 use WP_User;
 
@@ -19,28 +18,21 @@ class Person {
 
 	public function __construct(
 		public ?WP_User $user = null,
-		public ?WP_Post $application = null,
-		public ?WC_Customer $customer = null
+		public ?WP_Post $application = null
 	) {
-		if ( ! $user && ! $application && ! $customer ) {
+		if ( ! $user && ! $application ) {
 			throw new Error( 'Must specify something to find person from' );
 		}
 
 		if ( ! $user ) {
 			if ( $application?->created_user ) {
 				$user_id = $application->created_user;
-			} elseif ( $customer ) {
-				$user_id = $customer->get_id();
 			}
 			$this->user = falsey_to_null( get_user_by( 'id', $user_id ?? false ) );
 		}
 
 		if ( ! $application && $this->user?->application ) {
 			$this->application = get_post( $this->user?->application );
-		}
-
-		if ( ! $customer && $this->user ) {
-			$this->customer = new WC_Customer( $this->user->ID );
 		}
 
 		if ( ! $this->user && ! $this->application ) {
@@ -112,18 +104,6 @@ class Person {
 	}
 
 	/**
-	 * Gets all WooCommerce orders
-	 *
-	 * @return \WC_Order[]
-	 */
-	public function orders(): array {
-		if ( ! $this->user ) {
-			return [];
-		}
-		return wc_get_orders( [ 'customer' => $this->user->user_email ] );
-	}
-
-	/**
 	 * Returns true if someone is vaccinated
 	 *
 	 * @return boolean
@@ -137,21 +117,6 @@ class Person {
 			return $set;
 		}
 		return (bool) $this->user->vaccinated;
-	}
-
-	/**
-	 * Gets a link to all customer orders
-	 *
-	 * @return string|null
-	 */
-	public function orders_link(): ?string {
-		if ( ! $this->customer ) {
-			return null;
-		}
-		return add_query_arg( [
-			'post_type' => 'shop_order',
-			'_customer_user' => $this->customer->get_id(),
-		], admin_url( 'edit.php' ) );
 	}
 
 	/**
@@ -214,12 +179,7 @@ class Person {
 			return [];
 		}
 
-		// Check by order ID
-		if ( intval( $query ) > 0 ) {
-			$order = wc_get_order( $query );
-			$user_id = $order->get_user_id();
-			// Next, check if this is an email
-		} elseif ( is_email( $query ) ) {
+		if ( is_email( $query ) ) {
 			$user_id = email_exists( $query );
 			$meta_keys[] = 'email';
 		}
@@ -314,16 +274,14 @@ class Person {
 	 * @param array $people The array to modify
 	 * @param WP_User|null $user User
 	 * @param WP_Post|null $application Application
-	 * @param WC_Customer|null $customer Woo customer
 	 * @return array
 	 */
 	public static function append_if_new(
 		array $people,
 		?WP_User $user = null,
 		?WP_Post $application = null,
-		?WC_Customer $customer = null
 	): array {
-		$person = new self( $user, $application, $customer );
+		$person = new self( $user, $application );
 		foreach ( $people as $old_person ) {
 			if ( $old_person->id === $person->id ) {
 				return $people;
