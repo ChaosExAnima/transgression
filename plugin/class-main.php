@@ -29,8 +29,8 @@ class Main {
 		new Auth0( $people, $settings );
 		new Conflicts();
 		new Discord( $settings, $logger );
-		new ForbiddenTickets();
 		new WooCommerce( $settings );
+		new ForbiddenTickets();
 
 		Event_Schema::init();
 	}
