@@ -136,6 +136,13 @@ class ForbiddenTickets extends Module {
 			return;
 		}
 
+		$key = "trans-ticket-{$email}";
+		if ( get_transient( $key ) ) {
+			Logger::error( "Already sent ticket code to {$email}" );
+			error_code_redirect( 203 );
+		}
+		set_transient( "trans-ticket-{$email}", true, MINUTE_IN_SECONDS * 5 );
+
 		if ( ! is_email( $email ) ) {
 			Logger::error( "Invalid email {$email} for tickets" );
 			error_code_redirect( 201 );

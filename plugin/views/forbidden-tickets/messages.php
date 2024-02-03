@@ -40,6 +40,9 @@ switch ( $code ) {
 	case 201:
 		$message = 'Invalid email. Please try again.';
 		break;
+	case 203:
+		$message = 'We already sent you an email with your ticket code. Give it five minutes and try again.';
+		break;
 }
 
 $email = sprintf(

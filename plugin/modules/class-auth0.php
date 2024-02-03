@@ -122,6 +122,8 @@ class Auth0 extends Module {
 			error_code_redirect( 105, $current_url );
 		}
 
+		Logger::info( "Social login by user {$user_id} with email {$email}" );
+
 		// Log the user in and redirect to get tickets
 		wp_set_auth_cookie( $user_id, true );
 		$event_url = $this->tickets->user_ticket_url( $user_id );
