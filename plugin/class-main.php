@@ -3,7 +3,7 @@
 namespace Transgression;
 
 use Transgression\Admin\Page_Options;
-use Transgression\Modules\{Applications, Attendance, Auth0, Conflicts, Discord, People, Email\Emailer, JetForms, WooCommerce};
+use Transgression\Modules\{Applications, Attendance, Auth0, Conflicts, Discord, People, Email\Emailer, ForbiddenTickets, JetForms, WooCommerce};
 
 class Main {
 	public function __construct() {
@@ -29,6 +29,7 @@ class Main {
 		new Auth0( $people, $settings );
 		new Conflicts();
 		new Discord( $settings, $logger );
+		new ForbiddenTickets();
 		new WooCommerce( $settings );
 
 		Event_Schema::init();
