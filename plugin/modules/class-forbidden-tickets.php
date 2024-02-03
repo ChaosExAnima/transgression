@@ -297,6 +297,7 @@ class ForbiddenTickets extends Module {
 		}
 		update_user_meta( $user_id, self::USER_CODE_KEY, $code );
 		wp_cache_delete( self::CACHE_ALL_KEY, PLUGIN_SLUG );
+		update_option( self::OPTION_UNUSED_CODES, $codes );
 		return $code;
 	}
 

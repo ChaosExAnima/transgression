@@ -29,8 +29,8 @@ class Main {
 		$jetforms = new JetForms( $emailer );
 		new Applications( $jetforms, $emailer );
 		new Attendance();
-		$people = new People( $emailer );
 		$tickets = new ForbiddenTickets( $emailer );
+		$people = new People( $emailer, $tickets );
 		new Auth0( $people, $settings, $tickets );
 		new Conflicts();
 		new Discord( $settings, $logger );
