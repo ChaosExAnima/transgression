@@ -6,7 +6,11 @@ namespace Transgression\Modules;
 use Transgression\Admin\Option;
 use Transgression\Admin\Page_Options;
 
+use function Transgression\load_view;
+
+use const Transgression\PLUGIN_ROOT;
 use const Transgression\PLUGIN_SLUG;
+use const Transgression\PLUGIN_VERSION;
 
 class ForbiddenTickets extends Module {
 	public const USER_CODE_KEY = PLUGIN_SLUG . '_code';
@@ -18,6 +22,7 @@ class ForbiddenTickets extends Module {
 	protected Page_Options $admin;
 
 	public function __construct() {
+		parent::__construct();
 		$admin = new Page_Options( 'forbidden_tickets', 'Forbidden Tickets', 'Forbidden Tickets', [], 'manage_options' );
 		$this->admin = $admin;
 		$admin->add_action( 'generate_codes', [ $this, 'action_generate_codes' ] );
@@ -51,6 +56,28 @@ class ForbiddenTickets extends Module {
 
 		add_action( 'user_register', [ $this, 'set_user_code' ] );
 		add_action( 'profile_update', [ $this, 'set_user_code' ] );
+	}
+
+	public function init() {
+		wp_register_style(
+			'transgression-blocks-tickets-style',
+			plugin_dir_url( PLUGIN_ROOT ) . 'transgression/blocks/tickets/style.css',
+			[],
+			PLUGIN_VERSION,
+		);
+		wp_register_script(
+			'transgression-blocks-tickets-editor',
+			plugin_dir_url( PLUGIN_ROOT ) . 'transgression/blocks/tickets/index.js',
+			[ 'wp-blocks' ],
+			PLUGIN_VERSION,
+			true,
+		);
+		register_block_type(
+			PLUGIN_ROOT . '/blocks/tickets',
+			[
+				'render_callback' => [ $this, 'render_tickets_block' ],
+			]
+		);
 	}
 
 	/**
@@ -99,6 +126,17 @@ class ForbiddenTickets extends Module {
 			count( $all_codes ),
 			esc_url( $this->event_url( '/panel/pages/events+%s?tab=events' ) )
 		);
+	}
+
+	/**
+	 * Render the tickets block
+	 *
+	 * @return string
+	 */
+	public function render_tickets_block(): string {
+		ob_start();
+		load_view( 'forbidden-tickets/login' );
+		return ob_get_clean();
 	}
 
 	/**
