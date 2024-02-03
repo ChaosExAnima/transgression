@@ -1,15 +1,35 @@
-.flex {
+.tickets-login {
+	border: 2px solid var(--wp--preset--color--primary);
+	border-radius: var(--wp--custom--form--border--radius);
+	box-sizing: border-box;
+	padding: 2rem;
+}
+
+.tickets-login > *:not(.quiet) {
+	align-items: center;
 	display: flex;
+	gap: 1rem;
 }
 
-.grow {
-	flex-grow: 1;
+.tickets-login .quiet {
+	color: var(--wp--preset--color--primary);
+	font-size: var(--wp--preset--font-size--medium);
+	text-align: center;
+	margin: 0;
 }
 
-.gap-2 {
-	gap: 0.5rem;
+.tickets-login .social-login {
+	align-items: center;
+	display: flex;
+	width: 2rem;
 }
 
-.align-top {
-	vertical-align: top;
+.tickets-login form > * {
+	box-sizing: border-box;
+	height: 50px;
+}
+
+.tickets-login button {
+	max-width: 10vw;
+	padding: 0;
 }

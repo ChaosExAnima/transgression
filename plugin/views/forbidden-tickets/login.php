@@ -12,17 +12,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 ?>
-<div class="woocommerce-variation-add-to-cart variations_button">
+<aside class="tickets-login">
 	<?php if ( apply_filters( 'transgression_social_configured', false ) ) : ?>
-	<p>
-		Buy tickets with <?php do_action( 'transgression_social_login' ); ?>
-	</p>
+		<div>
+			Buy tickets with:
+			<?php do_action( 'transgression_social_login', true ); ?>
+		</div>
 	<?php endif; ?>
 	<label for="login-email">Send a ticket to your email:</label>
-	<p>
-		<input type="email" id="login-email" name="login-email" placeholder="Email" required class="shop-login input-text" />
-	</p>
-	<button type="submit" class="single_add_to_cart_button button alt">
-		Log in
-	</button>
-</div>
+	<form action="" method="post">
+		<input type="email" id="login-email" name="login-email" placeholder="Email" required />
+		<button type="submit" class="button">
+			Get tickets
+		</button>
+	</form>
+</aside>
