@@ -200,9 +200,9 @@ class Page {
 	 * @return string
 	 */
 	public function get_url( array $params = [] ): string {
-		$screen = WP_Screen::get( $this->page_hook );
 		$params['page'] = $this->page_slug;
-		return add_query_arg( $params, admin_url( $screen->parent_file ) );
+		global $pagenow;
+		return add_query_arg( $params, admin_url( $pagenow ) );
 	}
 
 	/**
