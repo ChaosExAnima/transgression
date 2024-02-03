@@ -48,13 +48,9 @@ class ForbiddenTickets extends Module {
 			),
 			'success'
 		);
-	}
 
-	/**
-	 * Runs on init hook
-	 */
-	public function init() {
-		add_action( 'edit_user_created_user', [ $this, 'get_role' ] );
+		add_action( 'user_register', [ $this, 'set_user_code' ] );
+		add_action( 'profile_update', [ $this, 'set_user_code' ] );
 	}
 
 	/**
@@ -151,6 +147,16 @@ class ForbiddenTickets extends Module {
 			return $meta_value;
 		}
 
+		return $this->set_user_code( $user_id );
+	}
+
+	/**
+	 * Set the user code
+	 *
+	 * @param int $user_id User ID
+	 * @return string
+	 */
+	public function set_user_code( int $user_id ): string {
 		$codes = $this->unused_codes();
 		if ( count( $codes ) === 0 ) {
 			$this->generate_codes();
@@ -199,6 +205,12 @@ class ForbiddenTickets extends Module {
 		return array_merge( $unused, $used );
 	}
 
+	/**
+	 * Get the event URL
+	 *
+	 * @param string $path Path
+	 * @return string
+	 */
 	protected function event_url( string $path ): string {
 		return sprintf(
 			"https://forbiddentickets.com{$path}",
