@@ -15,7 +15,7 @@ class ForbiddenTickets extends Module {
 	public const OPTION_UNUSED_CODES = PLUGIN_SLUG . '_unused_codes';
 	public const CACHE_ALL_KEY = 'all_codes';
 
-	public const UNUSED_COUNT = 100;
+	public const UNUSED_COUNT = 10;
 
 	protected Page_Options $admin;
 
@@ -27,17 +27,19 @@ class ForbiddenTickets extends Module {
 		$admin->add_style( 'forbidden-tickets' );
 		$admin->add_script( 'forbidden-tickets' );
 
-		$admin->add_settings(
-			( new Option( 'copy_codes', 'Event codes' ) )
-				->of_type( 'none' )
-				->render_after( [ $this, 'render_copy' ] ),
-			( new Option( 'remaining_codes', 'Remaining codes' ) )
-				->of_type( 'none' )
-				->render_after( [ $this, 'render_remaining' ] ),
-			( new Option( 'producer_slug', 'Landing URL' ) )
-				->describe( 'The Forbidden Tickets producer slug' )
-				->on_page( $admin ),
-		);
+		( new Option( 'copy_codes', 'Event codes' ) )
+			->of_type( 'none' )
+			->render_after( [ $this, 'render_copy' ] )
+			->on_page( $admin );
+
+		( new Option( 'remaining_codes', 'Remaining codes' ) )
+			->of_type( 'none' )
+			->render_after( [ $this, 'render_remaining' ] )
+			->on_page( $admin );
+
+		( new Option( 'producer_slug', 'Landing URL' ) )
+			->describe( 'The Forbidden Tickets producer slug' )
+			->on_page( $admin );
 
 		$admin->register_message(
 			'codes_generated',
@@ -68,7 +70,7 @@ class ForbiddenTickets extends Module {
 				'_wpnonce' => wp_create_nonce( 'regenerate_codes' ),
 			] );
 			printf(
-				'<a class="button button-secondary" href="%s" target="_blank">Regenerate</a>',
+				'<a class="button button-secondary" href="%s">Regenerate</a>',
 				esc_url( $regen_url ),
 			);
 		} else {
@@ -77,14 +79,23 @@ class ForbiddenTickets extends Module {
 		echo '</div>';
 	}
 
+	/**
+	 * Render the copy codes
+	 *
+	 * @return void
+	 */
 	public function render_copy() {
 		$all_codes = $this->all_codes();
 		printf(
 			'<div class="flex-row">
 				<code id="codes">%s<span class="dashicons dashicons-editor-paste-text"></span></code>
-				<p id="result" class="hidden copy-success">Successfully copied codes!</p>
+				<p id="result" class="hidden copy-success">
+					Successfully copied codes!&nbsp;
+					<a href="%s" target="_blank">Paste in an event</a>
+				</p>
 			</div>',
-			esc_textarea( implode( ',', $all_codes ) )
+			esc_textarea( implode( ',', $all_codes ) ),
+			esc_url( $this->event_url( '/panel/pages/events+%s?tab=events' ) )
 		);
 	}
 
@@ -106,7 +117,7 @@ class ForbiddenTickets extends Module {
 	protected function generate_codes(): int {
 		$unused_codes = $this->unused_codes();
 		$needed = self::UNUSED_COUNT - count( $unused_codes );
-		if ( $needed === 0 ) {
+		if ( $needed <= 0 ) {
 			return 0;
 		}
 		$all_codes = $this->all_codes();
