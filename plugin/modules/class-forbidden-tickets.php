@@ -35,6 +35,14 @@ class ForbiddenTickets extends Module {
 			'Ticket email',
 			'An email with the user\'s ticket code. Use the shortcode [code] to include the code in the email.'
 		);
+		$user_id = get_current_user_id();
+		if ( $user_id ) {
+			$this->emailer->add_shortcode( 'code', fn() => sprintf(
+				'<a href="%s"><code>%s</code></a>',
+				$this->user_ticket_url( $user_id ),
+				$this->get_code( $user_id ),
+			) );
+		}
 
 		add_action( 'user_register', [ $this, 'set_user_code' ] );
 		add_action( 'profile_update', [ $this, 'set_user_code' ] );
@@ -117,6 +125,11 @@ class ForbiddenTickets extends Module {
 		return add_query_arg( 'code', $code, $event_url );
 	}
 
+	/**
+	 * Handle the send email action
+	 *
+	 * @return void
+	 */
 	public function handle_send_email(): void {
 		$email = get_safe_post( 'tickets-email' );
 		if ( ! $email ) {
@@ -134,14 +147,10 @@ class ForbiddenTickets extends Module {
 			error_code_redirect( 202 );
 		}
 
+		Logger::info( "Sending ticket code to {$email} for user {$user_id}" );
 		$this->emailer->create()
 			->to_user( $user_id )
 			->with_subject( 'Your ticket code' )
-			->set_shortcode( 'code', fn() => sprintf(
-				'<a href="%s"><code>%s</code></a>',
-				$this->user_ticket_url( $user_id ),
-				$this->get_code( $user_id ),
-			) )
 			->with_template( 'tickets' )
 			->send();
 	}
