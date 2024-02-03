@@ -6,8 +6,6 @@ namespace Transgression\Modules;
 use Transgression\Admin\Option;
 use Transgression\Admin\Page_Options;
 
-use function Transgression\load_view;
-
 use const Transgression\PLUGIN_SLUG;
 
 class ForbiddenTickets extends Module {
@@ -50,6 +48,13 @@ class ForbiddenTickets extends Module {
 			),
 			'success'
 		);
+	}
+
+	/**
+	 * Runs on init hook
+	 */
+	public function init() {
+		add_action( 'edit_user_created_user', [ $this, 'get_role' ] );
 	}
 
 	/**
