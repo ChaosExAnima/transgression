@@ -2,8 +2,6 @@
 
 namespace Transgression\Admin;
 
-use WP_Screen;
-
 use const Transgression\PLUGIN_SLUG;
 
 class Page_Options extends Page {
