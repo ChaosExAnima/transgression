@@ -267,8 +267,24 @@ class Page {
 	 * @return void
 	 */
 	public function do_screen_actions( \WP_Screen $screen ): void {
-		if ( $this->page_hook && $screen->id === $this->page_hook ) {
-			do_action( "{$this->page_slug}_screen_loaded", $this );
+		if ( ! $this->page_hook || $screen->id !== $this->page_hook ) {
+			return;
+		}
+		if ( ! current_user_can( $this->permission ) ) {
+			wp_die();
+		}
+		do_action( "{$this->page_slug}_screen_loaded", $this );
+
+		foreach ( $this->actions as $key ) {
+			// phpcs:ignore WordPress.Security.NonceVerification
+			if ( isset( $_REQUEST[ $key ] ) ) {
+				do_action(
+					"{$this->page_slug}_action_{$key}",
+					// phpcs:ignore WordPress.Security.NonceVerification
+					sanitize_textarea_field( wp_unslash( $_REQUEST[ $key ] ) ),
+					$this
+				);
+			}
 		}
 	}
 
@@ -331,18 +347,6 @@ class Page {
 	public function render_page() {
 		if ( ! current_user_can( $this->permission ) ) {
 			wp_die();
-		}
-
-		foreach ( $this->actions as $key ) {
-			// phpcs:ignore WordPress.Security.NonceVerification
-			if ( isset( $_REQUEST[ $key ] ) ) {
-				do_action(
-					"{$this->page_slug}_action_{$key}",
-					// phpcs:ignore WordPress.Security.NonceVerification
-					sanitize_textarea_field( wp_unslash( $_REQUEST[ $key ] ) ),
-					$this
-				);
-			}
 		}
 
 		settings_errors( "{$this->page_slug}_messages" );
