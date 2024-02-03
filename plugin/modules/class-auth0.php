@@ -44,8 +44,8 @@ class Auth0 extends Module {
 				'<a href="?social-login=%1$s" class="social-login %1$s">',
 				esc_attr( $provider )
 			);
-			if ( file_exists( PLUGIN_ROOT . "/assets/{$provider}.svg" ) ) {
-				include PLUGIN_ROOT . "/assets/{$provider}.svg";
+			if ( file_exists( PLUGIN_ROOT . "/assets/icons/{$provider}.svg" ) ) {
+				include PLUGIN_ROOT . "/assets/icons/{$provider}.svg";
 			} else {
 				echo esc_html( $provider );
 			}
