@@ -91,11 +91,12 @@ class ForbiddenTickets extends Module {
 			'<div class="flex-row">
 				<code id="codes">%s<span class="dashicons dashicons-editor-paste-text"></span></code>
 				<p id="result" class="hidden copy-success">
-					Successfully copied codes!&nbsp;
+					Successfully copied %d codes!&nbsp;
 					<a href="%s" target="_blank">Paste in an event</a>
 				</p>
 			</div>',
 			esc_textarea( implode( ',', $all_codes ) ),
+			count( $all_codes ),
 			esc_url( $this->event_url( '/panel/pages/events+%s?tab=events' ) )
 		);
 	}
@@ -156,15 +157,13 @@ class ForbiddenTickets extends Module {
 	 * @param int $user_id User ID
 	 * @return string
 	 */
-	public function set_user_code( int $user_id ): string {
+	public function set_user_code( int $user_id ): ?string {
 		$codes = $this->unused_codes();
-		if ( count( $codes ) === 0 ) {
-			$this->generate_codes();
-			$codes = $this->unused_codes();
-		}
 		$code = array_shift( $codes );
+		if ( ! $code ) {
+			return null;
+		}
 		update_user_meta( $user_id, self::USER_CODE_KEY, $code );
-		update_option( self::OPTION_UNUSED_CODES, $codes );
 		wp_cache_delete( self::CACHE_ALL_KEY, PLUGIN_SLUG );
 		return $code;
 	}
