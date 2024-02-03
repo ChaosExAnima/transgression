@@ -2,7 +2,8 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\Page;
+use Transgression\Admin\Option;
+use Transgression\Admin\Page_Options;
 
 use function Transgression\load_view;
 
@@ -13,9 +14,15 @@ class ForbiddenTickets extends Module {
 	public const CACHE_ALL_KEY = 'all_codes';
 
 	public function __construct() {
-		$admin = new Page( 'forbidden-tickets', 'Forbidden Tickets', 'Forbidden Tickets', 'manage_options' );
-		$admin->add_render_callback( [ $this, 'render' ] );
+		$admin = new Page_Options( 'forbidden-tickets', 'Forbidden Tickets', 'Forbidden Tickets', [], 'manage_options' );
+		$admin->add_render_callback( [ $this, 'render' ], 1 );
 		$admin->as_page( 'ticket.svg', 56 );
+		$admin->add_style( 'forbidden-tickets' );
+
+		( new Option( 'landing_url', 'Landing URL' ) )
+			->describe( 'The Forbidden Tickets landing page' )
+			->of_type( 'url' )
+			->on_page( $admin );
 	}
 
 	/**

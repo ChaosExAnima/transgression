@@ -9,31 +9,19 @@ namespace Transgression;
 
 $codes = $params['codes'] ?? [];
 ?>
-<style>
-	code {
-		display: block;
-		padding: 1rem 2.5rem 1rem 1rem;
-		border-radius: 0.5rem;
-		margin: 1rem 0;
-		max-width: 400px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		position: relative;
-		cursor: pointer;
-	}
-
-	code > .dashicons {
-		position: absolute;
-		right: 1rem;
-		top: 1rem;
-	}
-
-	.copy-success {
-		color: #00a32a;
-	}
-</style>
-<code id="codes"><?php echo esc_textarea( implode( ',', $codes ) ); ?> <span class="dashicons dashicons-editor-paste-text"></span></code>
-<p id="result" class="hidden copy-success">Successfully copied codes!</p>
+<table class="form-table">
+	<tbody>
+		<tr>
+			<th scope="row">Event Codes</th>
+			<td>
+				<div class="flex-row">
+					<code id="codes"><?php echo esc_textarea( implode( ',', $codes ) ); ?> <span class="dashicons dashicons-editor-paste-text"></span></code>
+					<p id="result" class="hidden copy-success">Successfully copied codes!</p>
+				</div>
+			</td>
+		</tr>
+	</tbody>
+</table>
 
 <script>
 	// Get the text field
