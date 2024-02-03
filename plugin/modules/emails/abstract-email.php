@@ -47,6 +47,11 @@ abstract class Email {
 		return $this;
 	}
 
+	public function set_shortcode( string $key, callable $content ): self {
+		$this->shortcodes[ $key ] = $content;
+		return $this;
+	}
+
 	public function set_url( string $key, string $url ): self {
 		$this->shortcodes[ $key ] = $url;
 		return $this;
@@ -143,13 +148,13 @@ abstract class Email {
 				return 'there';
 			};
 		}
-		if ( ! isset( $sc['events'] ) ) {
-			$this->set_url( 'events', 'https://forbiddentickets.com/events/transgression-nyc' );
-		}
-		if ( ! isset( $sc['code'] ) && $this->emailer->f_tix ) {
-			$this->shortcodes['code'] = function (): string {
-				return $this->emailer->f_tix->get_code( $this->user->ID );
-			};
+
+		$emailer_codes = $this->emailer->get_shortcodes();
+		foreach ( $emailer_codes as $key => $content ) {
+			if ( isset( $sc[ $key ] ) ) {
+				continue;
+			}
+			$this->shortcodes[ $key ] = $content;
 		}
 	}
 
