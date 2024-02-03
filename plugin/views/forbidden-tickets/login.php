@@ -37,7 +37,9 @@ load_view( 'forbidden-tickets/messages', [ 'code' => $error_code ] );
 			Welcome, <?php echo esc_html( wp_get_current_user()->display_name ); ?>!
 			Your code to unlock tickets is:
 		</p>
-		<code><?php echo esc_html( $code ); ?></code>
+		<a href="<?php echo esc_url( $tickets_url ); ?>" class="buy">
+			<code><?php echo esc_html( $code ); ?></code>
+		</a>
 		<p>Remember, do not share this with anyone else!</p>
 	<?php endif; ?>
 </aside>

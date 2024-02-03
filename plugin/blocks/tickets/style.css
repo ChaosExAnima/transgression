@@ -31,7 +31,7 @@
 	padding: 0;
 }
 
-.tickets-login > code {
+.tickets-login .buy {
 	display: block;
 	text-align: center;
 	letter-spacing: 0.1em;

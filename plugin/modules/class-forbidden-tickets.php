@@ -159,7 +159,7 @@ class ForbiddenTickets extends Module {
 		if ( is_user_logged_in() ) {
 			$code = $this->get_code( get_current_user_id() );
 		}
-		$tickets_url = $this->event_url( '/events/%s' );
+		$tickets_url = $this->user_ticket_url( get_current_user_id() );
 		$error_code = absint( $_GET['error_code'] ?? '' );
 		ob_start();
 		load_view( 'forbidden-tickets/login', compact( 'code', 'error_code', 'tickets_url' ) );
