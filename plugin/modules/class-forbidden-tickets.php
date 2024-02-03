@@ -79,7 +79,7 @@ class ForbiddenTickets extends Module {
 				'_wpnonce' => wp_create_nonce( 'regenerate_codes' ),
 			] );
 			printf(
-				'<a class="button button-secondary" href="%s">Regenerate</a>',
+				'<a class="button button-secondary" href="%s" target="_blank">Regenerate</a>',
 				esc_url( $regen_url ),
 			);
 		} else {
