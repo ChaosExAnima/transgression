@@ -47,6 +47,10 @@ class Option {
 	public function of_type( ?string $type = null ): self {
 		$this->render_cb = [ $this, 'render_text_field' ];
 		switch ( $type ) {
+			case 'empty':
+			case 'none':
+				$this->render_cb = '__return_empty_string';
+				break;
 			case 'bool':
 			case 'toggle':
 				$this->sanitize_cb = 'boolval';
