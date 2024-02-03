@@ -51,18 +51,6 @@ class ForbiddenTickets extends Module {
 	}
 
 	/**
-	 * Render the admin page
-	 *
-	 * @return void
-	 */
-	public function render(): void {
-		load_view( 'forbidden-tickets/admin', [
-			'codes' => $this->all_codes(),
-			'unused_count' => count( $this->unused_codes() ),
-		] );
-	}
-
-	/**
 	 * Render the remaining codes
 	 *
 	 * @return void
