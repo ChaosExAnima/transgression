@@ -30,15 +30,25 @@ switch ( $code ) {
 		$message = 'There was a problem with your login.';
 		break;
 	case 105:
-		$message = 'We donʼt recognize this email. Did you use a different one?';
+	case 202:
+		$message = 'We donʼt know this email. Did you apply with another one?';
+		break;
+	case 201:
+		$message = 'Invalid email. Please try again.';
 		break;
 }
+
+$email = sprintf(
+	'mailto:%s?subject=Cannot get tickets (code %d)',
+	get_bloginfo( 'admin_email' ),
+	$code
+);
 
 ?>
 
 <div class="message message-<?php echo esc_attr( $level ); ?>">
 	<?php echo esc_html( $message ); ?>
-	<a href="mailto:<?php echo esc_attr( get_bloginfo( 'admin_email' ) ); ?>?subject=Cannot get tickets (code <?php echo absint( $code ); ?>)">
+	<a href="<?php echo esc_url( $email ); ?>" target="_blank">
 		Click here to get help
 	</a>
 </div>

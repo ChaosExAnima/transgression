@@ -5,7 +5,11 @@ namespace Transgression\Modules;
 
 use Transgression\Admin\Option;
 use Transgression\Admin\Page_Options;
+use Transgression\Logger;
+use Transgression\Modules\Email\Emailer;
 
+use function Transgression\error_code_redirect;
+use function Transgression\get_safe_post;
 use function Transgression\load_view;
 
 use const Transgression\PLUGIN_ROOT;
@@ -21,8 +25,46 @@ class ForbiddenTickets extends Module {
 
 	protected Page_Options $admin;
 
-	public function __construct() {
+	public function __construct( protected Emailer $emailer ) {
 		parent::__construct();
+
+		$this->admin();
+
+		$this->emailer->add_template(
+			'tickets',
+			'Ticket email',
+			'An email with the user\'s ticket code. Use the shortcode [code] to include the code in the email.'
+		);
+
+		add_action( 'user_register', [ $this, 'set_user_code' ] );
+		add_action( 'profile_update', [ $this, 'set_user_code' ] );
+		add_filter( 'allowed_redirect_hosts', [ $this, 'filter_ft_host' ] );
+		add_action( 'template_redirect', [ $this, 'handle_send_email' ] );
+	}
+
+	public function init() {
+		wp_register_style(
+			'transgression-blocks-tickets-style',
+			plugin_dir_url( PLUGIN_ROOT ) . 'transgression/blocks/tickets/style.css',
+			[],
+			PLUGIN_VERSION,
+		);
+		wp_register_script(
+			'transgression-blocks-tickets-editor',
+			plugin_dir_url( PLUGIN_ROOT ) . 'transgression/blocks/tickets/index.js',
+			[ 'wp-blocks' ],
+			PLUGIN_VERSION,
+			true,
+		);
+		register_block_type(
+			PLUGIN_ROOT . '/blocks/tickets',
+			[
+				'render_callback' => [ $this, 'render_tickets_block' ],
+			]
+		);
+	}
+
+	protected function admin() {
 		$admin = new Page_Options( 'forbidden_tickets', 'Forbidden Tickets', 'Forbidden Tickets', [], 'manage_options' );
 		$this->admin = $admin;
 		$admin->add_action( 'generate_codes', [ $this, 'action_generate_codes' ] );
@@ -58,32 +100,6 @@ class ForbiddenTickets extends Module {
 			),
 			'success'
 		);
-
-		add_action( 'user_register', [ $this, 'set_user_code' ] );
-		add_action( 'profile_update', [ $this, 'set_user_code' ] );
-		add_filter( 'allowed_redirect_hosts', [ $this, 'filter_ft_host' ] );
-	}
-
-	public function init() {
-		wp_register_style(
-			'transgression-blocks-tickets-style',
-			plugin_dir_url( PLUGIN_ROOT ) . 'transgression/blocks/tickets/style.css',
-			[],
-			PLUGIN_VERSION,
-		);
-		wp_register_script(
-			'transgression-blocks-tickets-editor',
-			plugin_dir_url( PLUGIN_ROOT ) . 'transgression/blocks/tickets/index.js',
-			[ 'wp-blocks' ],
-			PLUGIN_VERSION,
-			true,
-		);
-		register_block_type(
-			PLUGIN_ROOT . '/blocks/tickets',
-			[
-				'render_callback' => [ $this, 'render_tickets_block' ],
-			]
-		);
 	}
 
 	/**
@@ -99,6 +115,35 @@ class ForbiddenTickets extends Module {
 			$event_url = $this->event_url( '/events/%s' );
 		}
 		return add_query_arg( 'code', $code, $event_url );
+	}
+
+	public function handle_send_email(): void {
+		$email = get_safe_post( 'tickets-email' );
+		if ( ! $email ) {
+			return;
+		}
+
+		if ( ! is_email( $email ) ) {
+			Logger::error( "Invalid email {$email} for tickets" );
+			error_code_redirect( 201 );
+		}
+
+		$user_id = email_exists( $email );
+		if ( ! $user_id ) {
+			Logger::error( "Unrecognized {$email} for tickets" );
+			error_code_redirect( 202 );
+		}
+
+		$this->emailer->create()
+			->to_user( $user_id )
+			->with_subject( 'Your ticket code' )
+			->set_shortcode( 'code', fn() => sprintf(
+				'<a href="%s"><code>%s</code></a>',
+				$this->user_ticket_url( $user_id ),
+				$this->get_code( $user_id ),
+			) )
+			->with_template( 'tickets' )
+			->send();
 	}
 
 	/**

@@ -25,9 +25,16 @@ load_view( 'forbidden-tickets/messages', [ 'code' => $error_code ] );
 				<?php do_action( 'transgression_social_login', true ); ?>
 			</div>
 		<?php endif; ?>
-		<label for="login-email">Send your code to your email:</label>
-		<form action="" method="post" class="flex">
-			<input type="email" id="login-email" name="login-email" placeholder="Email" required />
+		<label for="tickets-email">Send your code to your email:</label>
+		<form action="<?php echo esc_url( get_current_url() ); ?>" method="post" class="flex">
+			<input
+				type="email"
+				id="tickets-email"
+				name="tickets-email"
+				placeholder="Email"
+				value="<?php echo esc_attr( get_safe_post( 'tickets-email' ) ); ?>"
+				required
+			/>
 			<button type="submit" class="button">
 				Get tickets
 			</button>
