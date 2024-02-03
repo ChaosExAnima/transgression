@@ -228,3 +228,16 @@ function render_datalist( string $id, array $data ) {
 	}
 	echo '</datalist>';
 }
+
+/**
+ * Redirects to a URL with an error code
+ *
+ * @param integer $code
+ * @param string|null $url
+ * @return void
+ */
+function error_code_redirect( int $code, ?string $url = null ): void {
+	$url = $url ?? get_current_url();
+	wp_safe_redirect( add_query_arg( 'error_code', $code, $url ) );
+	exit;
+}
