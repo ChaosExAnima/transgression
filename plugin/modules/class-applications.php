@@ -446,6 +446,8 @@ class Applications extends Module {
 		wp_update_post( $post );
 		update_post_meta( $post->ID, 'created_user', $user_id );
 		$this->email_result( $post );
+		$admin_name = wp_get_current_user()->display_name;
+		Logger::info( "Created user {$user_id} from approval by {$admin_name}" );
 		return null;
 	}
 

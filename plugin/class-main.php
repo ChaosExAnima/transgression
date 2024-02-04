@@ -27,9 +27,9 @@ class Main {
 		$settings->as_subpage( 'options-general.php' );
 
 		$jetforms = new JetForms( $emailer );
+		$tickets = new ForbiddenTickets( $emailer );
 		new Applications( $jetforms, $emailer );
 		new Attendance();
-		$tickets = new ForbiddenTickets( $emailer );
 		$people = new People( $emailer, $tickets );
 		new Auth0( $people, $settings, $tickets );
 		new Conflicts();
