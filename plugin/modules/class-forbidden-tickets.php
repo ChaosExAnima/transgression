@@ -45,7 +45,7 @@ class ForbiddenTickets extends Module {
 		}
 
 		add_action( 'user_register', [ $this, 'set_user_code' ] );
-		add_action( 'profile_update', [ $this, 'set_user_code' ] );
+		add_action( 'profile_update', [ $this, 'get_code' ] );
 		add_filter( 'allowed_redirect_hosts', [ $this, 'filter_ft_host' ] );
 		add_action( 'template_redirect', [ $this, 'handle_send_email' ] );
 	}
