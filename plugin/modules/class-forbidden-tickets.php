@@ -21,7 +21,7 @@ class ForbiddenTickets extends Module {
 	public const OPTION_UNUSED_CODES = PLUGIN_SLUG . '_unused_codes';
 	public const CACHE_ALL_KEY = 'all_codes';
 
-	public const UNUSED_COUNT = 10;
+	public const UNUSED_COUNT = 100;
 
 	protected Page_Options $admin;
 
@@ -275,6 +275,9 @@ class ForbiddenTickets extends Module {
 	 * @return string|null
 	 */
 	public function get_code( int $user_id ): ?string {
+		if ( ! $user_id ) {
+			return null;
+		}
 		$meta_value = get_user_meta( $user_id, self::USER_CODE_KEY, true );
 		if ( $meta_value ) {
 			return $meta_value;
@@ -290,6 +293,10 @@ class ForbiddenTickets extends Module {
 	 * @return string
 	 */
 	public function set_user_code( int $user_id ): ?string {
+		if ( ! $user_id ) {
+			return null;
+		}
+		Logger::info( "Setting user code for user {$user_id}" );
 		$codes = $this->unused_codes();
 		$code = array_shift( $codes );
 		if ( ! $code ) {
