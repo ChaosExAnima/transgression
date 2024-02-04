@@ -272,9 +272,9 @@ class ForbiddenTickets extends Module {
 	 *
 	 * @param int $user_id User ID
 	 * @param string $code Code
-	 * @return string
+	 * @return string|null
 	 */
-	public function get_code( int $user_id ): string {
+	public function get_code( int $user_id ): ?string {
 		$meta_value = get_user_meta( $user_id, self::USER_CODE_KEY, true );
 		if ( $meta_value ) {
 			return $meta_value;
