@@ -4,11 +4,13 @@ namespace Transgression\Modules\Email;
 
 use Transgression\Admin\{Option, Page_Options};
 use Transgression\Logger;
-use Transgression\Modules\Applications;
 
 class Emailer {
 	/** @var Option[] */
 	protected array $templates = [];
+
+	/** @var array<string,string|callable> */
+	protected array $shortcodes = [];
 
 	public Page_Options $admin;
 
@@ -95,6 +97,26 @@ class Emailer {
 	}
 
 	/**
+	 * Registers a shortcode for use in email templates.
+	 *
+	 * @param string $key
+	 * @param callable|string $value
+	 * @return void
+	 */
+	public function add_shortcode( string $key, callable|string $value ): void {
+		$this->shortcodes[ $key ] = $value;
+	}
+
+	/**
+	 * Gets all registered shortcodes.
+	 *
+	 * @return array
+	 */
+	public function get_shortcodes(): array {
+		return $this->shortcodes;
+	}
+
+	/**
 	 * Renders a test email button
 	 *
 	 * @param Option $option
@@ -126,7 +148,7 @@ class Emailer {
 			$this->create()
 				->to_user( $user_id )
 				->with_template( $template_key )
-				->set_url( 'login-url', wc_get_page_permalink( 'shop' ) )
+				->set_url( 'login-url', get_bloginfo( 'url' ) )
 				->send();
 			$this->admin->redirect_message( 'test_sent' );
 		} catch ( \Error $error ) {

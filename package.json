@@ -18,7 +18,7 @@
 		"setup:plugins": "wp plugin install --activate $(cat plugins.txt)",
 		"setup:theme": "wp theme install blockbase; yarn wp theme activate transgression",
 		"cron": "wp cron event run --due-now",
-		"js": "esbuild --bundle --outbase=. --outdir=. --sourcemap --target=chrome58,firefox57,safari11 plugin/assets/[!_]*.ts",
+		"js": "esbuild --bundle --outbase=. --outdir=. --sourcemap --target=chrome58,firefox57,safari11 plugin/assets/[!_]*.ts $(find plugin/blocks -name *.ts -o -name *.tsx)",
 		"js:watch": "yarn js --watch"
 	},
 	"repository": "git@github.com:ChaosExAnima/transgression.git",
@@ -26,6 +26,12 @@
 	"license": "MIT",
 	"private": true,
 	"devDependencies": {
+		"@total-typescript/ts-reset": "^0.5.1",
+		"@types/react": "^18.2.52",
+		"@types/react-dom": "^18.2.18",
+		"@types/wordpress__block-editor": "^11.5.10",
+		"@types/wordpress__blocks": "^12.5.13",
+		"@wordpress/server-side-render": "^4.27.1",
 		"concurrently": "^7.2.1",
 		"esbuild": "^0.18.11",
 		"prettier": "^2.6.2",
@@ -33,5 +39,6 @@
 	},
 	"volta": {
 		"node": "18.3.0"
-	}
+	},
+	"dependencies": {}
 }

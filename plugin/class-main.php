@@ -3,9 +3,13 @@
 namespace Transgression;
 
 use Transgression\Admin\Page_Options;
-use Transgression\Modules\{Applications, Attendance, Auth0, Conflicts, Discord, People, Email\Emailer, JetForms, WooCommerce};
+use Transgression\Modules\{Applications, Attendance, Auth0, Conflicts, Discord, People, Email\Emailer, ForbiddenTickets, JetForms, WooCommerce};
+
+use const Transgression\PLUGIN_VERSION;
 
 class Main {
+	protected const BLOCKS = [ 'tickets' ];
+
 	public function __construct() {
 		add_action( 'plugins_loaded', [ $this, 'init' ] );
 		add_filter( 'script_loader_tag', [ $this, 'filter_script_module' ], 10, 3 );
@@ -25,8 +29,9 @@ class Main {
 		$jetforms = new JetForms( $emailer );
 		new Applications( $jetforms, $emailer );
 		new Attendance();
-		$people = new People( $emailer );
-		new Auth0( $people, $settings );
+		$tickets = new ForbiddenTickets( $emailer );
+		$people = new People( $emailer, $tickets );
+		new Auth0( $people, $settings, $tickets );
 		new Conflicts();
 		new Discord( $settings, $logger );
 		new WooCommerce( $settings );

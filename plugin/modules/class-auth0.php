@@ -7,12 +7,12 @@ use Transgression\Logger;
 
 use const Transgression\PLUGIN_ROOT;
 
-use function Transgression\{get_current_url, strip_query};
+use function Transgression\{error_code_redirect, get_current_url, strip_query};
 
 class Auth0 extends Module {
 	public const PROVIDERS = [ 'discord', 'google-oauth2' ];
 
-	public function __construct( protected People $people, protected Page_Options $settings ) {
+	public function __construct( protected People $people, protected Page_Options $settings, protected ForbiddenTickets $tickets ) {
 		$this->settings->add_section( 'auth0', 'Auth0' );
 		$this->settings->add_settings( 'auth0',
 			( new Option( 'auth0_baseurl', 'Base URL' ) )->of_type( 'url' ),
@@ -35,28 +35,21 @@ class Auth0 extends Module {
 	 * @param bool $enabled
 	 * @return void
 	 */
-	public function display_login_buttons( bool $enabled = true ) {
+	public function display_login_buttons() {
 		if ( ! $this->is_configured() ) {
 			return;
 		}
 		foreach ( self::PROVIDERS as $provider ) {
-			if ( $enabled ) {
-				printf(
-					'<a href="?social-login=%1$s" class="social-login %1$s">',
-					esc_attr( $provider )
-				);
-			} else {
-				printf(
-					'<span class="social-login disabled %1$s">',
-					esc_attr( $provider )
-				);
-			}
-			if ( file_exists( PLUGIN_ROOT . "/assets/{$provider}.svg" ) ) {
-				include PLUGIN_ROOT . "/assets/{$provider}.svg";
+			printf(
+				'<a href="?social-login=%1$s" class="social-login %1$s">',
+				esc_attr( $provider )
+			);
+			if ( file_exists( PLUGIN_ROOT . "/assets/icons/{$provider}.svg" ) ) {
+				include PLUGIN_ROOT . "/assets/icons/{$provider}.svg";
 			} else {
 				echo esc_html( $provider );
 			}
-			echo $enabled ? '</a> ' : '</span> ';
+			echo '</a>';
 		}
 	}
 
@@ -76,14 +69,9 @@ class Auth0 extends Module {
 			empty( $_GET['social-login'] ) &&
 			empty( $_GET['code'] ) &&
 			empty( $_GET['state'] ) ||
-			is_admin() // Disable for admin
+			! empty( $_GET['error_code'] )
 		) {
 			return;
-		}
-
-		// Set the session cookie so notices work.
-		if ( ! WC()->session->has_session() ) {
-			WC()->session->set_customer_session_cookie( true );
 		}
 
 		$current_url = strip_query( get_current_url() );
@@ -93,9 +81,7 @@ class Auth0 extends Module {
 			$provider = sanitize_text_field( wp_unslash( $_GET['social-login'] ) );
 			if ( ! in_array( $provider, self::PROVIDERS, true ) ) {
 				Logger::info( "Invalid social login: {$provider}" );
-				wc_add_notice( 'Invalid login type', 'error' );
-				wp_safe_redirect( $current_url );
-				exit;
+				error_code_redirect( 101, $current_url );
 			}
 			$this->social_redirect( $provider, $current_url );
 			return;
@@ -113,48 +99,35 @@ class Auth0 extends Module {
 			count( $state ) !== 3
 		) {
 			Logger::info( 'Got invalid social login state' );
-			wc_add_notice( 'There was a problem with your login', 'error' );
-			wp_safe_redirect( wc_get_page_permalink( 'shop' ) );
-			exit;
+			error_code_redirect( 102, $current_url );
 		}
 
 		// Validate nonce
 		$current_url = $state[1];
 		if ( 1 !== wp_verify_nonce( $state[2], $this->get_nonce_action( $state[0], $state[1] ) ) ) {
 			Logger::info( 'Nonce validation failed for social login' );
-			wc_add_notice( 'There was a problem with your login', 'error' );
-			wp_safe_redirect( $current_url );
-			exit;
+			error_code_redirect( 103, $current_url );
 		}
 
 		// Gets the email from the code
 		$email = $this->get_email( sanitize_text_field( wp_unslash( $_GET['code'] ) ) );
 		if ( ! $email ) {
-			wc_add_notice( 'There was a problem with your login', 'error' );
-			wp_safe_redirect( $current_url );
-			exit;
+			error_code_redirect( 104, $current_url );
 		}
 
 		// Validates the user exists
 		$user_id = email_exists( $email );
 		if ( ! $user_id ) {
 			Logger::error( "Failed social login attempt by email {$email}" );
-			wc_add_notice( "There is no account associated with the email {$email}. Is this this correct one?", 'error' );
-			wp_safe_redirect( $current_url );
-			exit;
+			error_code_redirect( 105, $current_url );
 		}
 
-		// Logs the user in and redirects them back to the right spot
-		$user = get_userdata( $user_id );
-		$this->people->redirect_to_login_if_not_customer( $user );
+		Logger::info( "Social login by user {$user_id} with email {$email}" );
 
-		wp_set_auth_cookie( $user_id );
-		wc_add_notice( sprintf(
-			'You are now logged in, %s. <a href="%s">Log out</a>',
-			esc_html( $user->display_name ),
-			esc_url( wp_logout_url( $current_url ) )
-		) );
-		wp_safe_redirect( $current_url );
+		// Log the user in and redirect to get tickets
+		wp_set_auth_cookie( $user_id, true );
+		$event_url = $this->tickets->user_ticket_url( $user_id );
+		wp_safe_redirect( $event_url );
 		exit;
 	}
 

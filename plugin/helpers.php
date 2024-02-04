@@ -164,7 +164,6 @@ function is_url( string $url ): bool {
  * Gets data from POST as a string, passed through sanitization.
  *
  * @param string $key The key name
- * @return string|null The value, or null if it's not set
  */
 function get_safe_post( string $key ): ?string {
 	// phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -175,6 +174,11 @@ function get_safe_post( string $key ): ?string {
 	return sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
 }
 
+/**
+ * Strips out any query parameters from a URL.
+ *
+ * @param string $url URL to strip
+ */
 function strip_query( string $url ): string {
 	$result = strtok( $url, '?' );
 	if ( false === $result ) {
@@ -227,4 +231,17 @@ function render_datalist( string $id, array $data ) {
 		}
 	}
 	echo '</datalist>';
+}
+
+/**
+ * Redirects to a URL with an error code
+ *
+ * @param integer $code
+ * @param string|null $url
+ * @return void
+ */
+function error_code_redirect( int $code, ?string $url = null ): void {
+	$url = $url ?? get_current_url();
+	wp_safe_redirect( add_query_arg( 'error_code', $code, $url ) );
+	exit;
 }

@@ -47,6 +47,11 @@ abstract class Email {
 		return $this;
 	}
 
+	public function set_shortcode( string $key, callable $content ): self {
+		$this->shortcodes[ $key ] = $content;
+		return $this;
+	}
+
 	public function set_url( string $key, string $url ): self {
 		$this->shortcodes[ $key ] = $url;
 		return $this;
@@ -143,11 +148,13 @@ abstract class Email {
 				return 'there';
 			};
 		}
-		if ( ! isset( $sc['events'] ) ) {
-			$this->set_url( 'events', wc_get_page_permalink( 'shop' ) );
-		}
-		if ( ! isset( $sc['account'] ) ) {
-			$this->set_url( 'account', wc_get_page_permalink( 'myaccount' ) );
+
+		$emailer_codes = $this->emailer->get_shortcodes();
+		foreach ( $emailer_codes as $key => $content ) {
+			if ( isset( $sc[ $key ] ) ) {
+				continue;
+			}
+			$this->shortcodes[ $key ] = $content;
 		}
 	}
 

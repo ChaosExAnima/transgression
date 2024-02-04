@@ -7,6 +7,7 @@ use WP_Screen;
 use function Transgression\get_asset_url;
 use function Transgression\prefix;
 
+use const Transgression\PLUGIN_ROOT;
 use const Transgression\PLUGIN_VERSION;
 
 class Page {
@@ -56,6 +57,13 @@ class Page {
 	 */
 	public function as_page( string $icon, ?int $position = null ): self {
 		$callback = function () use ( $icon, $position ) {
+			if ( str_ends_with( $icon, '.svg' ) ) {
+				$path = PLUGIN_ROOT . '/assets/icons/' . $icon;
+				if ( file_exists( $path ) ) {
+					// @phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+					$icon = 'data:image/svg+xml;base64,' . base64_encode( file_get_contents( $path ) );
+				}
+			}
 			$admin_page = add_menu_page(
 				$this->label,
 				$this->menu_label,
@@ -192,9 +200,9 @@ class Page {
 	 * @return string
 	 */
 	public function get_url( array $params = [] ): string {
-		$screen = WP_Screen::get( $this->page_hook );
 		$params['page'] = $this->page_slug;
-		return add_query_arg( $params, admin_url( $screen->parent_file ) );
+		global $pagenow;
+		return add_query_arg( $params, admin_url( $pagenow ) );
 	}
 
 	/**
@@ -259,8 +267,24 @@ class Page {
 	 * @return void
 	 */
 	public function do_screen_actions( \WP_Screen $screen ): void {
-		if ( $this->page_hook && $screen->id === $this->page_hook ) {
-			do_action( "{$this->page_slug}_screen_loaded", $this );
+		if ( ! $this->page_hook || $screen->id !== $this->page_hook ) {
+			return;
+		}
+		if ( ! current_user_can( $this->permission ) ) {
+			wp_die();
+		}
+		do_action( "{$this->page_slug}_screen_loaded", $this );
+
+		foreach ( $this->actions as $key ) {
+			// phpcs:ignore WordPress.Security.NonceVerification
+			if ( isset( $_REQUEST[ $key ] ) ) {
+				do_action(
+					"{$this->page_slug}_action_{$key}",
+					// phpcs:ignore WordPress.Security.NonceVerification
+					sanitize_textarea_field( wp_unslash( $_REQUEST[ $key ] ) ),
+					$this
+				);
+			}
 		}
 	}
 
@@ -323,18 +347,6 @@ class Page {
 	public function render_page() {
 		if ( ! current_user_can( $this->permission ) ) {
 			wp_die();
-		}
-
-		foreach ( $this->actions as $key ) {
-			// phpcs:ignore WordPress.Security.NonceVerification
-			if ( isset( $_REQUEST[ $key ] ) ) {
-				do_action(
-					"{$this->page_slug}_action_{$key}",
-					// phpcs:ignore WordPress.Security.NonceVerification
-					sanitize_textarea_field( wp_unslash( $_REQUEST[ $key ] ) ),
-					$this
-				);
-			}
 		}
 
 		settings_errors( "{$this->page_slug}_messages" );

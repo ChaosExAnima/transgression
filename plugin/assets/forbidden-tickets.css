@@ -1,0 +1,25 @@
+code {
+	display: block;
+	padding: 1rem 2.5rem 1rem 1rem;
+	border-radius: 0.5rem;
+	max-width: 400px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	position: relative;
+	cursor: pointer;
+}
+
+code > .dashicons {
+	position: absolute;
+	right: 1rem;
+	top: 1rem;
+}
+
+.flex-row {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+.copy-success {
+	color: #00a32a;
+}

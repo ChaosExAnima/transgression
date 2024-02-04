@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 $query = $params['query'];
 /** @var Person[] */
 $people = $params['people'];
+/** @var Modules\ForbiddenTickets */
+$tickets = $params['tickets'];
 ?>
 <form action="<?php echo esc_url( admin_url() ); ?>" method="get">
 	<?php wp_nonce_field( prefix( 'person_search' ) ); ?>
@@ -40,21 +42,14 @@ $people = $params['people'];
 				<?php endif; ?>
 				<?php if ( $person->user ) : ?>
 					&ndash;
-					<a href="<?php echo esc_url( get_edit_user_link( $person->user->id ) ); ?>">
+					<a href="<?php echo esc_url( get_edit_user_link( $person->user_id() ) ); ?>">
 						User
 					</a>
-				<?php endif; ?>
-				<?php if ( $person->customer && $person->customer->get_order_count() > 0 ) : ?>
 					&ndash;
-					<a href="<?php echo esc_url( $person->orders_link() ); ?>">
-						<?php
-						echo esc_html( sprintf(
-							'%s %s ($%s)',
-							$person->customer->get_order_count(),
-							_n( 'order', 'orders', $person->customer->get_order_count(), 'transgression' ),
-							wc_format_decimal( $person->customer->get_total_spent(), 0, true )
-						) );
-						?>
+					<a href="<?php echo esc_url( $tickets->user_ticket_url( $person->user_id() ) ); ?>" target="_blank">
+						<code>
+							<?php echo esc_html( $tickets->get_code( $person->user_id() ) ); ?>
+						</code>
 					</a>
 				<?php endif; ?>
 			</li>
