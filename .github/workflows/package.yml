@@ -24,8 +24,8 @@ jobs:
               with:
                   name: transgression
                   path: |
-                    src
-                    !src/**/*.ts
+                    theme
+                    !theme/**/*.ts
             - uses: actions/upload-artifact@v3
               with:
                   name: transgression-plugin
