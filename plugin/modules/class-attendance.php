@@ -82,7 +82,7 @@ class Attendance extends Module {
 		);
 		register_rest_route(
 			PLUGIN_REST_NAMESPACE,
-			'/checkin/(?P<user_id>\d+)/(?P<id>\s+)',
+			'/checkin/(?P<user_id>\d+)/(?P<id>\w+)',
 			[
 				'methods' => [ 'GET', 'PUT' ],
 				'callback' => [ $this, 'checkin_endpoint' ],
