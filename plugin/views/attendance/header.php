@@ -40,7 +40,7 @@ $search = $params['search'];
 			aria-label='Search input for attendees'
 			spellcheck='false'
 			incremental
-			placeholder='Search for order id, name, or email'
+			placeholder='Search for name or email'
 			autocomplete="name email"
 		/>
 		<button type="submit" class="button button-primary">
