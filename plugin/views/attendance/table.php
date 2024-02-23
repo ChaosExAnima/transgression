@@ -4,14 +4,14 @@
  * @var array $params
  */
 
-/** @var WC_Order[] */
+/** @var array */
 $orders = $params['orders'];
+
 ?>
 
 <table class="attendance" id="attendance">
 	<thead>
 		<tr>
-			<th>Order</th>
 			<th class="pic">Photo</th>
 			<th>Name</th>
 			<th>Email</th>
@@ -22,16 +22,11 @@ $orders = $params['orders'];
 	</thead>
 	<tbody>
 		<?php foreach ( $orders as $order ) : ?>
-			<tr data-order-id="<?php echo absint( $order['id'] ); ?>" id="order-<?php echo absint( $order['id'] ); ?>">
-				<td class="order" data-col="id">
-					<?php if ( current_user_can( 'edit_products' ) ) : // phpcs:ignore ?>
-						<a href="<?php echo esc_url( get_edit_post_link( $order['id'] ) ); ?>">
-							#<?php echo absint( $order['id'] ); ?>
-						</a>
-					<?php else : ?>
-						#<?php echo absint( $order['id'] ); ?>
-					<?php endif; ?>
-				</td>
+			<tr
+				data-order-id="<?php echo esc_attr( $order['id'] ); ?>"
+				data-user-id="<?php echo absint( $order['user_id'] ); ?>"
+				id="order-<?php echo esc_attr( $order['id'] ); ?>"
+			>
 				<td class="pic">
 					<?php if ( $order['pic'] ) : ?>
 						<img src="<?php echo esc_url( $order['pic'] ); ?>" loading="lazy" width="96" height="96" />

@@ -11,7 +11,7 @@ declare global {
 }
 
 interface OrderRow {
-	id: number;
+	id: string;
 	pic: string;
 	name: string;
 	email: string;
@@ -28,9 +28,9 @@ class Attendance {
 	protected table: HTMLTableElement;
 	protected percentage: HTMLMeterElement;
 	protected searchInput: HTMLInputElement;
-	protected productSelect: HTMLSelectElement;
+	protected attachmentSelect: HTMLSelectElement;
 
-	protected orderMap: Map<number, OrderRow>;
+	protected orderMap: Map<string, OrderRow>;
 	protected controller = new AbortController();
 
 	public constructor() {
@@ -41,8 +41,8 @@ class Attendance {
 		this.searchInput = document.getElementById(
 			'search'
 		) as HTMLInputElement;
-		this.productSelect = document.getElementById(
-			'product'
+		this.attachmentSelect = document.getElementById(
+			'attachment'
 		) as HTMLSelectElement;
 
 		this.orderMap = new Map(
@@ -151,11 +151,13 @@ class Attendance {
 		button.disabled = true;
 		button.classList.add('disabled');
 		try {
-			const id = button.closest('tr')?.dataset.orderId;
-			if (!id) {
+			const tr = button.closest('tr');
+			const orderId = tr?.dataset.orderId;
+			const userId = tr?.dataset.userId;
+			if (!orderId || !userId) {
 				throw new Error('Could not find ID for button');
 			}
-			const result = await apiQuery<OrderRow>(`/checkin/${id}`, 'PUT', {
+			const result = await apiQuery<OrderRow>(`/checkin/${userId}/${orderId}`, 'PUT', {
 				signal: this.controller.signal,
 			});
 			this.updateRowDisplay(result);
@@ -167,7 +169,7 @@ class Attendance {
 	}
 
 	protected async pollOrderApi() {
-		const productId = this.productSelect.value;
+		const productId = this.attachmentSelect.value;
 		if (document.visibilityState !== 'visible' || !productId) {
 			return;
 		}
