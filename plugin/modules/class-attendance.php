@@ -13,10 +13,11 @@ use function Transgression\load_view;
 use function Transgression\prefix;
 
 class Attendance extends Module {
-	const ROLE_CHECKIN = 'check_in';
-	const CAP_ATTENDANCE = 'view_attendance';
+	public const ROLE_CHECKIN = 'check_in';
+	public const CAP_ATTENDANCE = 'view_attendance';
+	public const CACHE_ORDERS = PLUGIN_SLUG . '_orders';
 
-	const ICON = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OC4zNjkiIGhlaWdodD0iNzguMzY' .
+	public const ICON = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OC4zNjkiIGhlaWdodD0iNzguMzY' .
 	'5IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3OC4zNjkgNzguMzY5IiB4bWw6c3BhY2U9InByZXNlcnZlIj' .
 	'48cGF0aCBkPSJNNzguMDQ5IDE5LjAxNSAyOS40NTggNjcuNjA2YTEuMDk0IDEuMDk0IDAgMCAxLTEuNTQ4IDBMLjMyIDQwL' .
 	'jAxNWExLjA5NCAxLjA5NCAwIDAgMSAwLTEuNTQ3bDYuNzA0LTYuNzA0YTEuMDk1IDEuMDk1IDAgMCAxIDEuNTQ4IDBsMjAu' .
@@ -185,14 +186,18 @@ class Attendance extends Module {
 			return new \WP_Error( 'no-user-id', 'Missing user ID', [ 'status' => 404 ] );
 		}
 		$user = get_user_by( 'ID', $user_id );
+		if ( ! $user ) {
+			return new \WP_Error( 'no-user', 'User not found', [ 'status' => 404 ] );
+		}
 
+		$person = new Person( $user );
 		$update = $request->get_method() !== \WP_REST_Server::READABLE;
 		if ( $update ) {
 			update_option( 'checked_in_' . $order_id, true );
-			( new Person( $user ) )->vaccinated( true );
+			$person->vaccinated( true );
 		}
 
-		return rest_ensure_response( $this->get_order_data( $user, $order_id ) );
+		return rest_ensure_response( $this->order_row( $person, $order_id ) );
 	}
 
 	/**
@@ -206,73 +211,91 @@ class Attendance extends Module {
 			return [];
 		}
 
+		// Get the cached results
+		$cached_map = wp_cache_get( $attachment_id, self::CACHE_ORDERS );
+		if ( is_array( $cached_map ) ) {
+			$orders = [];
+			foreach ( $cached_map as $user_id => $order_id ) {
+				$person = Person::from_user_id( $user_id );
+				$orders[] = $this->order_row( $person, $order_id );
+			}
+			return $orders;
+		}
+
+		// Get the orders from the CSV
 		$path = get_attached_file( $attachment_id );
 		if ( ! $path ) {
 			Logger::error( "Could not get path for attachment {$attachment_id}" );
 			return [];
 		}
 
-		$handle = fopen( $path, 'r' ); // @phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+		// @phpcs:disable WordPress.WP.AlternativeFunctions
+		$handle = fopen( $path, 'r' );
 		if ( ! $handle ) {
 			Logger::error( "Could not open file {$path}" );
 			return [];
 		}
-		$codes = [];
-		$row = fgetcsv( $handle, 1000, ',' );
-		while ( $row !== false ) {
-			if ( isset( $row[8] ) && 'Promo Code' !== $row[8] ) {
-				$codes[ $row[8] ] = $row[1];
-			}
-			$row = fgetcsv( $handle, 1000, ',' );
-		}
-		fclose( $handle ); // @phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 
-		if ( ! count( $codes ) ) {
+		// Parse correct columns from the header row
+		$row = fgetcsv( $handle, 1000, ',' );
+		$order_id_col = array_search( 'Order ID', $row, true );
+		$email_col = array_search( 'Email', $row, true );
+		$code_col = array_search( 'Promo Code', $row, true );
+		if ( ! $order_id_col || ! $email_col || ! $code_col ) {
+			Logger::error( "Could not find required columns in CSV: {$order_id_col}, {$email_col}, {$code_col}" );
+			fclose( $handle );
 			return [];
 		}
+
+		$code_order_map = [];
+		$row = fgetcsv( $handle, 1000, ',' );
+		while ( $row !== false ) {
+			if ( ! isset( $row[ $order_id_col ] ) || ! isset( $row[ $code_col ] ) ) {
+				continue;
+			}
+			$code_order_map[ $row[ $code_col ] ] = $row[ $order_id_col ];
+			$row = fgetcsv( $handle, 1000, ',' );
+		}
+		fclose( $handle );
+		// @phpcs:enable WordPress.WP.AlternativeFunctions
 
 		$users = new \WP_User_Query( [
 			'orderby' => 'display_name',
 			'meta_query' => [ // @phpcs:ignore WordPress.DB.SlowDBQuery
 				[
 					'key' => ForbiddenTickets::USER_CODE_KEY,
-					'value' => array_keys( $codes ),
+					'value' => array_keys( $code_order_map ),
 				],
 			],
 		] );
 
+		$user_order_map = [];
 		$orders = [];
 		foreach ( $users->get_results() as $user ) {
-			$code = $this->tickets->get_code( $user->ID ) ?? '';
-			$orders[] = $this->get_order_data( $user, $codes[ $code ] );
+			$person = new Person( $user );
+			$code = $person->code();
+			if ( ! $code ) {
+				continue;
+			}
+			$order_id = $code_order_map[ $code ];
+			$user_order_map[ $user->ID ] = $order_id;
+			$orders[] = $this->order_row( $person, $order_id );
 		}
+
+		// Cache the results
+		wp_cache_set( $attachment_id, $user_order_map, self::CACHE_ORDERS, DAY_IN_SECONDS );
 
 		return $orders;
 	}
 
 	/**
-	 * Gets a person from an order
-	 *
-	 * @param \WC_Order $order
-	 * @return Person|null
-	 */
-	protected function order_to_person( \WC_Order $order ): ?Person {
-		$user = $order->get_user();
-		if ( ! $user ) {
-			return null;
-		}
-		return new Person( $user );
-	}
-
-	/**
 	 * Gets formatted order data
 	 *
-	 * @param \WP_User $user
+	 * @param Person $person
 	 * @param string $order_id
-	 * @return array|null
+	 * @return array
 	 */
-	protected function get_order_data( \WP_User $user, string $order_id ): ?array {
-		$person = new Person( $user );
+	protected function order_row( Person $person, string $order_id ): array {
 		return [
 			'id' => $order_id,
 			'pic' => $person->image_url(),

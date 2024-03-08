@@ -4,8 +4,10 @@ namespace Transgression;
 
 use Error;
 use Transgression\Modules\Applications;
+use Transgression\Modules\ForbiddenTickets;
 use WP_Post;
 use WP_User;
+use WP_User_Query;
 
 /**
  * Person class, used to find people by various means
@@ -117,6 +119,15 @@ class Person {
 			return $set;
 		}
 		return (bool) $this->user->vaccinated;
+	}
+
+	/**
+	 * Gets the user code
+	 *
+	 * @return string
+	 */
+	public function code(): string {
+		return get_user_meta( $this->user_id(), ForbiddenTickets::USER_CODE_KEY, true ) ?? '';
 	}
 
 	/**
@@ -266,6 +277,20 @@ class Person {
 		wp_cache_set( $query, $people, self::CACHE_SEARCH, DAY_IN_SECONDS );
 
 		return $people;
+	}
+
+	/**
+	 * Gets a person from a user ID
+	 *
+	 * @param int $user_id User ID
+	 * @return self
+	 */
+	public static function from_user_id( int $user_id ): self {
+		$user = get_user_by( 'id', $user_id );
+		if ( ! $user ) {
+			throw new Error( 'Could not find user' );
+		}
+		return new self( $user );
 	}
 
 	/**
