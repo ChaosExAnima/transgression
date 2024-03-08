@@ -13,13 +13,11 @@ use function Transgression\load_view;
 use function Transgression\prefix;
 
 class Attendance extends Module {
-	const ROLE_CHECKIN = 'check_in';
-	const CAP_ATTENDANCE = 'view_attendance';
+	public const ROLE_CHECKIN = 'check_in';
+	public const CAP_ATTENDANCE = 'view_attendance';
+	public const CACHE_ORDERS = PLUGIN_SLUG . '_orders';
 
-	/** @inheritDoc */
-	const REQUIRED_PLUGINS = [ 'woocommerce/woocommerce.php' ];
-
-	const ICON = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OC4zNjkiIGhlaWdodD0iNzguMzY' .
+	public const ICON = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OC4zNjkiIGhlaWdodD0iNzguMzY' .
 	'5IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3OC4zNjkgNzguMzY5IiB4bWw6c3BhY2U9InByZXNlcnZlIj' .
 	'48cGF0aCBkPSJNNzguMDQ5IDE5LjAxNSAyOS40NTggNjcuNjA2YTEuMDk0IDEuMDk0IDAgMCAxLTEuNTQ4IDBMLjMyIDQwL' .
 	'jAxNWExLjA5NCAxLjA5NCAwIDAgMSAwLTEuNTQ3bDYuNzA0LTYuNzA0YTEuMDk1IDEuMDk1IDAgMCAxIDEuNTQ4IDBsMjAu' .
@@ -28,14 +26,9 @@ class Attendance extends Module {
 
 	protected Page $admin;
 
-	protected ?int $product_id = null;
-	/** @var \WC_Order[] Array of orders for a given event */
-	protected array $orders = [];
+	protected int $attachment_id = 0;
 
-	public function __construct() {
-		if ( ! self::check_plugins() ) {
-			return;
-		}
+	public function __construct( protected ForbiddenTickets $tickets ) {
 		$admin = new Page( 'attendance', 'Attendance Sheet', 'Attendance', self::CAP_ATTENDANCE );
 		$admin->add_render_callback( [ $this, 'render' ] );
 		$admin->as_page( 'data:image/svg+xml;base64,' . self::ICON, 56 );
@@ -61,7 +54,7 @@ class Attendance extends Module {
 				self::CAP_ATTENDANCE => true,
 			],
 		);
-		$roles = [ 'administrator', 'shop_manager' ];
+		$roles = [ 'administrator' ];
 		foreach ( $roles as $role_slug ) {
 			$role = get_role( $role_slug );
 			$role->add_cap( self::CAP_ATTENDANCE );
@@ -90,14 +83,17 @@ class Attendance extends Module {
 		);
 		register_rest_route(
 			PLUGIN_REST_NAMESPACE,
-			'/checkin/(?P<id>\d+)',
+			'/checkin/(?P<user_id>\d+)/(?P<id>\w+)',
 			[
 				'methods' => [ 'GET', 'PUT' ],
 				'callback' => [ $this, 'checkin_endpoint' ],
 				'args' => [
-					'id' => [
+					'user_id' => [
 						'required' => true,
 						'validate_callback' => 'rest_is_integer',
+					],
+					'id' => [
+						'required' => true,
 					],
 				],
 				'permission_callback' => [ $this, 'can_use_endpoints' ],
@@ -111,25 +107,16 @@ class Attendance extends Module {
 	 * @return void
 	 */
 	public function pre_render() {
-		$product_id = absint( filter_input( INPUT_GET, 'product_id', FILTER_VALIDATE_INT ) );
-		if ( ! $product_id ) {
-			/** @var int[] */
-			$product_ids = wc_get_products( [
-				'status' => 'publish',
-				'limit' => 1,
-				'return' => 'ids',
-			] );
-			$product_id = reset( $product_ids );
-		}
-		if ( $product_id ) {
-			$this->product_id = $product_id;
-			$this->orders = $this->get_orders( $product_id );
+		$attachment_id = 0;
+		if ( isset( $_GET['attachment_id'] ) ) {
+			check_admin_referer( prefix( 'attendance' ) );
+			$attachment_id = absint( $_GET['attachment_id'] );
 		}
 
 		$this->admin->add_script( 'attendance', [], [
 			'root' => esc_url_raw( rest_url( PLUGIN_REST_NAMESPACE ) ),
 			'nonce' => wp_create_nonce( 'wp_rest' ),
-			'orders' => $this->orders,
+			'orders' => $this->users_from_csv( $attachment_id ),
 		] );
 	}
 
@@ -139,10 +126,19 @@ class Attendance extends Module {
 	 * @return void
 	 */
 	public function render() {
-		/** @var \WC_Product[] */
-		$products = wc_get_products( [
-			'limit' => 100,
+		$attachments = new \WP_Query( [
+			'post_mime_type' => 'text/csv',
+			'post_status' => 'inherit',
+			'post_type' => 'attachment',
+			'posts_per_page' => -1,
 		] );
+		$attachment_id = $attachments->have_posts() ? $attachments->posts[0]->ID : 0;
+		if ( isset( $_GET['attachment_id'] ) ) {
+			check_admin_referer( prefix( 'attendance' ) );
+			$attachment_id = absint( $_GET['attachment_id'] );
+		}
+
+		$orders = $this->users_from_csv( $attachment_id );
 
 		$search = '';
 		if ( ! empty( $_GET['search'] ) ) {
@@ -150,10 +146,8 @@ class Attendance extends Module {
 			$search = sanitize_text_field( wp_unslash( $_GET['search'] ) );
 		}
 
-		$product_id = $this->product_id;
-		load_view( 'attendance/header', compact( 'products', 'product_id', 'search' ) );
-
-		load_view( 'attendance/table', [ 'orders' => $this->orders ] );
+		load_view( 'attendance/header', compact( 'attachment_id', 'attachments', 'search' ) );
+		load_view( 'attendance/table', [ 'orders' => $orders ] );
 	}
 
 	/**
@@ -173,7 +167,7 @@ class Attendance extends Module {
 	 */
 	public function orders_endpoint( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
 		$product_id = absint( $request->get_param( 'product_id' ) );
-		return rest_ensure_response( $this->get_orders( $product_id ) );
+		return rest_ensure_response( $this->users_from_csv( $product_id ) );
 	}
 
 	/**
@@ -184,99 +178,132 @@ class Attendance extends Module {
 	 */
 	public function checkin_endpoint( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
 		$order_id = $request->get_param( 'id' );
-		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
+		if ( ! $order_id ) {
 			return new \WP_Error( 'no-id', 'Missing order ID', [ 'status' => 404 ] );
 		}
+		$user_id = $request->get_param( 'user_id' );
+		if ( ! $user_id ) {
+			return new \WP_Error( 'no-user-id', 'Missing user ID', [ 'status' => 404 ] );
+		}
+		$user = get_user_by( 'ID', $user_id );
+		if ( ! $user ) {
+			return new \WP_Error( 'no-user', 'User not found', [ 'status' => 404 ] );
+		}
 
+		$person = new Person( $user );
 		$update = $request->get_method() !== \WP_REST_Server::READABLE;
 		if ( $update ) {
-			$current = $order->get_meta( 'checked_in' );
-			if ( $current ) {
-				$order->delete_meta_data( 'checked_in' );
-			} else {
-				$order->update_meta_data( 'checked_in', time() );
-			}
-			$order->save();
-			$this->order_to_person( $order )?->vaccinated( true );
+			update_option( 'checked_in_' . $order_id, true );
+			$person->vaccinated( true );
 		}
 
-		return rest_ensure_response( $this->get_order_data( $order ) );
+		return rest_ensure_response( $this->order_row( $person, $order_id ) );
 	}
 
 	/**
-	 * Get order data for a product
+	 * Get users from a CSV file
 	 *
-	 * @param int $product_id
-	 * @return array
+	 * @param int $attachment_id
+	 * @return null|array
 	 */
-	protected function get_orders( int $product_id ): array {
-		if ( ! $product_id ) {
+	protected function users_from_csv( int $attachment_id ): array {
+		if ( ! $attachment_id ) {
 			return [];
 		}
-		/** @var string[] */
-		$order_ids = [];
-		if ( $product_id ) {
-			global $wpdb;
-			$query = $wpdb->prepare(
-				"SELECT order_id FROM {$wpdb->prefix}wc_order_product_lookup
-				WHERE product_id = %d AND product_qty > 0
-				LIMIT 1000",
-				$product_id
-			);
-			/** @var string[] */
-			$order_ids = array_unique( $wpdb->get_col( $query ), SORT_NUMERIC ); // phpcs:ignore WordPress.DB
-		}
 
-		$orders = [];
-		foreach ( $order_ids as $order_id ) {
-			$order = wc_get_order( $order_id );
-			if ( $order->get_status() === 'completed' ) {
-				$order_data = $this->get_order_data( $order );
-				if ( ! $order_data ) {
-					Logger::info( "Attendance: no data for order ID {$order->get_id()}" );
-					continue;
-				}
-				$orders[] = $order_data;
+		// Get the cached results
+		$cached_map = wp_cache_get( $attachment_id, self::CACHE_ORDERS );
+		if ( is_array( $cached_map ) ) {
+			$orders = [];
+			foreach ( $cached_map as $user_id => $order_id ) {
+				$person = Person::from_user_id( $user_id );
+				$orders[] = $this->order_row( $person, $order_id );
 			}
+			return $orders;
 		}
-		$sorted = wp_list_sort( $orders, 'name' );
-		return $sorted;
-	}
 
-	/**
-	 * Gets a person from an order
-	 *
-	 * @param \WC_Order $order
-	 * @return Person|null
-	 */
-	protected function order_to_person( \WC_Order $order ): ?Person {
-		$user = $order->get_user();
-		if ( ! $user ) {
-			return null;
+		// Get the orders from the CSV
+		$path = get_attached_file( $attachment_id );
+		if ( ! $path ) {
+			Logger::error( "Could not get path for attachment {$attachment_id}" );
+			return [];
 		}
-		return new Person( $user );
+
+		// @phpcs:disable WordPress.WP.AlternativeFunctions
+		$handle = fopen( $path, 'r' );
+		if ( ! $handle ) {
+			Logger::error( "Could not open file {$path}" );
+			return [];
+		}
+
+		// Parse correct columns from the header row
+		$row = fgetcsv( $handle, 1000, ',' );
+		$order_id_col = array_search( 'Order ID', $row, true );
+		$email_col = array_search( 'Email', $row, true );
+		$code_col = array_search( 'Promo Code', $row, true );
+		if ( ! $order_id_col || ! $email_col || ! $code_col ) {
+			Logger::error( "Could not find required columns in CSV: {$order_id_col}, {$email_col}, {$code_col}" );
+			fclose( $handle );
+			return [];
+		}
+
+		$code_order_map = [];
+		$row = fgetcsv( $handle, 1000, ',' );
+		while ( $row !== false ) {
+			if ( ! isset( $row[ $order_id_col ] ) || ! isset( $row[ $code_col ] ) ) {
+				continue;
+			}
+			$code_order_map[ $row[ $code_col ] ] = $row[ $order_id_col ];
+			$row = fgetcsv( $handle, 1000, ',' );
+		}
+		fclose( $handle );
+		// @phpcs:enable WordPress.WP.AlternativeFunctions
+
+		$users = new \WP_User_Query( [
+			'orderby' => 'display_name',
+			'meta_query' => [ // @phpcs:ignore WordPress.DB.SlowDBQuery
+				[
+					'key' => ForbiddenTickets::USER_CODE_KEY,
+					'value' => array_keys( $code_order_map ),
+				],
+			],
+		] );
+
+		$user_order_map = [];
+		$orders = [];
+		foreach ( $users->get_results() as $user ) {
+			$person = new Person( $user );
+			$code = $person->code();
+			if ( ! $code ) {
+				continue;
+			}
+			$order_id = $code_order_map[ $code ];
+			$user_order_map[ $user->ID ] = $order_id;
+			$orders[] = $this->order_row( $person, $order_id );
+		}
+
+		// Cache the results
+		wp_cache_set( $attachment_id, $user_order_map, self::CACHE_ORDERS, DAY_IN_SECONDS );
+
+		return $orders;
 	}
 
 	/**
 	 * Gets formatted order data
 	 *
-	 * @param \WC_Order $order
-	 * @return array|null
+	 * @param Person $person
+	 * @param string $order_id
+	 * @return array
 	 */
-	protected function get_order_data( \WC_Order $order ): ?array {
-		$person = $this->order_to_person( $order );
-		if ( ! $person ) {
-			return null;
-		}
+	protected function order_row( Person $person, string $order_id ): array {
 		return [
-			'id' => $order->get_id(),
+			'id' => $order_id,
 			'pic' => $person->image_url(),
 			'name' => $person->name(),
 			'email' => $person->email(),
 			'user_id' => $person->user_id(),
-			'volunteer' => $this->is_volunteer( $order ),
-			'checked_in' => (bool) $order->get_meta( 'checked_in' ),
+			'volunteer' => false,
+			'checked_in' => (bool) get_option( 'checked_in_' . $order_id, false ),
 			'vaccinated' => $person->vaccinated(),
 		];
 	}

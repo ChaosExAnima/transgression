@@ -29,7 +29,7 @@ class Main {
 		$jetforms = new JetForms( $emailer );
 		$tickets = new ForbiddenTickets( $emailer );
 		new Applications( $jetforms, $emailer );
-		new Attendance();
+		new Attendance( $tickets );
 		$people = new People( $emailer, $tickets );
 		new Auth0( $people, $settings, $tickets );
 		new Conflicts();

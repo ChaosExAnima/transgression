@@ -6,22 +6,22 @@
 
 namespace Transgression;
 
-/** @var int current product id */
-$product_id = $params['product_id'];
-/** @var WC_Product[] list of all products */
-$products = $params['products'];
+/** @var int current attachment id */
+$attachment_id = $params['attachment_id'];
+/** @var \WP_Query list of all attachments */
+$attachments = $params['attachments'];
 /** @var string search string */
 $search = $params['search'];
 ?>
 <form id="header-form" class="header" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" method="get">
 	<input type="hidden" name="page" value="transgression_attendance" />
 	<?php wp_nonce_field( prefix( 'attendance' ) ); ?>
-	<p class="product-wrapper">
-		<label for="product">Event</label>
-		<select class="widefat" name="product_id" id="product">
-			<?php foreach ( $products as $product ) : ?>
-				<option value="<?php echo absint( $product->get_id() ); ?>" <?php selected( $product_id, $product->get_id() ); ?>>
-					<?php echo esc_html( $product->get_title() ); ?>
+	<p class="attachment-wrapper">
+		<label for="attachment">Event</label>
+		<select class="widefat" name="attachment_id" id="attachment">
+			<?php foreach ( $attachments->posts as $attachment ) : ?>
+				<option value="<?php echo absint( $attachment->ID ); ?>" <?php selected( $attachment_id, $attachment->ID ); ?>>
+					<?php echo esc_html( get_the_title( $attachment ) ); ?>
 				</option>
 			<?php endforeach; ?>
 		</select>
@@ -40,7 +40,7 @@ $search = $params['search'];
 			aria-label='Search input for attendees'
 			spellcheck='false'
 			incremental
-			placeholder='Search for order id, name, or email'
+			placeholder='Search for name or email'
 			autocomplete="name email"
 		/>
 		<button type="submit" class="button button-primary">
