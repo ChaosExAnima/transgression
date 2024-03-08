@@ -18,14 +18,6 @@ class Discord extends Module {
 				->of_type( 'url' )
 				->render_after( [ $this, 'render_test_button' ] )
 		);
-		if ( WooCommerce::check_plugins() ) {
-			$settings->add_setting(
-				( new Option( DiscordHooks::WooCommerce->hook(), 'Purchase Webhook' ) )
-					->in_section( 'discord' )
-					->of_type( 'url' )
-					->render_after( [ $this, 'render_test_button' ] )
-			);
-		}
 
 		$logging_hook = ( new Option( DiscordHooks::Logging->hook(), 'Logging Webhook' ) )
 			->in_section( 'discord' )
@@ -63,61 +55,6 @@ class Discord extends Module {
 			"New application from {$post->post_title}",
 			admin_url( "post.php?post={$post_id}&action=edit" ),
 			$description
-		);
-	}
-
-	/**
-	 * Sends a message with new orders
-	 *
-	 * @param int $order_id The order ID
-	 * @return void
-	 */
-	public function send_woo_message( int $order_id ): void {
-		$order = wc_get_order( $order_id );
-
-		/** @var \WC_Order_Item_Product[] */
-		$items = $order->get_items();
-		$item = array_pop( $items );
-		$product = $item->get_product();
-
-		// Build up additional fields.
-		$fields = [];
-		if ( $product->is_type( 'variation' ) ) {
-			$fields[] = [
-				'name' => 'Tier',
-				'value' => $product->get_attribute( 'tier' ),
-			];
-		}
-
-		if ( count( $order->get_coupon_codes() ) > 0 ) {
-			$fields[] = [
-				'name' => 'Coupons',
-				'value' => implode( ', ', $order->get_coupon_codes() ),
-			];
-		}
-
-		$fields[] = [
-			'name' => 'Total',
-			'value' => '$' . wc_trim_zeros( $order->get_total() ),
-		];
-		$fields[] = [
-			'name' => 'Remaining tickets',
-			'value' => $product->get_stock_quantity(),
-		];
-		$sales = WooCommerce::get_gross_sales( $item->get_product_id() );
-		$fields[] = [
-			'name' => 'Total sales',
-			'value' => '$' . wc_format_decimal( $sales, '', true ),
-		];
-
-		$customer_id = $order->get_customer_id();
-		$customer = get_userdata( $customer_id );
-		$this->send_discord_message(
-			DiscordHooks::WooCommerce,
-			"New {$product->get_title()} ticket for {$customer->display_name}",
-			admin_url( "post.php?post={$order_id}&action=edit" ),
-			null,
-			compact( 'fields' )
 		);
 	}
 
@@ -244,7 +181,6 @@ class Discord extends Module {
 enum DiscordHooks: string {
 	case Application = 'app';
 	case Logging = 'log';
-	case WooCommerce = 'woo';
 
 	public function hook(): string {
 		return "{$this->value}_discord_hook";

@@ -12,4 +12,3 @@ require_once __DIR__ . '/class-discord.php';
 require_once __DIR__ . '/class-forbidden-tickets.php';
 require_once __DIR__ . '/class-jetforms.php';
 require_once __DIR__ . '/class-people.php';
-require_once __DIR__ . '/class-woocommerce.php';

@@ -307,22 +307,4 @@ class Attendance extends Module {
 			'vaccinated' => $person->vaccinated(),
 		];
 	}
-
-	/**
-	 * Returns true if someone is probably a volunteer
-	 *
-	 * @param \WC_Order $order
-	 * @return boolean
-	 */
-	protected function is_volunteer( \WC_Order $order ): bool {
-		if ( count( $order->get_coupons() ) > 0 ) {
-			return true;
-		}
-		foreach ( $order->get_items() as $item ) {
-			if ( false !== stripos( $item->get_name(), 'volunteer' ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
 }
