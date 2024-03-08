@@ -2,7 +2,7 @@
 
 namespace Transgression\Modules\Email;
 
-use Transgression\Admin\{Option, Page_Options};
+use Transgression\Admin\{Option, Option_Select, Page_Options};
 use Transgression\Logger;
 
 class Emailer {
@@ -16,6 +16,15 @@ class Emailer {
 
 	public function __construct() {
 		$admin = new Page_Options( 'emails', 'Emails' );
+		$admin->add_setting(
+			( new Option_Select( 'email_type', __( 'Email Platform', 'transgression' ), 'wp_mail' ) )
+				->without_none()
+				->with_options( [
+					'wp_mail' => __( 'WP Mail', 'transgression' ),
+					'mailpoet' => __( 'MailPoet', 'transgression' ),
+					'elasticemail' => __( 'ElasticEmail', 'transgression' ),
+				] )
+		);
 		$this->admin = $admin;
 		call_user_func( [ $this->get_email_class(), 'init' ], $this );
 
@@ -165,8 +174,12 @@ class Emailer {
 	 * @return string
 	 */
 	protected function get_email_class(): string {
-		if ( is_plugin_active( 'mailpoet/mailpoet.php' ) ) {
+		$email_type = $this->admin->value( 'email_type' );
+		if ( is_plugin_active( 'mailpoet/mailpoet.php' ) && $email_type === 'mailpoet' ) {
 			return MailPoet::class;
+		}
+		if ( $email_type === 'elasticemail' ) {
+			return ElasticEmail::class;
 		}
 		return WPMail::class;
 	}
