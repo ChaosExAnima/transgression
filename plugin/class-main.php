@@ -3,9 +3,7 @@
 namespace Transgression;
 
 use Transgression\Admin\Page_Options;
-use Transgression\Modules\{Applications, Attendance, Auth0, Conflicts, Discord, People, Email\Emailer, ForbiddenTickets, JetForms, WooCommerce};
-
-use const Transgression\PLUGIN_VERSION;
+use Transgression\Modules\{Applications, Attendance, Auth0, Conflicts, Discord, People, Email\Emailer, ForbiddenTickets, JetForms};
 
 class Main {
 	protected const BLOCKS = [ 'tickets' ];
@@ -34,9 +32,6 @@ class Main {
 		new Auth0( $people, $settings, $tickets );
 		new Conflicts();
 		new Discord( $settings, $logger );
-		new WooCommerce( $settings );
-
-		Event_Schema::init();
 	}
 
 	/**
