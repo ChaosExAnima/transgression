@@ -68,9 +68,9 @@ abstract class Email {
 	/**
 	 * Sends an email
 	 *
-	 * @return void
+	 * @return bool
 	 */
-	public function send() {
+	public function send(): bool {
 		try {
 			if ( ! $this->email ) {
 				throw new Error( 'Email is not set' );
@@ -79,9 +79,11 @@ abstract class Email {
 			if ( ! $success ) {
 				throw new Error( "Could not send email to {$this->email}" );
 			}
+			return true;
 		} catch ( Error $error ) {
 			Logger::error( $error );
 		}
+		return false;
 	}
 
 	/**

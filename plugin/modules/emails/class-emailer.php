@@ -59,6 +59,8 @@ class Emailer {
 		try {
 			if ( $email_class === MailPoet::class ) {
 				return new MailPoet( $this, $to, $subject );
+			} elseif ( $email_class === ElasticEmail::class ) {
+				return new ElasticEmail( $this, $to, $subject );
 			}
 		} catch ( \Error $error ) {
 			Logger::error( $error );
@@ -152,20 +154,17 @@ class Emailer {
 			$this->admin->redirect_message( 'template_invalid' );
 		}
 
-		try {
-			$user_id = get_current_user_id();
-			$this->create()
-				->to_user( $user_id )
-				->with_template( $template_key )
-				->set_url( 'login-url', get_bloginfo( 'url' ) )
-				->send();
+		$success = $this->create()
+			->to_user( get_current_user_id() )
+			->with_subject( 'Test email' )
+			->with_template( $template_key )
+			->set_url( 'login-url', get_bloginfo( 'url' ) )
+			->send();
+		if ( $success ) {
 			$this->admin->redirect_message( 'test_sent' );
-		} catch ( \Error $error ) {
-			Logger::error( $error );
-			$this->admin->redirect_message( 'test_error', [ 'error' => base64_encode( $error->getMessage() ) ] );
+		} else {
+			$this->admin->redirect_message( 'test_error', [ 'error' => base64_encode( 'Could not send test email' ) ] );
 		}
-
-		$this->admin->redirect_message( 'test_error', [ 'error' => base64_encode( 'Could not send test email' ) ] );
 	}
 
 	/**
