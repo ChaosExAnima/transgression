@@ -76,7 +76,7 @@ class Emailer {
 	 */
 	public function add_template( string $key, string $name, string $description = '' ): Option {
 		/** @var Option */
-		$option = call_user_func( [ $this->get_email_class(), 'template_option' ], $key, $name );
+		$option = call_user_func( [ $this->get_email_class(), 'template_option' ], $key, $name, $this );
 		$this->templates[ $key ] = $option
 			->describe( $description )
 			->render_after( [ $this, 'render_test_button' ] )

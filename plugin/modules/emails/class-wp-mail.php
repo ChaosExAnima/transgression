@@ -40,7 +40,7 @@ class WPMail extends Email {
 	/**
 	 * @inheritDoc
 	 */
-	public static function template_option( string $key, string $name ): Option_Textarea {
+	public static function template_option( string $key, string $name, Emailer $emailer ): Option_Textarea {
 		add_action( PLUGIN_SLUG . "_option_{$key}_after_register", [ __CLASS__, 'register_subject' ], 10, 3 );
 		$render_subject = function() use ( $key, $name ) {
 			printf(

@@ -137,7 +137,7 @@ class MailPoet extends Email {
 	/**
 	 * @inheritDoc
 	 */
-	public static function template_option( string $key, string $name ): Option {
+	public static function template_option( string $key, string $name, Emailer $emailer ): Option {
 		$newsletters = [];
 		if ( class_exists( '\\MailPoet\\DI\\ContainerWrapper' ) ) {
 			$templates = \MailPoet\DI\ContainerWrapper::getInstance()

@@ -179,7 +179,8 @@ abstract class Email {
 	 *
 	 * @param string $key
 	 * @param string $name
+	 * @param Emailer $emailer
 	 * @return Option
 	 */
-	abstract public static function template_option( string $key, string $name ): Option;
+	abstract public static function template_option( string $key, string $name, Emailer $emailer ): Option;
 }
