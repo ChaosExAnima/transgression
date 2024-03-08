@@ -19,6 +19,10 @@ class ElasticEmail extends Email {
 		if ( ! $this->template ) {
 			throw new \Error( 'No template set' );
 		}
+		$template = get_option( $this->template );
+		if ( ! $template ) {
+			throw new \Error( "No template saved for {$this->template}" );
+		}
 		$body = [
 			'Recipients' => [
 				'To' => [ $this->email ],
@@ -31,7 +35,7 @@ class ElasticEmail extends Email {
 				),
 				'Subject' => $this->subject,
 				'Merge' => [],
-				'TemplateName' => $this->template,
+				'TemplateName' => $template,
 				'Utm' => [
 					'Source' => sanitize_title( $this->template ),
 				],
