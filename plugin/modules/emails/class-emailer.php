@@ -2,7 +2,7 @@
 
 namespace Transgression\Modules\Email;
 
-use Transgression\Admin\{Option, Page_Options};
+use Transgression\Admin\{Option, Option_Select, Page_Options};
 use Transgression\Logger;
 
 class Emailer {
@@ -16,6 +16,15 @@ class Emailer {
 
 	public function __construct() {
 		$admin = new Page_Options( 'emails', 'Emails' );
+		$admin->add_setting(
+			( new Option_Select( 'email_type', __( 'Email Platform', 'transgression' ), 'wp_mail' ) )
+				->without_none()
+				->with_options( [
+					'wp_mail' => __( 'WP Mail', 'transgression' ),
+					'mailpoet' => __( 'MailPoet', 'transgression' ),
+					'elasticemail' => __( 'ElasticEmail', 'transgression' ),
+				] )
+		);
 		$this->admin = $admin;
 		call_user_func( [ $this->get_email_class(), 'init' ], $this );
 
@@ -50,6 +59,8 @@ class Emailer {
 		try {
 			if ( $email_class === MailPoet::class ) {
 				return new MailPoet( $this, $to, $subject );
+			} elseif ( $email_class === ElasticEmail::class ) {
+				return new ElasticEmail( $this, $to, $subject );
 			}
 		} catch ( \Error $error ) {
 			Logger::error( $error );
@@ -67,7 +78,7 @@ class Emailer {
 	 */
 	public function add_template( string $key, string $name, string $description = '' ): Option {
 		/** @var Option */
-		$option = call_user_func( [ $this->get_email_class(), 'template_option' ], $key, $name );
+		$option = call_user_func( [ $this->get_email_class(), 'template_option' ], $key, $name, $this );
 		$this->templates[ $key ] = $option
 			->describe( $description )
 			->render_after( [ $this, 'render_test_button' ] )
@@ -143,20 +154,17 @@ class Emailer {
 			$this->admin->redirect_message( 'template_invalid' );
 		}
 
-		try {
-			$user_id = get_current_user_id();
-			$this->create()
-				->to_user( $user_id )
-				->with_template( $template_key )
-				->set_url( 'login-url', get_bloginfo( 'url' ) )
-				->send();
+		$success = $this->create()
+			->to_user( get_current_user_id() )
+			->with_subject( 'Test email' )
+			->with_template( $template_key )
+			->set_url( 'login-url', get_bloginfo( 'url' ) )
+			->send();
+		if ( $success ) {
 			$this->admin->redirect_message( 'test_sent' );
-		} catch ( \Error $error ) {
-			Logger::error( $error );
-			$this->admin->redirect_message( 'test_error', [ 'error' => base64_encode( $error->getMessage() ) ] );
+		} else {
+			$this->admin->redirect_message( 'test_error', [ 'error' => base64_encode( 'Could not send test email' ) ] );
 		}
-
-		$this->admin->redirect_message( 'test_error', [ 'error' => base64_encode( 'Could not send test email' ) ] );
 	}
 
 	/**
@@ -165,8 +173,12 @@ class Emailer {
 	 * @return string
 	 */
 	protected function get_email_class(): string {
-		if ( is_plugin_active( 'mailpoet/mailpoet.php' ) ) {
+		$email_type = $this->admin->value( 'email_type' );
+		if ( is_plugin_active( 'mailpoet/mailpoet.php' ) && $email_type === 'mailpoet' ) {
 			return MailPoet::class;
+		}
+		if ( $email_type === 'elasticemail' ) {
+			return ElasticEmail::class;
 		}
 		return WPMail::class;
 	}

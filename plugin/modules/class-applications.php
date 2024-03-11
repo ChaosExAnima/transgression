@@ -2,11 +2,9 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\Page;
 use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
-use WP_Query;
 
 use const Transgression\{PLUGIN_SLUG, PLUGIN_VERSION};
 
@@ -17,6 +15,7 @@ class Applications extends Module {
 	public const COMMENT_TYPE = 'review_comment';
 	public const STATUS_APPROVED = 'approved';
 	public const STATUS_DENIED = 'denied';
+	public const ROLE_APPS = 'app_reviewer';
 
 	protected const LABELS = [
 		'name' => 'Applications',
@@ -121,6 +120,27 @@ class Applications extends Module {
 				'transgression'
 			),
 		] );
+
+		add_role(
+			self::ROLE_APPS,
+			'App Reviewer',
+			[
+				'delete_apps' => true,
+				'edit_apps' => true,
+				'edit_others_apps' => true,
+				'publish_apps' => true,
+				'read' => true,
+				'view_admin_dashboard' => true, // This lets people see the back end
+			],
+		);
+		$roles = [ 'administrator' ];
+		foreach ( $roles as $role_slug ) {
+			$role = get_role( $role_slug );
+			$role->add_cap( 'delete_apps' );
+			$role->add_cap( 'edit_apps' );
+			$role->add_cap( 'edit_others_apps' );
+			$role->add_cap( 'publish_apps' );
+		}
 	}
 
 	/**

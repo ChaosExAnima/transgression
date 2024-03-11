@@ -51,6 +51,8 @@ class Logger {
 				$messages[] = "{$error_code}: {$message->get_error_message( $error_code )}";
 			}
 			return implode( ', ', $messages );
+		} elseif ( is_array( $message ) || is_object( $message ) ) {
+			return wp_json_encode( $message, JSON_PRETTY_PRINT );
 		}
 		return (string) $message;
 	}
