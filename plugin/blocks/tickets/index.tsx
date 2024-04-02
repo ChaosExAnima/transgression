@@ -1,14 +1,6 @@
 import metadata from './block.json';
 
-declare global {
-	interface Window {
-		wp: {
-			blocks: typeof import('@wordpress/blocks');
-			serverSideRender: typeof import('@wordpress/server-side-render');
-			blockEditor: typeof import('@wordpress/block-editor');
-		};
-	}
-}
+import '../global';
 
 const { React, wp } = window;
 const {
