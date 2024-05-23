@@ -1,5 +1,10 @@
-const { React } = window;
+const { React, wp } = window;
+const {
+	blockEditor: { useBlockProps },
+} = wp;
 
 export default function ApplyFormSave() {
-	return <form></form>;
+	return <form {...useBlockProps.save()}>
+
+	</form>;
 }

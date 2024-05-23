@@ -8,5 +8,137 @@
 	"version": "1.1",
 	"description": "A form for applying for membership.",
 	"editorScript": "transgression-blocks-apply-editor",
-	"style": "transgression-blocks-apply-style"
+	"style": "transgression-blocks-apply-style",
+	"attributes": {
+		"nameText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=nameText]"
+		},
+		"nameHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=nameHelper]"
+		},
+		"pronounsText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=pronounsText]"
+		},
+		"pronounsHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=pronounsHelper]"
+		},
+		"emailText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=emailText]"
+		},
+		"emailHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=emailHelper]"
+		},
+		"identityText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=identityText]"
+		},
+		"identityHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=identityHelper]"
+		},
+		"photoText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=photoText]"
+		},
+		"photoHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=photoHelper]"
+		},
+		"socialsText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=socialsText]"
+		},
+		"socialsHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=socialsHelper]"
+		},
+		"accessibilityText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=accessibilityText]"
+		},
+		"accessibilityHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=accessibilityHelper]"
+		},
+		"refererText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=refererText]"
+		},
+		"refererHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=refererHelper]"
+		},
+		"friendsText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=friendsText]"
+		},
+		"friendsHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=friendsHelper]"
+		},
+		"conflictsText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=conflictsText]"
+		},
+		"conflictsHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=conflictsHelper]"
+		},
+		"termsText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=termsText]"
+		},
+		"termsHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=termsHelper]"
+		},
+		"newsletterText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=newsletterText]"
+		},
+		"newsletterHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=newsletterHelper]"
+		},
+		"extraText": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=extraText]"
+		},
+		"extraHelper": {
+			"type": "string",
+			"source": "html",
+			"selector": "[name=extraHelper]"
+		}
+	}
 }
