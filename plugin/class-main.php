@@ -26,11 +26,11 @@ class Main {
 
 		$jetforms = new JetForms( $emailer );
 		$tickets = new ForbiddenTickets( $emailer );
-		new Applications( $jetforms, $emailer );
+		new Applications( $jetforms, $emailer, $settings );
 		new Attendance( $tickets );
 		$people = new People( $emailer, $tickets );
 		new Auth0( $people, $settings, $tickets );
-		new Conflicts();
+		new Conflicts( $settings );
 		new Discord( $settings, $logger );
 	}
 

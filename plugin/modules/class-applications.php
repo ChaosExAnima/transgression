@@ -2,6 +2,8 @@
 
 namespace Transgression\Modules;
 
+use Transgression\Admin\Option;
+use Transgression\Admin\Page_Options;
 use Transgression\Logger;
 use Transgression\Modules\Email\Emailer;
 use WP_Post;
@@ -42,7 +44,7 @@ class Applications extends Module {
 		'webp' => 'image/webp',
 	];
 
-	public function __construct( protected JetForms $jet_forms, protected Emailer $emailer ) {
+	public function __construct( protected JetForms $jet_forms, protected Emailer $emailer, protected Page_Options $settings ) {
 		parent::__construct();
 
 		// Actions
@@ -72,6 +74,14 @@ class Applications extends Module {
 			'app_dupe',
 			'Application Duplicate',
 			'When someone submits an application but their email is already approved'
+		);
+
+		$settings->add_section( 'applications', __( 'Applications', 'transgression' ) );
+		$settings->add_setting(
+			( new Option( Conflicts::OPTION_SHEET_URL, __( 'Conflicts URL', 'transgression' ) ) )
+				->of_type( 'url' )
+				->in_section( 'applications' )
+				->describe( __( 'Overrides conflict page with URL to sheet.', 'transgression' ) )
 		);
 	}
 

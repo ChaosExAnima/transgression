@@ -2,7 +2,9 @@
 
 namespace Transgression\Modules;
 
+use stdClass;
 use Transgression\Admin\Page;
+use Transgression\Admin\Page_Options;
 use WP_Post;
 use WP_Query;
 
@@ -13,14 +15,16 @@ use const Transgression\PLUGIN_SLUG;
 class Conflicts extends Module {
 	public const COMMENT_TYPE = 'conflict_comment';
 	public const CACHE_KEY = PLUGIN_SLUG . '_conflict_ids';
+	public const OPTION_SHEET_URL = 'conflict_sheet_url';
 
 	protected Page $admin;
 
-	public function __construct() {
+	public function __construct( protected Page_Options $settings ) {
 		add_action( 'pending_to_' . Applications::STATUS_APPROVED, [ $this, 'bust_cache' ] );
 
 		$admin = new Page( 'conflicts', 'Conflicts', null, 'edit_posts' );
 		$admin->as_post_subpage( Applications::POST_TYPE );
+		$admin->add_screen_callback( [ $this, 'action_redirect' ] );
 		$admin->add_render_callback( [ $this, 'render_conflicts' ] );
 		$admin->add_style( 'conflicts' );
 
@@ -33,6 +37,19 @@ class Conflicts extends Module {
 		$admin->register_message( 'comment_success', 'Added comment', 'success' );
 
 		$this->admin = $admin;
+	}
+
+	/**
+	 * Redirects to the conflict sheet if set.
+	 *
+	 * @return void
+	 */
+	public function action_redirect(): void {
+		$redirect = $this->settings->value( self::OPTION_SHEET_URL );
+		// @phpcs:ignore WordPress.Security.SafeRedirect
+		if ( $redirect && wp_redirect( $redirect ) ) {
+			exit;
+		}
 	}
 
 	/**
