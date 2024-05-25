@@ -133,9 +133,17 @@ input[type='radio']:checked {
 	transition: border-color var(--wp--custom--timing--short);
 }
 
+.jet-form-builder__field-label > span::before {
+	border-color: var(--wp--preset--color--secondary);
+}
+
+.jet-form-builder__field-label.for-radio > span::before {
+	display: none;
+}
 .jet-form-builder__field.radio-field {
 	width: 2em;
 	height: 2em;
+	flex-basis: 2em;
 	margin-right: 1em;
 	position: static;
 	opacity: 1;
@@ -143,13 +151,8 @@ input[type='radio']:checked {
 .jet-form-builder__field.radio-field:checked {
 	border-width: 0.6em;
 }
-.jet-form-builder__field-label.for-radio > span::before {
-	display: none;
-}
 
-.jet-form-builder__field-label > span::before {
-	border-color: var(--wp--preset--color--secondary);
-}
+
 .jet-form-builder__field-label.for-checkbox
 	:not(:disabled):not(:checked):hover
 	+ span::before {
@@ -161,7 +164,6 @@ input[type='radio']:checked {
 	background-color: var(--wp--preset--color--primary);
 	border-color: var(--wp--preset--color--primary);
 }
-
 .jet-form-builder__field-label.for-checkbox :checked + span::before {
 	background-color: var(--wp--preset--color--primary);
 	border-color: var(--wp--preset--color--secondary);
