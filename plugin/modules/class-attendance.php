@@ -278,6 +278,9 @@ class Attendance extends Module {
 				continue;
 			}
 			$order_id = $code_order_map[ $code ];
+			if ( ! $order_id ) {
+				$order_id = "blank-{$user->ID}-{$attachment_id}";
+			}
 			$user_order_map[ $user->ID ] = $order_id;
 			$orders[] = $this->order_row( $person, $order_id );
 		}
