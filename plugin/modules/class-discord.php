@@ -2,28 +2,33 @@
 
 namespace Transgression\Modules;
 
-use Transgression\Admin\{Page_Options, Option};
+use Transgression\Admin\{Page_Options, Option, Option_Select};
 use Transgression\{Logger, LoggerLevels};
 use WP_Post;
 
 class Discord extends Module {
-	protected const ACTION_RESULT = 'hook-result';
-
 	public function __construct( protected Page_Options $settings, Logger $logger ) {
+		$settings->register_message( 'not_conf', __( 'Hook not configured', 'transgression' ) );
+		$settings->register_message( 'test_success', __( 'Test message sent', 'transgression' ) );
+
 		$settings->add_section( 'discord', 'Discord' );
-		$settings->add_action( 'test-hook', [ $this, 'send_test' ] );
-		$settings->add_action( self::ACTION_RESULT, [ $this, 'test_message' ] );
-		$settings->add_settings( 'discord',
-			( new Option( DiscordHooks::Application->hook(), 'Application Webhook' ) )
-				->of_type( 'url' )
-				->render_after( [ $this, 'render_test_button' ] )
+		$apps_hook = ( new Option( DiscordHooks::Application->hook(), 'Application Webhook' ) )
+			->of_type( 'url' )
+			->in_section( 'discord' );
+		$settings->add_button(
+			$apps_hook,
+			__( 'Send test', 'transgression' ),
+			[ $this, 'send_test' ]
 		);
 
 		$logging_hook = ( new Option( DiscordHooks::Logging->hook(), 'Logging Webhook' ) )
-			->in_section( 'discord' )
 			->of_type( 'url' )
-			->render_after( [ $this, 'render_test_button' ] )
-			->on_page( $settings );
+			->in_section( 'logging' );
+		$settings->add_button(
+			$logging_hook,
+			__( 'Send test', 'transgression' ),
+			[ $this, 'send_test' ]
+		);
 		if ( $logging_hook->get() ) {
 			$logger->register_destination( [ $this, 'send_logging_message' ] );
 		}
@@ -59,40 +64,22 @@ class Discord extends Module {
 	}
 
 	/**
-	 * Renders a button that triggers
-	 *
-	 * @param Option $option
-	 * @return void
-	 */
-	public function render_test_button( Option $option ): void {
-		$test_url = $this->settings->get_url( [
-			'test-hook' => $option->key,
-			'_wpnonce' => wp_create_nonce( "test-hook-{$option->key}" ),
-		] );
-		printf(
-			'&nbsp;<a class="button button-secondary" href="%s" id="%s-test">Send test</a>',
-			esc_url( $test_url ),
-			esc_attr( $option->key )
-		);
-	}
-
-	/**
 	 * Sends a test message
 	 *
-	 * @param string $hook_type
+	 * @param string $value The value passed.
+	 * @param Option $option The triggering option.
 	 * @return void
 	 */
-	public function send_test( string $hook_type ): void {
-		check_admin_referer( "test-hook-{$hook_type}" );
+	public function send_test( string $value, Option $option ): string {
 		$url = null;
 		try {
-			$webhook = DiscordHooks::from_hook( $hook_type );
+			$webhook = DiscordHooks::from_hook( $option->key );
 			$url = $this->settings->value( $webhook->hook() );
 		} catch ( \ValueError $error ) {
 			Logger::error( $error );
 		}
 		if ( ! $url ) {
-			$this->settings->action_redirect( self::ACTION_RESULT, 'not-conf' );
+			return 'not_conf';
 		}
 
 		$this->send_discord_message(
@@ -101,21 +88,7 @@ class Discord extends Module {
 			site_url(),
 			'This is a message to check things are working!'
 		);
-		$this->settings->action_redirect( self::ACTION_RESULT, 'success' );
-	}
-
-	/**
-	 * Shows the hook test result message
-	 *
-	 * @param string $result
-	 * @return void
-	 */
-	public function test_message( string $result ): void {
-		if ( $result === 'not-conf' ) {
-			$this->settings->add_message( 'Hook not configured' );
-		} elseif ( $result === 'success' ) {
-			$this->settings->add_message( 'Sent test message', 'success' );
-		}
+		return 'test_sent';
 	}
 
 	/**
@@ -127,7 +100,7 @@ class Discord extends Module {
 	 * @return void
 	 */
 	public function send_logging_message( string $message, LoggerLevels $severity ) {
-		$this->send_discord_message( DiscordHooks::Logging, $severity->value, null, $message, [], true );
+		$this->send_discord_message( DiscordHooks::Logging, $severity->name(), null, $message, [], true );
 	}
 
 	/**
