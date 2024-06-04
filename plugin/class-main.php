@@ -18,18 +18,19 @@ class Main {
 	 * @return void
 	 */
 	public function init() {
-		$logger = new Logger();
-		$emailer = new Emailer();
-
 		$settings = new Page_Options( 'settings', 'Ticketing Settings', 'Ticketing' );
 		$settings->as_subpage( 'options-general.php' );
 
+		$logger = new Logger( true, $settings );
+		$emailer = new Emailer();
+
 		$jetforms = new JetForms( $emailer );
 		$tickets = new ForbiddenTickets( $emailer );
+		$people = new People( $emailer, $tickets );
+
+		new Auth0( $people, $settings, $tickets );
 		new Applications( $jetforms, $emailer, $settings );
 		new Attendance( $tickets );
-		$people = new People( $emailer, $tickets );
-		new Auth0( $people, $settings, $tickets );
 		new Conflicts( $settings );
 		new Discord( $settings, $logger );
 	}
