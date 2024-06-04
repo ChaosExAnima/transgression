@@ -74,6 +74,49 @@ class Page_Options extends Page {
 	}
 
 	/**
+	 * Adds a button
+	 *
+	 * @param string $key Option key to add.
+	 * @param string $title Button title.
+	 * @param callable $action Callback to run on button click.
+	 * @param string $css_class CSS class for button.
+	 * @return
+	 */
+	public function add_button(
+		Option $option,
+		string $title,
+		callable $action,
+		?string $action_value = null,
+		string $css_class = 'button-secondary'
+	): static {
+		$action_key = "{$option->key}_button";
+		$this->add_action( $action_key, function ( string $value ) use ( $action_key, $action, $option ) {
+			check_admin_referer( $action_key );
+			$message = call_user_func( $action, $value, $option );
+			if ( $message && is_string( $message ) ) {
+				$this->redirect_message( $message );
+			}
+		} );
+		$url = $this->get_url( [
+			$action_key => $action_value ?? '1',
+			'_wpnonce' => wp_create_nonce( $action_key ),
+		] );
+		$option
+			->on_page( $this )
+			->render_after(
+				function () use ( $url, $title, $css_class ) {
+					printf(
+						'&nbsp;<a href="%1$s" class="button %3$s">%2$s</a>',
+						esc_url( $url ),
+						esc_html( $title ),
+						sanitize_html_class( $css_class )
+					);
+				}
+			);
+		return $this;
+	}
+
+	/**
 	 * Gets a setting
 	 *
 	 * @param string $key
