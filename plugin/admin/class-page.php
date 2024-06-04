@@ -201,6 +201,8 @@ class Page {
 	 */
 	public function get_url( array $params = [] ): string {
 		$params['page'] = $this->page_slug;
+		$params['post_type'] = $_GET['post_type'] ?? null; // phpcs:ignore WordPress.Security
+		$params['taxonomy'] = $_GET['taxonomy'] ?? null; // phpcs:ignore WordPress.Security
 		global $pagenow;
 		return add_query_arg( $params, admin_url( $pagenow ) );
 	}
@@ -349,7 +351,9 @@ class Page {
 			wp_die();
 		}
 
-		settings_errors( "{$this->page_slug}_messages" );
+		if ( ! ( $this instanceof Page_Options ) ) {
+			settings_errors( "{$this->page_slug}_messages" );
+		}
 
 		printf(
 			'<div class="wrap"><h1>%s</h1>',
