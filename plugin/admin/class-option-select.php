@@ -24,16 +24,16 @@ class Option_Select extends Option {
 		parent::__construct( $key, $label, $default_value );
 	}
 
-	public function of_type( ?string $type = null ): self {
+	public function of_type( ?string $type = null ): static {
 		return $this;
 	}
 
-	public function without_none(): self {
+	public function without_none(): static {
 		$this->show_none = false;
 		return $this;
 	}
 
-	public function with_options( array $options ): self {
+	public function with_options( array $options ): static {
 		$this->options = $options;
 		return $this;
 	}

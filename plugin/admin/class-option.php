@@ -44,7 +44,7 @@ class Option {
 	 * @param string|null $type
 	 * @return self
 	 */
-	public function of_type( ?string $type = null ): self {
+	public function of_type( ?string $type = null ): static {
 		$this->render_cb = [ $this, 'render_text_field' ];
 		switch ( $type ) {
 			case 'empty':
@@ -82,17 +82,17 @@ class Option {
 		return $this;
 	}
 
-	public function describe( string $description ): self {
+	public function describe( string $description ): static {
 		$this->description = $description;
 		return $this;
 	}
 
-	public function on_page( Page_Options $page ): self {
+	public function on_page( Page_Options $page ): static {
 		$page->add_setting( $this );
 		return $this;
 	}
 
-	public function in_section( string $section ): self {
+	public function in_section( string $section ): static {
 		$this->section = $section;
 		return $this;
 	}
@@ -105,12 +105,12 @@ class Option {
 		return update_option( $this->key, $value );
 	}
 
-	public function render_before( callable $callback ): self {
+	public function render_before( callable $callback ): static {
 		add_action( PLUGIN_SLUG . "_option_{$this->key}_before_render", $callback );
 		return $this;
 	}
 
-	public function render_after( callable $callback ): self {
+	public function render_after( callable $callback ): static {
 		add_action( PLUGIN_SLUG . "_option_{$this->key}_after_render", $callback );
 		return $this;
 	}
