@@ -469,8 +469,18 @@ class Applications extends Module {
 		] );
 
 		if ( is_wp_error( $user_id ) ) {
-			Logger::error( $user_id );
-			return 103;
+			if ( $user_id->get_error_code() === 'existing_user_login' ) {
+				$user = get_user_by( 'login', $email );
+				if ( $user->application !== $post->ID ) {
+					Logger::error( "Found duplicate application of user {$user->ID}" );
+					return 103;
+				}
+				Logger::warning( "User {$user->ID} already created" );
+				$user_id = $user->ID;
+			} else {
+				Logger::error( $user_id );
+				return 103;
+			}
 		}
 		$post->post_status = self::STATUS_APPROVED;
 		wp_update_post( $post );
