@@ -1,13 +1,13 @@
 # Transgression
 This is a custom WordPress theme that also integrates several plugins to create an event site.
 
-The theme is built off of [Blockbase](https://blockbasetheme.com/) and customized with specific fonts and colors. See more about [FSE here](https://fullsiteediting.com/).
+The theme is built off of [Blockbase](https://blockbasetheme.com/) and customized with specific fonts and colors.
 
-The main functionality is around [WooCommerce](https://woocommerce.com/) and [MailPoet](https://www.mailpoet.com/). Users can be created with the Customer role, and with that role can log in (potentially with a passwordless setup) and purchase tickets.
-
-There is also a custom post type Applications, which is designed to hold apps for review. These have custom admin screens to help with that. Also, if MailPoet is installed, application responses can be automatically sent out with linking to customizable templates.
+There is a custom post type Applications, which is designed to hold apps for review. These have custom admin screens to help with that.
 
 Applications can be created by multiple sources, but the current choice is [JetFormsBuilder](https://crocoblock.com/plugins/jetformbuilder/).
+
+There are also integrations for Auth0, Discord, Elastic Email, Forbidden Tickets, and MailPoet.
 
 ## Dev Setup
 ### Requirements
